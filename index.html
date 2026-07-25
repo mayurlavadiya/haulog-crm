@@ -10,6 +10,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/jspdf.plugin.autotable.min.js"></script>
 <style>
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
@@ -241,6 +244,18 @@ tbody tr:hover{background:var(--blue-50);}
 .perm-chip{display:flex;align-items:center;gap:7px;font-size:12.5px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:9px;padding:7px 10px;}
 .perm-chip input{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
 .perm-chip.locked{opacity:.6;}
+.upload-zone{border:2px dashed var(--blue-100);border-radius:12px;padding:18px;text-align:center;background:var(--blue-50);cursor:pointer;margin-top:6px;}
+.upload-zone:hover{border-color:var(--blue);}
+.upload-zone input{display:none;}
+.upload-zone .hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+.attach-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.attach-chip{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;}
+.attach-chip .ic{width:28px;height:28px;border-radius:8px;background:var(--blue-50);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.attach-chip a{color:var(--blue);font-weight:600;flex:1;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attach-chip .rm{width:22px;height:22px;border-radius:6px;border:none;background:none;color:var(--red);flex-shrink:0;}
+.attach-chip .rm:hover{background:#FEEEEC;}
+.attach-thumb{display:inline-flex;align-items:center;gap:4px;background:var(--blue-50);color:var(--blue-dark);border:1px solid var(--blue-100);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;margin:2px;text-decoration:none;}
+.report-total-row{background:var(--blue-50);font-weight:700;}
 .login-loading{display:none;text-align:center;color:rgba(255,255,255,.85);font-size:13px;margin-top:14px;}
 .login-loading.show{display:block;}
 
@@ -540,6 +555,24 @@ tbody tr:hover{background:var(--blue-50);}
           <div><div class="eyebrow">Operations</div><h1>Expense Management</h1><p id="expCount">0 claims</p></div>
           <div class="head-actions"><button class="btn-primary" onclick="openForm('expenses')">+ Add Expense</button></div>
         </div>
+
+        <div class="card" style="margin-bottom:18px;">
+          <h3>Monthly Expense Report</h3><p class="sub">Pick a month, generate a date-wise report with totals and attached bills</p>
+          <div class="toolbar" style="margin-top:14px;">
+            <input type="month" id="reportMonth" class="filter">
+            <select class="filter" id="reportEmpFilter"><option value="">All Employees</option></select>
+            <button class="btn-primary" onclick="generateExpenseReport()">Generate Report</button>
+            <button class="btn-ghost" id="reportExportExcel" style="display:none;" onclick="exportExpenseReportExcel()">Export Excel</button>
+            <button class="btn-ghost" id="reportExportPdf" style="display:none;" onclick="exportExpenseReportPdf()">Export PDF</button>
+          </div>
+          <div id="reportResultWrap" style="display:none;margin-top:16px;">
+            <div class="grid g-3" id="reportSummary" style="margin-bottom:16px;"></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Date</th><th>Employee</th><th>Category</th><th>Merchant</th><th>Payment</th><th>Status</th><th>Amount</th><th>Docs</th></tr></thead><tbody id="tbody-expenseReport"></tbody></table>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="toolbar"><input class="search-input" placeholder="Search by employee or category…" oninput="renderTable('expenses', this.value)"></div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-expenses"></tbody></table></div>
@@ -834,9 +867,9 @@ let DB = {
 const DEFAULT_ROLES = [
   {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','calls','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
   {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','calls','meetings','quotations','proposals','expenses','employees','customers','reports','profile','myreports']},
-  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','meetings','quotations','proposals','customers','profile','myreports']},
+  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','meetings','quotations','proposals','expenses','customers','profile','myreports']},
   {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','expenses','quotations','reports','profile','myreports']},
-  {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','employees','profile','myreports']}
+  {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','profile','myreports']}
 ];
 
 let unsubscribers = [];
@@ -1112,16 +1145,22 @@ const MODULES = {
     columns:[
       {key:'employee', label:'Employee'},
       {key:'category', label:'Category'},
+      {key:'merchant', label:'Merchant/Vendor'},
       {key:'amount', label:'Amount', fmt:v=>fmtMoney(v)},
       {key:'status', label:'Status', pill:s=>({Pending:'amber',Approved:'green',Rejected:'red'}[s]||'grey')},
-      {key:'date', label:'Date'}
+      {key:'date', label:'Date'},
+      {key:'attachments', label:'Docs', fmt:v=>(v&&v.length)?`📎 ${v.length}`:'—'}
     ],
     fields:[
       {key:'employee', label:'Employee', type:'select', optionsFrom:'employeeNames', required:true},
-      {key:'category', label:'Category', type:'select', options:['Travel','Fuel','Food','Client Entertainment','Office Expense','Miscellaneous'], required:true},
+      {key:'category', label:'Category', type:'select', options:['Travel','Fuel','Accommodation','Food','Client Entertainment','Office Supplies','Communication','Training','Miscellaneous'], required:true},
+      {key:'merchant', label:'Merchant / Vendor Name', type:'text'},
+      {key:'billNumber', label:'Bill / Invoice Number', type:'text'},
       {key:'amount', label:'Amount (₹)', type:'number', required:true, min:1},
+      {key:'paymentMode', label:'Payment Mode', type:'select', options:['Cash','Company Card','Personal Card','UPI','Bank Transfer'], required:true},
+      {key:'date', label:'Expense Date', type:'date', required:true},
       {key:'status', label:'Status', type:'select', options:['Pending','Approved','Rejected'], required:true},
-      {key:'date', label:'Date', type:'date', required:true}
+      {key:'description', label:'Description / Notes', type:'textarea'}
     ]
   },
   employees:{
@@ -1218,6 +1257,7 @@ function go(id){
   if(id==='profile') renderProfilePage();
   if(id==='adminpanel') renderAdminPanel();
   if(id==='myreports') renderMyReports();
+  if(id==='expenses') populateReportEmpFilter();
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
@@ -1346,9 +1386,135 @@ function openForm(moduleKey, id){
     </div>`;
   }).join('');
 
+  if(moduleKey==='expenses'){
+    expenseExistingAttachments = (record.attachments || []).slice();
+    expenseNewFiles = [];
+    body.insertAdjacentHTML('beforeend', `
+      <div class="field">
+        <label>Bills / Receipts (images, PDF, DOC — multiple allowed)</label>
+        <div class="upload-zone" onclick="document.getElementById('expenseFileInput').click()">
+          <input type="file" id="expenseFileInput" multiple accept="image/*,.pdf,.doc,.docx" onchange="handleExpenseFiles(this.files)">
+          <div>📎 Click to choose files</div>
+          <div class="hint">Photos auto-compressed · PDF/DOC up to 200KB · max 3 files per expense</div>
+        </div>
+        <div class="attach-list" id="attachListUI"></div>
+      </div>
+    `);
+    renderAttachmentUI();
+  }
+
   document.getElementById('modalBg').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+
+/* =========================================================
+   EXPENSE ATTACHMENTS (Base64 stored directly in Firestore —
+   no Firebase Storage needed, stays on free Spark plan)
+========================================================= */
+let expenseExistingAttachments = [];
+let expenseNewFiles = [];
+const MAX_DOC_ATTACHMENT_KB = 200;      // raw size cap for PDF/DOC (can't be compressed)
+const MAX_ATTACHMENTS_PER_EXPENSE = 3;
+const MAX_TOTAL_ATTACHMENT_BYTES = 900*1024; // keep well under Firestore's 1MB document limit
+
+function fileIcon(type){
+  if(type && type.startsWith('image/')) return '🖼️';
+  if(type === 'application/pdf') return '📄';
+  return '📝';
+}
+
+function fileToDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function compressImage(file, maxWidth=1000, quality=0.7){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > maxWidth){ h = Math.round(h*maxWidth/w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function totalAttachmentBytes(){
+  return [...expenseExistingAttachments, ...expenseNewFiles]
+    .reduce((sum,a)=> sum + Math.round((a.dataUrl||'').length*0.75), 0);
+}
+
+async function handleExpenseFiles(fileList){
+  for(const file of Array.from(fileList)){
+    if(expenseExistingAttachments.length + expenseNewFiles.length >= MAX_ATTACHMENTS_PER_EXPENSE){
+      toast(`Max ${MAX_ATTACHMENTS_PER_EXPENSE} attachments per expense`, 'error');
+      break;
+    }
+    let dataUrl;
+    try{
+      if(file.type.startsWith('image/')){
+        dataUrl = await compressImage(file); // auto-shrinks phone photos to a tiny JPEG
+      } else {
+        if(file.size > MAX_DOC_ATTACHMENT_KB*1024){
+          toast(`${file.name} is over ${MAX_DOC_ATTACHMENT_KB}KB — PDFs/DOCs can't be auto-compressed, try a smaller file or a photo of the bill instead`, 'error');
+          continue;
+        }
+        dataUrl = await fileToDataUrl(file);
+      }
+    }catch(err){ toast('Could not read '+file.name, 'error'); continue; }
+
+    const projectedTotal = totalAttachmentBytes() + Math.round(dataUrl.length*0.75);
+    if(projectedTotal > MAX_TOTAL_ATTACHMENT_BYTES){
+      toast(`Adding ${file.name} would exceed the per-expense storage limit — remove another file first`, 'error');
+      continue;
+    }
+    expenseNewFiles.push({name:file.name, type: file.type.startsWith('image/') ? 'image/jpeg' : file.type, size: Math.round(dataUrl.length*0.75), dataUrl});
+  }
+  document.getElementById('expenseFileInput').value = '';
+  renderAttachmentUI();
+}
+
+function removeExistingAttachment(idx){
+  expenseExistingAttachments.splice(idx,1);
+  renderAttachmentUI();
+}
+function removeNewFile(idx){
+  expenseNewFiles.splice(idx,1);
+  renderAttachmentUI();
+}
+
+function renderAttachmentUI(){
+  const el = document.getElementById('attachListUI');
+  if(!el) return;
+  const usedKB = (totalAttachmentBytes()/1024).toFixed(0);
+  const existingHtml = expenseExistingAttachments.map((a,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(a.type)}</div>
+      <a href="${a.dataUrl}" target="_blank" rel="noopener" download="${a.name}">${a.name}</a>
+      <button type="button" class="rm" onclick="removeExistingAttachment(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  const newHtml = expenseNewFiles.map((f,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(f.type)}</div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name} <span style="color:var(--ink-soft);font-weight:400;">(new — ${(f.size/1024).toFixed(0)}KB)</span></span>
+      <button type="button" class="rm" onclick="removeNewFile(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  el.innerHTML = (existingHtml + newHtml || '') + `<div class="hint" style="margin-top:2px;">${usedKB}KB of ~900KB used for this expense</div>`;
+}
 
 document.getElementById('modalForm').addEventListener('submit', async function(e){
   e.preventDefault();
@@ -1390,6 +1556,10 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
   submitBtn.disabled = true; submitBtn.textContent = 'Saving…';
 
   try{
+    if(currentModule==='expenses'){
+      data.attachments = [...expenseExistingAttachments, ...expenseNewFiles];
+    }
+
     if(currentEditId){
       await db.collection(currentModule).doc(currentEditId).update(data);
       toast(cfg.label+' updated successfully','success');
@@ -1810,6 +1980,106 @@ function exportEmployeeCSV(){
   a.href = URL.createObjectURL(blob);
   a.download = name.replace(/\s+/g,'_')+'_report.csv';
   a.click();
+}
+
+/* =========================================================
+   MONTHLY EXPENSE REPORT
+========================================================= */
+let lastReportRows = [];
+let lastReportMeta = {month:'', employee:'All'};
+
+function populateReportEmpFilter(){
+  const sel = document.getElementById('reportEmpFilter');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+  if(prev) sel.value = prev;
+  const monthInput = document.getElementById('reportMonth');
+  if(monthInput && !monthInput.value){
+    monthInput.value = todayISO().slice(0,7);
+  }
+}
+
+function generateExpenseReport(){
+  const month = document.getElementById('reportMonth').value;
+  const empFilter = document.getElementById('reportEmpFilter').value;
+  if(!month){ toast('Pick a month first','error'); return; }
+
+  let rows = DB.expenses.filter(e => (e.date||'').slice(0,7) === month);
+  if(empFilter) rows = rows.filter(e=>e.employee===empFilter);
+  rows.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+
+  lastReportRows = rows;
+  lastReportMeta = {month, employee: empFilter || 'All Employees'};
+
+  const total = rows.reduce((a,e)=>a+Number(e.amount||0),0);
+  const approved = rows.filter(e=>e.status==='Approved').reduce((a,e)=>a+Number(e.amount||0),0);
+  const pending = rows.filter(e=>e.status==='Pending').reduce((a,e)=>a+Number(e.amount||0),0);
+
+  document.getElementById('reportSummary').innerHTML = `
+    <div class="card kpi"><div class="val">${fmtMoney(total)}</div><div class="lbl">Total Claimed (${rows.length} entries)</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(approved)}</div><div class="lbl">Approved</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(pending)}</div><div class="lbl">Pending</div></div>
+  `;
+
+  const tbody = document.getElementById('tbody-expenseReport');
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">No expenses found for this month.</div></td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(e=>{
+      const docs = (e.attachments||[]).map(a=>`<a class="attach-thumb" href="${a.dataUrl}" target="_blank" rel="noopener" download="${a.name}">${fileIcon(a.type)} ${a.name.length>14?a.name.slice(0,12)+'…':a.name}</a>`).join('') || '—';
+      return `<tr>
+        <td>${e.date||'—'}</td><td>${e.employee||'—'}</td><td>${e.category||'—'}</td>
+        <td>${e.merchant||'—'}</td><td>${e.paymentMode||'—'}</td>
+        <td><span class="pill ${({Pending:'amber',Approved:'green',Rejected:'red'}[e.status]||'grey')}">${e.status}</span></td>
+        <td>${fmtMoney(e.amount)}</td><td>${docs}</td>
+      </tr>`;
+    }).join('') + `<tr class="report-total-row"><td colspan="6" style="text-align:right;">Grand Total</td><td>${fmtMoney(total)}</td><td></td></tr>`;
+  }
+
+  document.getElementById('reportResultWrap').style.display = 'block';
+  document.getElementById('reportExportExcel').style.display = 'inline-flex';
+  document.getElementById('reportExportPdf').style.display = 'inline-flex';
+}
+
+function exportExpenseReportExcel(){
+  if(!lastReportRows.length){ toast('Generate the report first','error'); return; }
+  const data = lastReportRows.map(e=>({
+    Date:e.date||'', Employee:e.employee||'', Category:e.category||'', Merchant:e.merchant||'',
+    'Bill No.':e.billNumber||'', 'Payment Mode':e.paymentMode||'', Status:e.status||'',
+    'Amount (₹)':Number(e.amount||0), Description:e.description||'',
+    Attachments:(e.attachments||[]).map(a=>a.name).join(', ')
+  }));
+  const total = lastReportRows.reduce((a,e)=>a+Number(e.amount||0),0);
+  data.push({Date:'', Employee:'', Category:'', Merchant:'', 'Bill No.':'', 'Payment Mode':'', Status:'GRAND TOTAL', 'Amount (₹)':total, Description:'', Attachments:''});
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Expense Report');
+  XLSX.writeFile(wb, `Expense_Report_${lastReportMeta.month}.xlsx`);
+}
+
+function exportExpenseReportPdf(){
+  if(!lastReportRows.length){ toast('Generate the report first','error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text('Haulog CRM — Monthly Expense Report', 14, 16);
+  doc.setFontSize(10);
+  doc.text(`Month: ${lastReportMeta.month}   Employee: ${lastReportMeta.employee}`, 14, 23);
+
+  const total = lastReportRows.reduce((a,e)=>a+Number(e.amount||0),0);
+  const body = lastReportRows.map(e=>[e.date||'', e.employee||'', e.category||'', e.merchant||'', e.paymentMode||'', e.status||'', fmtMoney(e.amount), (e.attachments||[]).length]);
+  body.push(['', '', '', '', '', '', 'Grand Total: '+fmtMoney(total), '']);
+
+  doc.autoTable({
+    startY:28,
+    head:[['Date','Employee','Category','Merchant','Payment','Status','Amount','Docs']],
+    body,
+    styles:{fontSize:8},
+    headStyles:{fillColor:[0,0,254]}
+  });
+  doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
 }
 
 /* =========================================================
