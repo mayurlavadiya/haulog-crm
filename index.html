@@ -2063,6 +2063,20 @@ function fmtMoneyPdf(v){ v = Number(v)||0; if(v>=100000) return 'Rs. '+(v/100000
 
 function exportExpenseReportPdf(){
   if(!lastReportRows.length){ toast('Generate the report first','error'); return; }
+  exportExpenseReportPdfAsync();
+}
+
+function getImageDims(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve({width:img.naturalWidth, height:img.naturalHeight});
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+async function exportExpenseReportPdfAsync(){
+  toast('Generating PDF…','success');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(14);
@@ -2077,7 +2091,7 @@ function exportExpenseReportPdf(){
     { content: fmtMoneyPdf(total), styles:{fontStyle:'bold'} },
     ''
   ]);
-  
+
   doc.autoTable({
     startY:28,
     head:[['Date','Employee','Category','Merchant','Payment','Status','Amount','Docs']],
@@ -2085,9 +2099,56 @@ function exportExpenseReportPdf(){
     styles:{fontSize:8},
     headStyles:{fillColor:[0,0,254]}
   });
-  doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
-}
 
+  const rowsWithDocs = lastReportRows.filter(e=>(e.attachments||[]).length);
+  if(rowsWithDocs.length){
+    const pageH = doc.internal.pageSize.getHeight();
+    let y = doc.lastAutoTable.finalY + 14;
+
+    if(y > pageH - 30){ doc.addPage(); y = 18; }
+    doc.setFontSize(13);
+    doc.setFont(undefined,'bold');
+    doc.text('Attached Bills & Receipts', 14, y);
+    doc.setFont(undefined,'normal');
+    y += 9;
+
+    for(const e of rowsWithDocs){
+      if(y > pageH - 20){ doc.addPage(); y = 18; }
+      doc.setFontSize(10);
+      doc.setFont(undefined,'bold');
+      doc.text(`${e.date||''}  ·  ${e.employee||''}  ·  ${e.category||''}  ·  ${fmtMoneyPdf(e.amount)}`, 14, y);
+      doc.setFont(undefined,'normal');
+      y += 6;
+
+      for(const a of (e.attachments||[])){
+        if(a.type && a.type.startsWith('image/')){
+          try{
+            const dims = await getImageDims(a.dataUrl);
+            let w = 70, h = (dims.height/dims.width)*w;
+            if(h > 70){ h = 70; w = (dims.width/dims.height)*h; }
+            if(y + h + 10 > pageH - 15){ doc.addPage(); y = 18; }
+            doc.addImage(a.dataUrl, 'JPEG', 14, y, w, h);
+            doc.setFontSize(8);
+            doc.text(a.name, 14, y + h + 4);
+            y += h + 12;
+          }catch(err){
+            doc.setFontSize(9);
+            doc.text('Could not preview: '+a.name, 14, y);
+            y += 6;
+          }
+        } else {
+          if(y > pageH - 15){ doc.addPage(); y = 18; }
+          doc.setFontSize(9);
+          doc.text(`Document: ${a.name} (${a.type||'file'}) — open in app to view full file`, 14, y);
+          y += 6;
+        }
+      }
+      y += 5;
+    }
+  }
+
+  doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
+  
 /* =========================================================
    ADMIN TABS
 ========================================================= */
