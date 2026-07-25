@@ -2059,19 +2059,25 @@ function exportExpenseReportExcel(){
   XLSX.writeFile(wb, `Expense_Report_${lastReportMeta.month}.xlsx`);
 }
 
+function fmtMoneyPdf(v){ v = Number(v)||0; if(v>=100000) return 'Rs. '+(v/100000).toFixed(1)+'L'; return 'Rs. '+v.toLocaleString('en-IN'); }
+
 function exportExpenseReportPdf(){
   if(!lastReportRows.length){ toast('Generate the report first','error'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(14);
-  doc.text('Haulog CRM — Monthly Expense Report', 14, 16);
+  doc.text('Haulog CRM - Monthly Expense Report', 14, 16);
   doc.setFontSize(10);
   doc.text(`Month: ${lastReportMeta.month}   Employee: ${lastReportMeta.employee}`, 14, 23);
 
   const total = lastReportRows.reduce((a,e)=>a+Number(e.amount||0),0);
-  const body = lastReportRows.map(e=>[e.date||'', e.employee||'', e.category||'', e.merchant||'', e.paymentMode||'', e.status||'', fmtMoney(e.amount), (e.attachments||[]).length]);
-  body.push(['', '', '', '', '', '', 'Grand Total: '+fmtMoney(total), '']);
-
+  const body = lastReportRows.map(e=>[e.date||'', e.employee||'', e.category||'', e.merchant||'', e.paymentMode||'', e.status||'', fmtMoneyPdf(e.amount), (e.attachments||[]).length]);
+  body.push([
+    { content:'Grand Total', colSpan:6, styles:{halign:'right', fontStyle:'bold'} },
+    { content: fmtMoneyPdf(total), styles:{fontStyle:'bold'} },
+    ''
+  ]);
+  
   doc.autoTable({
     startY:28,
     head:[['Date','Employee','Category','Merchant','Payment','Status','Amount','Docs']],
