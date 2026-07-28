@@ -1199,8 +1199,8 @@ const MODULES = {
       {key:'role', label:'Role', type:'select', options:['Super Admin','Admin','Sales Manager','Sales Executive','Accounts','HR'], required:true},
       {key:'email', label:'Email', type:'email', required:true},
       {key:'phone', label:'Phone', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
-      {key:'target', label:'Monthly Target (₹)', type:'number', required:true, min:0},
-      {key:'achieved', label:'Achieved (₹)', type:'number', required:true, min:0}
+      {key:'target', label:'Monthly Target (₹)', type:'number', required:false, min:0},
+      {key:'achieved', label:'Achieved (₹)', type:'number', required:false, min:0}
     ]
   },
   customers:{
