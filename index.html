@@ -256,6 +256,15 @@ tbody tr:hover{background:var(--blue-50);}
 .attach-chip .rm:hover{background:#FEEEEC;}
 .attach-thumb{display:inline-flex;align-items:center;gap:4px;background:var(--blue-50);color:var(--blue-dark);border:1px solid var(--blue-100);border-radius:7px;padding:3px 8px;font-size:11px;font-weight:600;margin:2px;text-decoration:none;}
 .report-total-row{background:var(--blue-50);font-weight:700;}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.tile{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;transition:.18s;cursor:pointer;box-shadow:var(--shadow);}
+.tile:hover{transform:translateY(-3px);box-shadow:0 20px 48px rgba(0,0,254,.14);border-color:var(--blue-100);}
+.tile .icon{width:42px;height:42px;border-radius:12px;background:var(--blue-50);color:var(--blue);display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.tile .icon svg{width:20px;height:20px;}
+.tile h4{font-size:14px;font-weight:600;}
+.tile p{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5;}
+@media (max-width:1180px){ .tiles{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:640px){ .tiles{grid-template-columns:1fr;} }
 .login-loading{display:none;text-align:center;color:rgba(255,255,255,.85);font-size:13px;margin-top:14px;}
 .login-loading.show{display:block;}
 
@@ -374,6 +383,10 @@ tbody tr:hover{background:var(--blue-50);}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
         Dashboard
       </button>
+      <button class="nav-item" data-page="sitemap" onclick="go('sitemap')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v6M12 13l-6 4M12 13l6 4"/></svg>
+        All Modules
+      </button>
       <div class="nav-section-title">Sales Pipeline</div>
       <button class="nav-item" data-page="leads" onclick="go('leads')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -475,6 +488,14 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="card"><h3>Sales Pipeline by Stage</h3><p class="sub" id="pipelineSub">—</p><div class="chart-box short"><canvas id="chartPipeline"></canvas></div></div>
           <div class="card"><h3>Recent Activity</h3><p class="sub">Auto-logged from your actions</p><div id="activityFeed" style="display:flex;flex-direction:column;gap:12px;margin-top:6px;max-height:230px;overflow-y:auto;"></div></div>
         </div>
+      </section>
+
+      <!-- ALL MODULES -->
+      <section class="page" id="page-sitemap">
+        <div class="page-head">
+          <div><div class="eyebrow">Overview</div><h1>All Modules</h1><p>Every module you have access to, one click away</p></div>
+        </div>
+        <div class="tiles" id="sitemapTiles"></div>
       </section>
 
       <!-- LEADS -->
@@ -1232,13 +1253,13 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','leads','calls','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','calls','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
   const match = (DB.roles||[]).find(r=>r.name===roleName);
   const base = match ? match.permissions : ((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions);
-  const forced = ['profile','myreports'];
+  const forced = ['profile','myreports','sitemap'];
   return [...new Set([...base, ...forced])];
 }
 
@@ -1259,6 +1280,7 @@ function go(id){
   if(id==='adminpanel') renderAdminPanel();
   if(id==='myreports') renderMyReports();
   if(id==='expenses') populateReportEmpFilter();
+  if(id==='sitemap') renderSitemap();
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
@@ -1368,7 +1390,7 @@ function openForm(moduleKey, id){
   body.innerHTML = cfg.fields.map(f=>{
     const val = record[f.key]!==undefined? record[f.key] : '';
     let input='';
- if(f.type==='select'){
+    if(f.type==='select'){
       let opts = f.options || optionsFor(f.optionsFrom);
       let lockedVal = val;
       if(moduleKey==='expenses' && f.key==='employee' && (!DB.profile || DB.profile.role !== 'Admin')){
@@ -2023,7 +2045,7 @@ function generateExpenseReport(){
   const isAdmin = DB.profile && DB.profile.role === 'Admin';
   const empFilter = isAdmin ? document.getElementById('reportEmpFilter').value : DB.profile.name;
   if(!month){ toast('Pick a month first','error'); return; }
-  
+
   let rows = DB.expenses.filter(e => (e.date||'').slice(0,7) === month);
   if(empFilter) rows = rows.filter(e=>e.employee===empFilter);
   rows.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
@@ -2168,7 +2190,7 @@ async function exportExpenseReportPdfAsync(){
 
   doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
 }
-  
+
 /* =========================================================
    ADMIN TABS
 ========================================================= */
@@ -2218,6 +2240,36 @@ const PAGE_LABELS = {
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
   reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
 };
+
+const MODULE_TILES = [
+  {id:'dashboard', title:'Dashboard', desc:'KPIs, pipeline health and today\'s activity.'},
+  {id:'leads', title:'Leads & Prospects', desc:'Capture, qualify and progress every opportunity.'},
+  {id:'calls', title:'Call Management', desc:'Log calls, auto-reminders, missed-call recovery.'},
+  {id:'meetings', title:'Calendar & Meetings', desc:'Demos, meetings, holidays, synced calendars.'},
+  {id:'quotations', title:'Quotations', desc:'GST-ready quotes with approval workflow.'},
+  {id:'proposals', title:'Proposals', desc:'Templated proposals with open/download tracking.'},
+  {id:'expenses', title:'Expenses', desc:'Travel & field claims with approval routing.'},
+  {id:'employees', title:'Employees', desc:'Targets, attendance, performance dashboards.'},
+  {id:'customers', title:'Customers', desc:'Post-win timeline, AMC, renewals, support.'},
+  {id:'reports', title:'Reports', desc:'Daily to custom-range analytics across modules.'},
+  {id:'settings', title:'Masters & Settings', desc:'Sources, industries, roles, integrations.'},
+  {id:'myreports', title:'My Reports', desc:'Your own pipeline, calls, and expenses.'},
+  {id:'profile', title:'My Profile', desc:'Your details, password, and account info.'},
+  {id:'adminpanel', title:'Admin Panel', desc:'Users, employees, roles, and system configuration.'}
+];
+
+function renderSitemap(){
+  const el = document.getElementById('sitemapTiles');
+  if(!el) return;
+  const allowed = allowedPagesForRole();
+  el.innerHTML = MODULE_TILES.filter(m=>allowed.includes(m.id)).map(m=>`
+    <div class="tile" onclick="go('${m.id}')">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+      <h4>${m.title}</h4>
+      <p>${m.desc}</p>
+    </div>`).join('');
+}
+
 function renderRolesTable(){
   const tbody = document.getElementById('tbody-roles');
   if(!tbody) return;
