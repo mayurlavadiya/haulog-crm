@@ -946,6 +946,7 @@ function attachListeners(){
     }
     renderProfilePage();
     applyRoleGating();
+    renderTable('expenses');
   }, err=>console.error(err));
   unsubscribers.push(unsubProfile);
 
