@@ -1306,6 +1306,10 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
   thead.innerHTML = '<tr>'+cfg.columns.map(c=>'<th>'+c.label+'</th>').join('')+'<th style="text-align:right">Actions</th></tr>';
 
   let rows = DB[moduleKey];
+  if(moduleKey==='expenses' && (!DB.profile || DB.profile.role !== 'Admin')){
+    const myName = DB.profile && DB.profile.name;
+    rows = rows.filter(r=>r.employee===myName);
+  }
   const f = (filterText||'').toLowerCase();
   if(f){
     rows = rows.filter(r => cfg.columns.some(c => String(r[c.key]||'').toLowerCase().includes(f)));
@@ -1363,11 +1367,16 @@ function openForm(moduleKey, id){
   body.innerHTML = cfg.fields.map(f=>{
     const val = record[f.key]!==undefined? record[f.key] : '';
     let input='';
-    if(f.type==='select'){
-      const opts = f.options || optionsFor(f.optionsFrom);
+ if(f.type==='select'){
+      let opts = f.options || optionsFor(f.optionsFrom);
+      let lockedVal = val;
+      if(moduleKey==='expenses' && f.key==='employee' && (!DB.profile || DB.profile.role !== 'Admin')){
+        opts = [DB.profile.name];
+        lockedVal = DB.profile.name;
+      }
       input = `<select name="${f.key}" data-required="${!!f.required}">
         <option value="">Select ${f.label}</option>
-        ${opts.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}
+        ${opts.map(o=>`<option value="${o}" ${o===lockedVal?'selected':''}>${o}</option>`).join('')}
       </select>`;
     } else if(f.type==='textarea'){
       input = `<textarea name="${f.key}">${val}</textarea>`;
@@ -1991,9 +2000,17 @@ let lastReportMeta = {month:'', employee:'All'};
 function populateReportEmpFilter(){
   const sel = document.getElementById('reportEmpFilter');
   if(!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
-  if(prev) sel.value = prev;
+  const isAdmin = DB.profile && DB.profile.role === 'Admin';
+  if(!isAdmin){
+    sel.innerHTML = `<option value="${DB.profile.name}">${DB.profile.name} (you)</option>`;
+    sel.value = DB.profile.name;
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
   const monthInput = document.getElementById('reportMonth');
   if(monthInput && !monthInput.value){
     monthInput.value = todayISO().slice(0,7);
@@ -2002,9 +2019,10 @@ function populateReportEmpFilter(){
 
 function generateExpenseReport(){
   const month = document.getElementById('reportMonth').value;
-  const empFilter = document.getElementById('reportEmpFilter').value;
+  const isAdmin = DB.profile && DB.profile.role === 'Admin';
+  const empFilter = isAdmin ? document.getElementById('reportEmpFilter').value : DB.profile.name;
   if(!month){ toast('Pick a month first','error'); return; }
-
+  
   let rows = DB.expenses.filter(e => (e.date||'').slice(0,7) === month);
   if(empFilter) rows = rows.filter(e=>e.employee===empFilter);
   rows.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
