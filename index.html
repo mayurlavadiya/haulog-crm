@@ -602,7 +602,8 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
 
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search by employee or category…" oninput="renderTable('expenses', this.value)"></div>
+          <h3>All Expense Claims</h3>
+          <div class="toolbar" style="margin-top:12px;"><input class="search-input" placeholder="Search by employee or category…" oninput="renderTable('expenses', this.value)"></div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-expenses"></tbody></table></div>
         </div>
       </section>
@@ -975,6 +976,8 @@ function attachListeners(){
     renderProfilePage();
     applyRoleGating();
     renderTable('expenses');
+    populateReportEmpFilter();
+    renderReportHistory();
   }, err=>console.error(err));
   unsubscribers.push(unsubProfile);
 
@@ -1333,12 +1336,13 @@ document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.i
 function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
   const cfg = MODULES[moduleKey];
   const tbody = document.getElementById(tbodyIdOverride || ('tbody-'+moduleKey));
+  if(!tbody) return;
   let thead = theadElOverride;
   if(!thead){
-    const wrap = document.querySelector('#page-'+moduleKey+' table');
-    thead = wrap ? wrap.querySelector('thead') : null;
+    const tableEl = tbody.closest('table');
+    thead = tableEl ? tableEl.querySelector('thead') : null;
   }
-  if(!tbody || !thead) return;
+  if(!thead) return;
   thead.innerHTML = '<tr>'+cfg.columns.map(c=>'<th>'+c.label+'</th>').join('')+'<th style="text-align:right">Actions</th></tr>';
 
   let rows = DB[moduleKey];
