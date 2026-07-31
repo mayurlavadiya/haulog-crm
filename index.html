@@ -1259,7 +1259,7 @@ function optionsFor(name){
   if(name==='industries') return DB.masters.industries;
   if(name==='branches') return DB.masters.branches;
   if(name==='employeeNames') return DB.employees.map(e=>e.name);
-  if(name==='leadCompanies') return [...new Set([...DB.leads.map(l=>l.company), ...DB.customers.map(c=>c.company)])];
+  if(name==='leadCompanies') return [...new Set([...myRecords('leads').map(l=>l.company), ...myRecords('customers').map(c=>c.company)])];
   if(name==='roleNames') return (DB.roles||[]).map(r=>r.name);
   return [];
 }
@@ -1331,6 +1331,32 @@ function togglePwVisibility(inputId, btn){
 document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.innerHTML = ICON_EYE; });
 
 /* =========================================================
+   RECORD OWNERSHIP SCOPING
+   Non-Admin users must only see/edit/delete records THEY
+   created. Admins see and manage everything.
+   NOTE: this is client-side UI scoping only. For real
+   security you must ALSO lock this down with Firestore
+   Security Rules (see bottom of file for a starting point),
+   otherwise a technical user can still read all documents
+   directly via the Firebase SDK / network tab.
+========================================================= */
+const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers'];
+function isAdmin(){ return !!(DB.profile && DB.profile.role === 'Admin'); }
+function myRecords(moduleKey){
+  const list = DB[moduleKey] || [];
+  if(!SCOPED_MODULES.includes(moduleKey)) return list;
+  if(isAdmin()) return list;
+  const uid = auth.currentUser && auth.currentUser.uid;
+  return list.filter(r => r.createdByUid === uid);
+}
+function ownsRecord(moduleKey, record){
+  if(!SCOPED_MODULES.includes(moduleKey)) return true;
+  if(isAdmin()) return true;
+  const uid = auth.currentUser && auth.currentUser.uid;
+  return !!record && record.createdByUid === uid;
+}
+
+/* =========================================================
    GENERIC TABLE RENDER
 ========================================================= */
 function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
@@ -1345,7 +1371,7 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
   if(!thead) return;
   thead.innerHTML = '<tr>'+cfg.columns.map(c=>'<th>'+c.label+'</th>').join('')+'<th style="text-align:right">Actions</th></tr>';
 
-  let rows = DB[moduleKey];
+  let rows = myRecords(moduleKey);
   if(moduleKey==='expenses' && (!DB.profile || DB.profile.role !== 'Admin')){
     const myName = DB.profile && DB.profile.name;
     rows = rows.filter(r=>r.employee===myName);
@@ -1386,6 +1412,8 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
 
 async function deleteRecord(moduleKey, id){
   const cfg = MODULES[moduleKey];
+  const record = DB[moduleKey].find(r=>r.id===id);
+  if(!ownsRecord(moduleKey, record)){ toast('You can only delete records you added','error'); return; }
   if(!confirm(`Delete this ${cfg.label.toLowerCase()}? This cannot be undone.`)) return;
   try{
     await db.collection(moduleKey).doc(id).delete();
@@ -1398,9 +1426,10 @@ async function deleteRecord(moduleKey, id){
 ========================================================= */
 let currentModule=null, currentEditId=null;
 function openForm(moduleKey, id){
-  currentModule = moduleKey; currentEditId = id||null;
   const cfg = MODULES[moduleKey];
   const record = id ? DB[moduleKey].find(r=>r.id===id) : {};
+  if(id && !ownsRecord(moduleKey, record)){ toast('You can only edit records you added','error'); return; }
+  currentModule = moduleKey; currentEditId = id||null;
   document.getElementById('modalTitle').textContent = (id? 'Edit ':'Add New ') + cfg.label;
 
   const body = document.getElementById('modalBody');
@@ -1614,6 +1643,7 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
       toast(cfg.label+' updated successfully','success');
     } else {
       data.createdBy = actor;
+      data.createdByUid = auth.currentUser && auth.currentUser.uid;
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection(currentModule).add(data);
       toast(cfg.label+' added successfully','success');
@@ -1633,7 +1663,7 @@ function renderKanban(){
   const stages = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Won'];
   const el = document.getElementById('leadsKanban');
   el.innerHTML = stages.map(s=>{
-    const rows = DB.leads.filter(l=>l.stage===s);
+    const rows = myRecords('leads').filter(l=>l.stage===s);
     const sum = rows.reduce((a,r)=>a+Number(r.value||0),0);
     return `<div class="kcol"><b>${s}</b><div class="cnt">${rows.length}</div><div class="amt">${fmtMoney(sum)}</div></div>`;
   }).join('');
@@ -1664,7 +1694,7 @@ function renderCalendar(){
   let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
   html += cells.map(c=>{
     const isToday = c.iso===todayStr;
-    const evts = c.iso? DB.meetings.filter(mt=>mt.date===c.iso) : [];
+    const evts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
     return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
       <span class="num">${c.d}</span>
       ${evts.map(e=>`<span class="evt" title="${e.title}">${e.title}</span>`).join('')}
@@ -1729,23 +1759,24 @@ let charts = {};
 function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 
 function updateCounts(){
-  document.getElementById('badgeLeads').textContent = DB.leads.length;
-  document.getElementById('leadsCount').textContent = DB.leads.length+' leads';
-  document.getElementById('callsCount').textContent = DB.calls.length+' calls logged';
-  document.getElementById('quotesCount').textContent = DB.quotations.length+' quotations';
-  document.getElementById('proposalsCount').textContent = DB.proposals.length+' proposals';
-  document.getElementById('expCount').textContent = DB.expenses.length+' claims';
+  document.getElementById('badgeLeads').textContent = myRecords('leads').length;
+  document.getElementById('leadsCount').textContent = myRecords('leads').length+' leads';
+  document.getElementById('callsCount').textContent = myRecords('calls').length+' calls logged';
+  document.getElementById('quotesCount').textContent = myRecords('quotations').length+' quotations';
+  document.getElementById('proposalsCount').textContent = myRecords('proposals').length+' proposals';
+  document.getElementById('expCount').textContent = (isAdmin()? DB.expenses : DB.expenses.filter(e=>e.employee===(DB.profile&&DB.profile.name))).length+' claims';
   document.getElementById('empCount').textContent = DB.employees.length+' employees';
-  document.getElementById('custCount').textContent = DB.customers.length+' customers';
+  document.getElementById('custCount').textContent = myRecords('customers').length+' customers';
 }
 
 function renderDashboard(){
-  const totalLeads = DB.leads.length;
-  const pipelineValue = DB.leads.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
-  const won = DB.leads.filter(l=>l.stage==='Won').length;
-  const closed = DB.leads.filter(l=>['Won','Lost'].includes(l.stage)).length;
+  const dashLeads = myRecords('leads');
+  const totalLeads = dashLeads.length;
+  const pipelineValue = dashLeads.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
+  const won = dashLeads.filter(l=>l.stage==='Won').length;
+  const closed = dashLeads.filter(l=>['Won','Lost'].includes(l.stage)).length;
   const winRate = closed? Math.round(won/closed*100) : 0;
-  const meetingsUpcoming = DB.meetings.filter(m=>m.date>=todayISO()).length;
+  const meetingsUpcoming = myRecords('meetings').filter(m=>m.date>=todayISO()).length;
 
   document.getElementById('kpiGrid').innerHTML = `
     <div class="card kpi"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="val">${totalLeads}</div><div class="lbl">Active Leads</div></div>
@@ -1756,7 +1787,7 @@ function renderDashboard(){
 
   // Revenue trend by month of expectedClosing
   const monthMap = {};
-  DB.leads.forEach(l=>{ const m=(l.expectedClosing||'').slice(0,7); if(!m) return; monthMap[m]=(monthMap[m]||0)+Number(l.value||0); });
+  dashLeads.forEach(l=>{ const m=(l.expectedClosing||'').slice(0,7); if(!m) return; monthMap[m]=(monthMap[m]||0)+Number(l.value||0); });
   const months = Object.keys(monthMap).sort();
   destroyChart('rev');
   charts.rev = new Chart(document.getElementById('chartRevenue'), {
@@ -1766,7 +1797,7 @@ function renderDashboard(){
   });
 
   const srcMap={};
-  DB.leads.forEach(l=>srcMap[l.source]=(srcMap[l.source]||0)+1);
+  dashLeads.forEach(l=>srcMap[l.source]=(srcMap[l.source]||0)+1);
   destroyChart('src');
   charts.src = new Chart(document.getElementById('chartSource'), {
     type:'doughnut',
@@ -1775,7 +1806,7 @@ function renderDashboard(){
   });
 
   document.getElementById('pipelineSub').textContent = totalLeads+' leads across '+STAGES.length+' stages';
-  const stageCounts = STAGES.map(s=>DB.leads.filter(l=>l.stage===s).length);
+  const stageCounts = STAGES.map(s=>dashLeads.filter(l=>l.stage===s).length);
   destroyChart('pipe');
   charts.pipe = new Chart(document.getElementById('chartPipeline'), {
     type:'bar',
@@ -1785,9 +1816,9 @@ function renderDashboard(){
 
   // activity feed (derived, most recent records across modules)
   const feedItems = [
-    ...DB.leads.slice(-3).map(l=>({t:`New lead: ${l.company} (${l.stage})`})),
-    ...DB.calls.slice(-2).map(c=>({t:`Call logged with ${c.lead} — ${c.outcome}`})),
-    ...DB.quotations.slice(-2).map(q=>({t:`Quotation ${q.quoteNo} · ${q.company} · ${q.status}`}))
+    ...dashLeads.slice(-3).map(l=>({t:`New lead: ${l.company} (${l.stage})`})),
+    ...myRecords('calls').slice(-2).map(c=>({t:`Call logged with ${c.lead} — ${c.outcome}`})),
+    ...myRecords('quotations').slice(-2).map(q=>({t:`Quotation ${q.quoteNo} · ${q.company} · ${q.status}`}))
   ].slice(-6).reverse();
   document.getElementById('activityFeed').innerHTML = feedItems.length? feedItems.map(f=>`<div style="font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line)">${f.t}</div>`).join('') : '<div class="sub">No activity yet — start by adding a lead.</div>';
 }
@@ -2409,7 +2440,7 @@ async function deleteRole(roleId, roleName){
 function globalSearch(val){
   if(!val) return;
   // simple heuristic: if it matches a lead company, go to leads
-  const hit = DB.leads.find(l=>l.company.toLowerCase().includes(val.toLowerCase()));
+  const hit = myRecords('leads').find(l=>l.company.toLowerCase().includes(val.toLowerCase()));
   if(hit){ go('leads'); const inp=document.querySelector('#page-leads .search-input'); inp.value=val; renderTable('leads', val); }
 }
 
