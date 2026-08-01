@@ -36,15 +36,24 @@
   --radius:16px; --shadow:0 8px 24px rgba(10,11,31,.06),0 1px 2px rgba(10,11,31,.06);
 }
 [data-theme="dark"]{
-  --blue:#4D6BFF; --blue-dark:#3652D9; --blue-deep:#0A0F3D;
-  --blue-50:#1A1D3F; --blue-100:#262A54; --blue-200:#3A3F78;
-  --ink:#EEEFFA; --ink-soft:#A3A6C9; --line:#2B2E52;
-  --paper:#15172E; --bg:#0B0C1E; --field-bg:#1B1D3D;
-  --green:#3DD68C; --amber:#FFB454; --red:#FF6B60;
-  --green-bg:rgba(61,214,140,.14); --amber-bg:rgba(255,180,84,.14); --red-bg:rgba(255,107,96,.14); --grey-bg:rgba(163,166,201,.12);
-  --shadow:0 8px 24px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.3);
+  --blue:#7C6FFF; --blue-dark:#6657E6; --blue-deep:#4A3FB0;
+  --blue-50:rgba(124,111,255,.12); --blue-100:rgba(124,111,255,.22); --blue-200:rgba(124,111,255,.36);
+  --ink:#F2F0FB; --ink-soft:#9C99BE; --line:#242142;
+  --paper:#100E20; --bg:#07060F; --field-bg:#161329;
+  --green:#34D399; --amber:#FBBF4A; --red:#FB7185;
+  --green-bg:rgba(52,211,153,.14); --amber-bg:rgba(251,191,74,.14); --red-bg:rgba(251,113,133,.14); --grey-bg:rgba(156,153,190,.12);
+  --shadow:0 8px 28px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4);
 }
-[data-theme="dark"] body{ background:var(--bg); }
+[data-theme="dark"] body{ background:
+    radial-gradient(900px 500px at 15% -5%, rgba(124,111,255,.16), transparent 60%),
+    radial-gradient(700px 420px at 100% 15%, rgba(124,111,255,.10), transparent 55%),
+    var(--bg);
+}
+[data-theme="dark"] .sidebar{ background:linear-gradient(180deg,#0C0A1C 0%,#1B1638 100%); }
+[data-theme="dark"] .hero{ background:linear-gradient(120deg,#5B4FE0 0%,#7C6FFF 55%,#9C8CFF 100%); }
+[data-theme="dark"] .btn-primary{ box-shadow:0 8px 22px rgba(124,111,255,.32); }
+[data-theme="dark"] .modal{ box-shadow:0 30px 80px rgba(0,0,0,.55); }
+[data-theme="dark"] .login-loading{ color:rgba(255,255,255,.85); }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .2s ease,color .2s ease;}
@@ -763,8 +772,8 @@ tbody tr:hover{background:var(--blue-50);}
               <div class="two-col" style="margin-top:16px;">
                 <div class="field"><label>Full Name <span class="req">*</span></label><input id="profName" required></div>
                 <div class="field"><label>Phone</label><input id="profPhone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" placeholder="10-digit number"></div>
-                <div class="field"><label>Email</label><input id="profEmail" disabled style="background:#F3F4F8;"></div>
-                <div class="field"><label>Role</label><input id="profRole" disabled style="background:#F3F4F8;"></div>
+                <div class="field"><label>Email</label><input id="profEmail" disabled style="background:var(--grey-bg);"></div>
+                <div class="field"><label>Role</label><input id="profRole" disabled style="background:var(--grey-bg);"></div>
               </div>
               <p class="sub" style="margin:-8px 0 14px;">Email and role can only be changed by an Admin.</p>
               <button class="btn-primary" type="submit">Save Profile</button>
@@ -2064,6 +2073,7 @@ function updateCounts(){
 }
 
 function renderDashboard(){
+  const tc = themeColors();
   const dashLeads = myRecords('leads');
   const totalLeads = dashLeads.length;
   const pipelineValue = dashLeads.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
@@ -2086,8 +2096,8 @@ function renderDashboard(){
   destroyChart('rev');
   charts.rev = new Chart(document.getElementById('chartRevenue'), {
     type:'line',
-    data:{labels:months.map(m=>m), datasets:[{label:'Expected Value', data:months.map(m=>monthMap[m]/100000), borderColor:'#0000FE', backgroundColor:'rgba(0,0,254,.10)', fill:true, tension:.4, borderWidth:2.5, pointRadius:3}]},
-    options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:'#EEF0FF'}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+    data:{labels:months.map(m=>m), datasets:[{label:'Expected Value', data:months.map(m=>monthMap[m]/100000), borderColor:tc.accent, backgroundColor:tc.accentSoft, fill:true, tension:.4, borderWidth:2.5, pointRadius:3}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:tc.grid}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
   });
 
   const srcMap={};
@@ -2095,7 +2105,7 @@ function renderDashboard(){
   destroyChart('src');
   charts.src = new Chart(document.getElementById('chartSource'), {
     type:'doughnut',
-    data:{labels:Object.keys(srcMap), datasets:[{data:Object.values(srcMap), backgroundColor:['#0000FE','#4245FF','#8A8DFF','#B9C0FF','#DDE1FF','#05007A'], borderWidth:0}]},
+    data:{labels:Object.keys(srcMap), datasets:[{data:Object.values(srcMap), backgroundColor:tc.palette, borderWidth:0}]},
     options:{cutout:'68%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
   });
 
@@ -2105,8 +2115,8 @@ function renderDashboard(){
   destroyChart('pipe');
   charts.pipe = new Chart(document.getElementById('chartPipeline'), {
     type:'bar',
-    data:{labels:chartStages, datasets:[{data:stageCounts, backgroundColor:'#0000FE', borderRadius:8, maxBarThickness:32}]},
-    options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#EEF0FF'}, ticks:{stepSize:1}}, x:{grid:{display:false}, ticks:{font:{size:10}}}}, responsive:true, maintainAspectRatio:false}
+    data:{labels:chartStages, datasets:[{data:stageCounts, backgroundColor:tc.accent, borderRadius:8, maxBarThickness:32}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:tc.grid}, ticks:{stepSize:1}}, x:{grid:{display:false}, ticks:{font:{size:10}}}}, responsive:true, maintainAspectRatio:false}
   });
 
   // activity feed (derived, most recent records across modules)
@@ -2118,23 +2128,33 @@ function renderDashboard(){
   document.getElementById('activityFeed').innerHTML = feedItems.length? feedItems.map(f=>`<div style="font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer;" onclick="go('${f.page}')">${f.t}</div>`).join('') : '<div class="sub">No activity yet — start by adding a lead.</div>';
 }
 
+function themeColors(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  return dark
+    ? { accent:'#7C6FFF', accentSoft:'rgba(124,111,255,.16)', grid:'rgba(255,255,255,.07)',
+        palette:['#7C6FFF','#9C8CFF','#B9AEFF','#5B4FE0','#4A3FB0','#D8CFFF'] }
+    : { accent:'#0000FE', accentSoft:'rgba(0,0,254,.10)', grid:'#EEF0FF',
+        palette:['#0000FE','#4245FF','#8A8DFF','#B9C0FF','#DDE1FF','#05007A'] };
+}
+
 function renderReports(){
+  const tc = themeColors();
   destroyChart('target');
   charts.target = new Chart(document.getElementById('chartTarget'), {
     type:'bar',
     data:{labels:DB.employees.map(e=>e.name.split(' ')[0]),
       datasets:[
-        {label:'Target', data:DB.employees.map(e=>e.target/100000), backgroundColor:'#DDE1FF', borderRadius:8},
-        {label:'Achieved', data:DB.employees.map(e=>e.achieved/100000), backgroundColor:'#0000FE', borderRadius:8}
+        {label:'Target', data:DB.employees.map(e=>e.target/100000), backgroundColor:tc.palette[2], borderRadius:8},
+        {label:'Achieved', data:DB.employees.map(e=>e.achieved/100000), backgroundColor:tc.accent, borderRadius:8}
       ]},
-    options:{plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:'#EEF0FF'}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+    options:{plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:tc.grid}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
   });
   const catMap={};
   DB.expenses.forEach(e=>catMap[e.category]=(catMap[e.category]||0)+Number(e.amount||0));
   destroyChart('exp');
   charts.exp = new Chart(document.getElementById('chartExpense'), {
     type:'pie',
-    data:{labels:Object.keys(catMap), datasets:[{data:Object.values(catMap), backgroundColor:['#0000FE','#4245FF','#8A8DFF','#B9C0FF','#DDE1FF','#05007A'], borderWidth:0}]},
+    data:{labels:Object.keys(catMap), datasets:[{data:Object.values(catMap), backgroundColor:tc.palette, borderWidth:0}]},
     options:{plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
   });
 }
@@ -2256,8 +2276,8 @@ function renderAdminPanel(){
       <td>${fmtMoney(e.amount)}</td>
       <td>${e.date||'—'}</td>
       <td><div class="row-actions" style="justify-content:flex-end">
-        <button class="btn-sm" style="background:#E9FBF2;color:var(--green);border-color:#BEEBD2;" onclick="setExpenseStatus('${e.id}','Approved')">Approve</button>
-        <button class="btn-sm" style="background:#FEEEEC;color:var(--red);border-color:#FBD5D0;" onclick="setExpenseStatus('${e.id}','Rejected')">Reject</button>
+        <button class="btn-sm" style="background:var(--green-bg);color:var(--green);border-color:var(--green-bg);" onclick="setExpenseStatus('${e.id}','Approved')">Approve</button>
+        <button class="btn-sm" style="background:var(--red-bg);color:var(--red);border-color:var(--red-bg);" onclick="setExpenseStatus('${e.id}','Rejected')">Reject</button>
       </div></td>
     </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state">No pending expense claims — you're all caught up.</div></td></tr>`;
 
