@@ -880,6 +880,8 @@ const auth = firebase.auth();
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
 const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers'];
+// collections that Firestore rules restrict to owner-or-Admin (must query with a matching where clause)
+const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers'];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -911,17 +913,44 @@ function setSyncStatus(state){
   txt.textContent = state==='busy' ? 'Syncing…' : state==='off' ? 'Offline' : 'Live';
 }
 
-function attachListeners(){
-  detachListeners();
-  setSyncStatus('busy');
-  COLLECTIONS.forEach(col=>{
-    const unsub = db.collection(col).onSnapshot(snap=>{
+let dataUnsubscribers = [];
+let lastSubscribedAsAdmin = null;
+function detachDataListeners(){ dataUnsubscribers.forEach(u=>u()); dataUnsubscribers=[]; }
+
+// leads/calls/meetings/quotations/proposals/expenses/customers are owner-scoped in
+// firestore.rules (read allowed only if createdByUid==uid or Admin). A query without
+// a matching where() clause gets rejected outright, so non-Admins must query with
+// .where('createdByUid','==', uid) — Admins query the full collection.
+function subscribeDataCollections(){
+  detachDataListeners();
+  const admin = isAdmin();
+  lastSubscribedAsAdmin = admin;
+  const uid = auth.currentUser && auth.currentUser.uid;
+  QUERY_SCOPED_MODULES.forEach(col=>{
+    let ref = db.collection(col);
+    if(!admin) ref = ref.where('createdByUid','==', uid);
+    const unsub = ref.onSnapshot(snap=>{
       DB[col] = snap.docs.map(d=>({id:d.id, ...d.data()}));
       onDataChange();
       setSyncStatus('on');
     }, err=>{ console.error(col, err); setSyncStatus('off'); toast('Sync error: '+err.message,'error'); });
-    unsubscribers.push(unsub);
+    dataUnsubscribers.push(unsub);
   });
+}
+
+function attachListeners(){
+  detachListeners();
+  detachDataListeners();
+  setSyncStatus('busy');
+
+  const unsubEmployees = db.collection('employees').onSnapshot(snap=>{
+    DB.employees = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    onDataChange();
+    setSyncStatus('on');
+  }, err=>{ console.error('employees', err); setSyncStatus('off'); toast('Sync error: '+err.message,'error'); });
+  unsubscribers.push(unsubEmployees);
+
+  subscribeDataCollections(); // initial pass — filtered by uid until profile/role loads below
   const unsubMasters = db.collection('meta').doc('masters').onSnapshot(doc=>{
     if(doc.exists) DB.masters = doc.data();
     else db.collection('meta').doc('masters').set(DB.masters);
@@ -975,6 +1004,7 @@ function attachListeners(){
     }
     renderProfilePage();
     applyRoleGating();
+    if(isAdmin() !== lastSubscribedAsAdmin) subscribeDataCollections();
     renderTable('expenses');
     populateReportEmpFilter();
     renderReportHistory();
@@ -993,7 +1023,7 @@ function attachListeners(){
   }, err=>console.error(err));
   unsubscribers.push(unsubReportLogs);
 }
-function detachListeners(){ unsubscribers.forEach(u=>u()); unsubscribers=[]; }
+function detachListeners(){ unsubscribers.forEach(u=>u()); unsubscribers=[]; detachDataListeners(); }
 
 let renderQueued = false;
 function onDataChange(){
