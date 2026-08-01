@@ -771,6 +771,15 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="card">
             <h3>Profile Details</h3>
             <form id="profileForm" onsubmit="saveProfile(event)">
+              <div class="field" style="margin-top:16px;display:flex;align-items:center;gap:14px;">
+                <img id="profPhotoPreview" src="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--blue-100);">
+                <div class="av" id="profPhotoInitials" style="width:56px;height:56px;background:var(--blue);color:#fff;font-size:18px;">?</div>
+                <div>
+                  <button type="button" class="btn-sm" onclick="document.getElementById('profPhotoInput').click()">Upload Photo</button>
+                  <input type="file" id="profPhotoInput" accept="image/*" style="display:none;" onchange="handleProfilePhoto(this.files[0])">
+                  <div class="hint" style="margin-top:4px;">JPG/PNG, auto-compressed</div>
+                </div>
+              </div>
               <div class="two-col" style="margin-top:16px;">
                 <div class="field"><label>Full Name <span class="req">*</span></label><input id="profName" required></div>
                 <div class="field"><label>Phone</label><input id="profPhone" type="tel" maxlength="10" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" placeholder="10-digit number"></div>
@@ -1392,6 +1401,7 @@ const MODULES = {
   users:{
     label:'User', idKey:'id',
     columns:[
+      {key:'photoURL', label:'Photo', fmt:(v,r)=> v ? `<img src="${v}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<div class="av" style="width:32px;height:32px;font-size:11px;background:var(--blue-50);color:var(--blue);">${(r.name||'?').slice(0,2).toUpperCase()}</div>`},
       {key:'name', label:'Name'},
       {key:'email', label:'Email'},
       {key:'phone', label:'Phone'},
@@ -1699,6 +1709,16 @@ function fileToDataUrl(file){
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+async function handleProfilePhoto(file){
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Please select an image file','error'); return; }
+  try{
+    const dataUrl = await compressImage(file, 300, 0.75);
+    await db.collection('users').doc(auth.currentUser.uid).set({photoURL:dataUrl}, {merge:true});
+    toast('Profile photo updated','success');
+  }catch(err){ toast('Failed to upload photo: '+err.message,'error'); }
 }
 
 function compressImage(file, maxWidth=1000, quality=0.7){
@@ -2280,6 +2300,12 @@ function renderProfilePage(){
   document.getElementById('profRole').value = role;
   document.getElementById('profNameDisplay').textContent = name || '—';
   document.getElementById('profAvatarBig').textContent = (name || '?').slice(0,2).toUpperCase();
+  const photoPrev = document.getElementById('profPhotoPreview');
+  const photoInit = document.getElementById('profPhotoInitials');
+  if(photoPrev && photoInit){
+    if(p.photoURL){ photoPrev.src = p.photoURL; photoPrev.style.display='block'; photoInit.style.display='none'; }
+    else { photoPrev.style.display='none'; photoInit.style.display='flex'; photoInit.textContent = (name||'?').slice(0,2).toUpperCase(); }
+  }
   document.getElementById('profRoleBadgeWrap').innerHTML = role ? `<span class="pill blue">${role}</span>` : '';
 }
 
@@ -2293,7 +2319,8 @@ async function saveProfile(e){
     await db.collection('users').doc(auth.currentUser.uid).set({name, phone}, {merge:true});
     if(auth.currentUser.displayName !== name){ await auth.currentUser.updateProfile({displayName:name}); }
     document.getElementById('userName').textContent = name;
-    document.getElementById('userAvatar').textContent = name.slice(0,2).toUpperCase();
+    const sidebarAv = document.getElementById('userAvatar');
+    sidebarAv.innerHTML = DB.profile.photoURL ? `<img src="${DB.profile.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : name.slice(0,2).toUpperCase();
     toast('Profile updated','success');
   }catch(err){ toast('Failed to save: '+err.message,'error'); }
 }
@@ -3085,6 +3112,7 @@ auth.onAuthStateChanged(user=>{
     document.getElementById('userName').textContent = label;
     document.getElementById('userEmail').textContent = user.email;
     document.getElementById('userAvatar').textContent = label.slice(0,2).toUpperCase();
+    if(DB.profile && DB.profile.photoURL) document.getElementById('userAvatar').innerHTML = `<img src="${DB.profile.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
     Chart.defaults.font.family = "Inter";
     Chart.defaults.color = "#4B4D6B";
     const hr = new Date().getHours();
