@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+  return isSignedIn() &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Admin','Super Admin'];
+}
+    function isOwnerOnCreate() {
+      return isSignedIn() && request.resource.data.createdByUid == request.auth.uid;
+    }
+    function isOwnerOfExisting() {
+      return isSignedIn() && resource.data.createdByUid == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdmin() ||
+        (isSignedIn() && request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+   match /roles/{roleId} {
+  allow read: if isSignedIn();
+  allow create, update, delete: if isAdmin();
+}
+match /meta/appConfig {
+  allow read: if true;
+  allow write: if isAdmin();
+}
+match /meta/masters {
+  allow read: if isSignedIn();
+  allow write: if isSignedIn();
+}
+match /meta/{docId} {
+  allow read: if isSignedIn();
+  allow write: if isAdmin();
+}
+match /leads/{id} {
+  allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+  allow create: if isAdmin() || isOwnerOnCreate();
+}
+match /contacts/{id} {
+  allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+  allow create: if isAdmin() || isOwnerOnCreate();
+}
+    match /calls/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+    match /meetings/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+    match /quotations/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+    match /proposals/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+    match /customers/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+    match /expenses/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+
+    match /employees/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.email.lower() == request.auth.token.email.lower());
+      allow write: if isAdmin();
+    }
+
+    match /expenseReportLogs/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+  }
+}
