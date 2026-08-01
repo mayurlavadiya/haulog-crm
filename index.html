@@ -553,6 +553,7 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="head-actions">
             <button class="btn-ghost" onclick="shiftMonth(-1)">‹ Prev</button>
             <button class="btn-ghost" onclick="shiftMonth(1)">Next ›</button>
+            <button class="btn-ghost" onclick="openForm('calls')">+ New Call</button>
             <button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button>
           </div>
         </div>
@@ -1902,16 +1903,18 @@ function renderCalendar(){
   let cells = [];
   for(let i=startDow-1;i>=0;i--) cells.push({d:daysInPrev-i, muted:true});
   for(let d=1; d<=daysInMonth; d++) cells.push({d, muted:false, iso:`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`});
-  while(cells.length % 7 !== 0) cells.push({d:cells.length, muted:true});
+  let nextDay = 1;   while(cells.length % 7 !== 0) cells.push({d:nextDay++, muted:true});
 
   const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
   html += cells.map(c=>{
     const isToday = c.iso===todayStr;
     const evts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
+    const dayCalls = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso) : [];
     return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
       <span class="num">${c.d}</span>
       ${evts.map(e=>`<span class="evt" style="cursor:pointer" onclick="openCalendarEvent('${e.id}')" title="${e.title} — click to open">${e.title}</span>`).join('')}
+      ${dayCalls.map(cl=>`<span class="evt" style="cursor:pointer;background:var(--green);" onclick="openCallDetail('${cl.id}')" title="Call — ${cl.lead} — click to open">📞 ${cl.lead}</span>`).join('')}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
