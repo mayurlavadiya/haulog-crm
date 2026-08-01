@@ -373,7 +373,7 @@ tbody tr:hover{background:var(--blue-50);}
 </div>
 
 <div class="modal-bg" id="callDetailModalBg">
-  <div class="modal" style="max-width:640px;">
+  <div class="modal" style="max-width:920px;width:92vw;max-height:88vh;overflow-y:auto;">
     <div class="modal-head">
       <h3 id="callDetailTitle">Call Details</h3>
       <button class="modal-close" onclick="closeCallDetail()">✕</button>
@@ -1179,7 +1179,7 @@ const MODULES = {
       {key:'date', label:'Call Date', fmt:v=>v||'—'},
       {key:'type', label:'Type', pill:t=>({Incoming:'green',Outgoing:'blue',Missed:'red'}[t]||'grey')},
       {key:'duration', label:'Duration'},
-      {key:'outcome', label:'Outcome'},
+      {key:'outcome', label:'Last Remarks', fmt:(v,r)=>lastCallRemark(r)},
       {key:'nextFollowUp', label:'Next Follow-up', fmt:(v,r)=> v ? v + (r.nextFollowUpTime? ' · '+r.nextFollowUpTime : '') : '—'}
     ],
     fields:[
@@ -1187,7 +1187,7 @@ const MODULES = {
       {key:'date', label:'Call Date', type:'date', required:true},
       {key:'type', label:'Call Type', type:'select', options:['Incoming','Outgoing','Missed'], required:true},
       {key:'duration', label:'Duration (mm:ss)', type:'text', required:true, pattern:/^[0-9]{1,2}:[0-5][0-9]$/, patternMsg:'Use format mm:ss e.g. 4:32'},
-      {key:'outcome', label:'Call Outcome', type:'text', required:true},
+      {key:'outcome', label:'Last Remarks', type:'text', required:true},
       {key:'nextFollowUp', label:'Next Follow-up Date', type:'date'},
       {key:'nextFollowUpTime', label:'Next Follow-up Time', type:'time'}
     ]
@@ -1329,6 +1329,11 @@ function optionsFor(name){
   return [];
 }
 function fmtMoney(v){ v = Number(v)||0; if(v>=100000) return '₹'+(v/100000).toFixed(1)+'L'; return '₹'+v.toLocaleString('en-IN'); }
+function lastCallRemark(call){
+  const fu = call.followUps || [];
+  if(fu.length) return fu[fu.length-1].remarks || call.outcome || '—';
+  return call.outcome || '—';
+}
 function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','Demo Scheduled':'amber','Proposal Sent':'blue',Negotiation:'amber',Won:'green',Lost:'red'}[s]||'grey'); }
 
 /* =========================================================
@@ -1678,7 +1683,7 @@ async function syncCallFollowUpMeeting(callId, callData){
     type: 'Call',
     date: callData.nextFollowUp,
     time: callData.nextFollowUpTime || '10:00',
-    notes: callData.outcome ? `Last outcome: ${callData.outcome}` : '',
+    notes: callData.outcome ? `Last remark: ${callData.outcome}` : '',
     linkedCallId: callId
   };
   try{
@@ -1797,7 +1802,7 @@ function renderCallDetailBody(call){
     ? companyCalls.map(c=>`<tr>
         <td>${c.date||'—'}</td>
         <td><span class="pill ${({Incoming:'green',Outgoing:'blue',Missed:'red'}[c.type]||'grey')}">${c.type||'—'}</span></td>
-        <td>${c.duration||'—'}</td><td>${c.outcome||'—'}</td>
+        <td>${c.duration||'—'}</td><td>${lastCallRemark(c)}</td>
         <td>${c.nextFollowUp||'—'}${c.nextFollowUpTime?' · '+c.nextFollowUpTime:''}</td>
       </tr>`).join('')
     : `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">No calls found</td></tr>`;
@@ -1819,7 +1824,7 @@ function renderCallDetailBody(call){
 
     <h4 style="margin:22px 0 4px;">All Calls with ${call.lead||'this company'} <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(${companyCalls.length})</span></h4>
     <div class="table-wrap"><table>
-      <thead><tr><th>Date</th><th>Type</th><th>Duration</th><th>Outcome</th><th>Next Follow-up</th></tr></thead>
+      <thead><tr><th>Date</th><th>Type</th><th>Duration</th><th>Last Remarks</th><th>Next Follow-up</th></tr></thead>
       <tbody>${historyRows}</tbody>
     </table></div>
   `;
