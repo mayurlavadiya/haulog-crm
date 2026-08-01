@@ -54,6 +54,17 @@
 [data-theme="dark"] .btn-primary{ box-shadow:0 8px 22px rgba(124,111,255,.32); }
 [data-theme="dark"] .modal{ box-shadow:0 30px 80px rgba(0,0,0,.55); }
 [data-theme="dark"] .login-loading{ color:rgba(255,255,255,.85); }
+/* Login screen is pre-auth branded UI (blue gradient + white card) and
+   should stay readable regardless of the in-app dark/light toggle —
+   re-declare the light palette scoped to it so nothing inherits dark values. */
+.login-screen{
+  --ink:#0A0B1F; --ink-soft:#4B4D6B; --line:#E4E6F7;
+  --paper:#FFFFFF; --bg:#F5F6FC; --field-bg:#FBFBFF;
+  --blue:#0000FE; --blue-dark:#0000B4; --blue-deep:#05007A;
+  --blue-50:#EEF0FF; --blue-100:#DDE1FF; --blue-200:#B9C0FF;
+  --green:#12B76A; --amber:#F79009; --red:#F04438;
+  --green-bg:#E9FBF2; --amber-bg:#FFF6E9; --red-bg:#FEEEEC; --grey-bg:#EEF0F5;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .2s ease,color .2s ease;}
