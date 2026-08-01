@@ -1357,7 +1357,7 @@ function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
   const match = (DB.roles||[]).find(r=>r.name===roleName);
   const base = match ? match.permissions : ((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions);
-  const forced = ['profile','myreports','sitemap'];
+  const forced = ['profile','myreports','sitemap','calendar'];
   return [...new Set([...base, ...forced])];
 }
 
@@ -1911,11 +1911,22 @@ function renderCalendar(){
     const evts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
     return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
       <span class="num">${c.d}</span>
-      ${evts.map(e=>`<span class="evt" title="${e.title}">${e.title}</span>`).join('')}
+      ${evts.map(e=>`<span class="evt" style="cursor:pointer" onclick="openCalendarEvent('${e.id}')" title="${e.title} — click to open">${e.title}</span>`).join('')}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
   renderTable('meetings');
+}
+
+function openCalendarEvent(meetingId){
+  const m = DB.meetings.find(x=>x.id===meetingId);
+  if(!m){ toast('Event not found','error'); return; }
+  if(m.linkedCallId){
+    const call = DB.calls.find(c=>c.id===m.linkedCallId);
+    if(call){ openCallDetail(call.id); return; }
+  }
+  openForm('meetings', meetingId);
+}
 }
 
 /* =========================================================
@@ -2563,11 +2574,10 @@ async function saveConfig(e){
    ROLES & RESPONSIBILITIES
 ========================================================= */
 const PAGE_LABELS = {
-  dashboard:'Dashboard', leads:'Leads', calls:'Calls', meetings:'Calendar', quotations:'Quotations',
+  dashboard:'Dashboard', leads:'Leads', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
   reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
 };
-
 const MODULE_TILES = [
   {id:'dashboard', title:'Dashboard', desc:'KPIs, pipeline health and today\'s activity.'},
   {id:'leads', title:'Leads & Prospects', desc:'Capture, qualify and progress every opportunity.'},
