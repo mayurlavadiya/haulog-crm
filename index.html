@@ -662,6 +662,7 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="card"><h3>Lead Sources</h3><div class="tag-list" id="tags-sources"></div><div class="add-row"><input id="add-sources" placeholder="Add new source…"><button class="btn-sm" onclick="addMaster('sources')">Add</button></div></div>
           <div class="card"><h3>Industries</h3><div class="tag-list" id="tags-industries"></div><div class="add-row"><input id="add-industries" placeholder="Add new industry…"><button class="btn-sm" onclick="addMaster('industries')">Add</button></div></div>
           <div class="card"><h3>Branches</h3><div class="tag-list" id="tags-branches"></div><div class="add-row"><input id="add-branches" placeholder="Add new branch…"><button class="btn-sm" onclick="addMaster('branches')">Add</button></div></div>
+          <div class="card"><h3>Lead Stages</h3><div class="tag-list" id="tags-stages"></div><div class="add-row"><input id="add-stages" placeholder="Add new stage…"><button class="btn-sm" onclick="addMaster('stages')">Add</button></div></div>
         </div>
 
         <div class="card" style="margin-top:18px;">
@@ -889,7 +890,7 @@ function inNdays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toIS
 
 let DB = {
   settings:{ companyName:'Haulog Technologies Pvt. Ltd.', email:'sales@haulog.com', currency:'₹', fy:'April' },
-  masters:{ sources:['Website','Referral','Exhibition','Cold Call','LinkedIn'], industries:['Manufacturer','Solar EPC','FMCG','Textiles','Ceramics','Plastics'], branches:['Rajkot HQ','Ahmedabad','Surat','Vadodara'] },
+  masters:{ sources:['Website','Referral','Exhibition','Cold Call','LinkedIn'], industries:['Manufacturer','Solar EPC','FMCG','Textiles','Ceramics','Plastics'], branches:['Rajkot HQ','Ahmedabad','Surat','Vadodara'], stages:[...STAGES] },
   employees:[], leads:[], calls:[], meetings:[], quotations:[], proposals:[], expenses:[], customers:[],
   profile:{ name:'', email:'', role:'', phone:'', status:'Active' }, users:[],
   roles:[], appConfig:{ selfSignupEnabled:true, idleTimeoutMinutes:45, defaultNewUserRole:'Sales Executive' }, reportLogs:[]
@@ -948,7 +949,7 @@ function attachListeners(){
 
   subscribeDataCollections(); // initial pass — filtered by uid until profile/role loads below
   const unsubMasters = db.collection('meta').doc('masters').onSnapshot(doc=>{
-    if(doc.exists) DB.masters = doc.data();
+    if(doc.exists) DB.masters = {sources:[], industries:[], branches:[], stages:[...STAGES], ...doc.data()};
     else db.collection('meta').doc('masters').set(DB.masters);
     onDataChange();
   }, err=>console.error(err));
@@ -1151,10 +1152,10 @@ const MODULES = {
       {key:'phone', label:'Phone', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
       {key:'industry', label:'Industry', type:'select', optionsFrom:'industries', required:true},
       {key:'source', label:'Lead Source', type:'select', optionsFrom:'sources', required:true},
-      {key:'stage', label:'Stage', type:'select', options:STAGES, required:true},
+      {key:'stage', label:'Stage', type:'select', optionsFrom:'stages', required:true},
       {key:'owner', label:'Owner', type:'select', optionsFrom:'employeeNames', required:true},
-      {key:'expectedClosing', label:'Expected Closing', type:'date', required:true},
-      {key:'value', label:'Deal Value (₹)', type:'number', required:true, min:1},
+      {key:'expectedClosing', label:'Expected Closing', type:'date'},
+      {key:'value', label:'Deal Value (₹)', type:'number', min:1},
       {key:'notes', label:'Notes', type:'textarea'}
     ]
   },
@@ -1304,6 +1305,7 @@ const MODULES = {
 function optionsFor(name){
   if(name==='sources') return DB.masters.sources;
   if(name==='industries') return DB.masters.industries;
+  if(name==='stages') return DB.masters.stages && DB.masters.stages.length ? DB.masters.stages : STAGES;
   if(name==='branches') return DB.masters.branches;
   if(name==='employeeNames') return DB.employees.map(e=>e.name);
   if(name==='leadCompanies') return [...new Set([...myRecords('leads').map(l=>l.company), ...myRecords('customers').map(c=>c.company)])];
@@ -1491,16 +1493,17 @@ function openForm(moduleKey, id){
     if(f.type==='select'){
       let opts = f.options || optionsFor(f.optionsFrom);
       let lockedVal = val;
-      if(moduleKey==='expenses' && f.key==='employee' && !isAdmin()){
-        opts = [DB.profile.name];
+      if(f.optionsFrom==='employeeNames' && !isAdmin()){
+        // Non-Admins can only ever be the owner/employee on their own new records
+        opts = DB.profile && DB.profile.name ? [DB.profile.name] : opts;
         lockedVal = DB.profile.name;
       }
-      if(!id && !lockedVal && f.optionsFrom==='employeeNames' && DB.profile && DB.profile.name && opts.includes(DB.profile.name)){
-        lockedVal = DB.profile.name;
-      }
-      input = `<select name="${f.key}" data-required="${!!f.required}">
+      const MASTER_BACKED = ['sources','industries','stages'];
+      const isMasterBacked = MASTER_BACKED.includes(f.optionsFrom);
+      input = `<select name="${f.key}" data-required="${!!f.required}" ${isMasterBacked?`onchange="handleAddNewOption(this,'${f.optionsFrom}')"`:''}>
         <option value="">Select ${f.label}</option>
         ${opts.map(o=>`<option value="${o}" ${String(o).trim()===String(lockedVal||'').trim()?'selected':''}>${o}</option>`).join('')}
+        ${isMasterBacked?'<option value="__add_new__">+ Add new…</option>':''}
       </select>`;
     } else if(f.type==='textarea'){
       input = `<textarea name="${f.key}">${val}</textarea>`;
@@ -1718,7 +1721,8 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
    LEADS KANBAN
 ========================================================= */
 function renderKanban(){
-  const stages = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Won'];
+  const allStages = (DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES;
+  const stages = allStages.filter(s=>s!=='Lost');
   const el = document.getElementById('leadsKanban');
   el.innerHTML = stages.map(s=>{
     const rows = myRecords('leads').filter(l=>l.stage===s);
@@ -1726,7 +1730,7 @@ function renderKanban(){
     return `<div class="kcol"><b>${s}</b><div class="cnt">${rows.length}</div><div class="amt">${fmtMoney(sum)}</div></div>`;
   }).join('');
   const sel = document.getElementById('leadsStageFilter');
-  sel.innerHTML = '<option value="">All Stages</option>' + STAGES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  sel.innerHTML = '<option value="">All Stages</option>' + allStages.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
 
 /* =========================================================
@@ -1787,11 +1791,36 @@ async function saveSettings(e){
   }catch(err){ toast('Failed: '+err.message,'error'); }
 }
 function renderMasterTags(){
-  ['sources','industries','branches'].forEach(k=>{
+  ['sources','industries','branches','stages'].forEach(k=>{
     const el = document.getElementById('tags-'+k);
-    el.innerHTML = DB.masters[k].map(v=>`<span class="tag">${v}<button onclick="removeMaster('${k}','${v.replace(/'/g,"\\'")}')">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--ink-soft)">None yet</span>';
+    if(!el) return;
+    el.innerHTML = (DB.masters[k]||[]).map(v=>`<span class="tag">${v}<button onclick="removeMaster('${k}','${v.replace(/'/g,"\\'")}')">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--ink-soft)">None yet</span>';
   });
 }
+async function handleAddNewOption(selectEl, masterKey){
+  if(selectEl.value !== '__add_new__') return;
+  const label = masterKey==='stages' ? 'stage' : masterKey==='sources' ? 'lead source' : 'industry';
+  const val = (prompt('Enter new '+label+':')||'').trim();
+  if(!val){ selectEl.value=''; return; }
+  if(!DB.masters[masterKey]) DB.masters[masterKey] = [];
+  if(DB.masters[masterKey].some(v=>v.toLowerCase()===val.toLowerCase())){
+    selectEl.value = DB.masters[masterKey].find(v=>v.toLowerCase()===val.toLowerCase());
+    return;
+  }
+  try{
+    const updated = {...DB.masters, [masterKey]:[...DB.masters[masterKey], val]};
+    await db.collection('meta').doc('masters').set(updated);
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = val;
+    selectEl.insertBefore(opt, selectEl.querySelector('option[value="__add_new__"]'));
+    selectEl.value = val;
+    toast('Added new '+label,'success');
+  }catch(err){
+    toast('Failed to add: '+err.message,'error');
+    selectEl.value = '';
+  }
+}
+
 async function addMaster(key){
   const input = document.getElementById('add-'+key);
   const val = input.value.trim();
@@ -1805,6 +1834,9 @@ async function addMaster(key){
   }catch(err){ toast('Failed: '+err.message,'error'); }
 }
 async function removeMaster(key, val){
+  if(key==='stages' && ['Won','Lost'].includes(val)){
+    toast('"Won" and "Lost" are core pipeline stages and can\'t be removed','error'); return;
+  }
   const updated = {...DB.masters, [key]: DB.masters[key].filter(v=>v!==val)};
   try{ await db.collection('meta').doc('masters').set(updated); }
   catch(err){ toast('Failed: '+err.message,'error'); }
@@ -1863,12 +1895,13 @@ function renderDashboard(){
     options:{cutout:'68%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
   });
 
-  document.getElementById('pipelineSub').textContent = totalLeads+' leads across '+STAGES.length+' stages';
-  const stageCounts = STAGES.map(s=>dashLeads.filter(l=>l.stage===s).length);
+  const chartStages = (DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES;
+  document.getElementById('pipelineSub').textContent = totalLeads+' leads across '+chartStages.length+' stages';
+  const stageCounts = chartStages.map(s=>dashLeads.filter(l=>l.stage===s).length);
   destroyChart('pipe');
   charts.pipe = new Chart(document.getElementById('chartPipeline'), {
     type:'bar',
-    data:{labels:STAGES, datasets:[{data:stageCounts, backgroundColor:'#0000FE', borderRadius:8, maxBarThickness:32}]},
+    data:{labels:chartStages, datasets:[{data:stageCounts, backgroundColor:'#0000FE', borderRadius:8, maxBarThickness:32}]},
     options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#EEF0FF'}, ticks:{stepSize:1}}, x:{grid:{display:false}, ticks:{font:{size:10}}}}, responsive:true, maintainAspectRatio:false}
   });
 
