@@ -372,6 +372,19 @@ tbody tr:hover{background:var(--blue-50);}
   </div>
 </div>
 
+<div class="modal-bg" id="callDetailModalBg">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <h3 id="callDetailTitle">Call Details</h3>
+      <button class="modal-close" onclick="closeCallDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="callDetailBody"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" onclick="closeCallDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="app" id="appRoot" style="display:none;">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -1163,17 +1176,20 @@ const MODULES = {
     label:'Call', idKey:'id',
     columns:[
       {key:'lead', label:'Company'},
+      {key:'date', label:'Call Date', fmt:v=>v||'—'},
       {key:'type', label:'Type', pill:t=>({Incoming:'green',Outgoing:'blue',Missed:'red'}[t]||'grey')},
       {key:'duration', label:'Duration'},
       {key:'outcome', label:'Outcome'},
-      {key:'nextFollowUp', label:'Next Follow-up'}
+      {key:'nextFollowUp', label:'Next Follow-up', fmt:(v,r)=> v ? v + (r.nextFollowUpTime? ' · '+r.nextFollowUpTime : '') : '—'}
     ],
     fields:[
       {key:'lead', label:'Related Company', type:'select', optionsFrom:'leadCompanies', required:true},
+      {key:'date', label:'Call Date', type:'date', required:true},
       {key:'type', label:'Call Type', type:'select', options:['Incoming','Outgoing','Missed'], required:true},
       {key:'duration', label:'Duration (mm:ss)', type:'text', required:true, pattern:/^[0-9]{1,2}:[0-5][0-9]$/, patternMsg:'Use format mm:ss e.g. 4:32'},
       {key:'outcome', label:'Call Outcome', type:'text', required:true},
-      {key:'nextFollowUp', label:'Next Follow-up Date', type:'date'}
+      {key:'nextFollowUp', label:'Next Follow-up Date', type:'date'},
+      {key:'nextFollowUpTime', label:'Next Follow-up Time', type:'time'}
     ]
   },
   meetings:{
@@ -1455,6 +1471,7 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
         return `<tr>${tds}<td style="text-align:right;color:var(--ink-soft);font-size:12px;">View only</td></tr>`;
       }
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
+        ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
         <button class="icon-action" title="Edit" onclick="openForm('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
@@ -1488,7 +1505,8 @@ function openForm(moduleKey, id){
 
   const body = document.getElementById('modalBody');
   body.innerHTML = cfg.fields.map(f=>{
-    const val = record[f.key]!==undefined? record[f.key] : '';
+    let val = record[f.key]!==undefined? record[f.key] : '';
+    if(!id && moduleKey==='calls' && f.key==='date' && !val) val = todayISO();
     let input='';
     if(f.type==='select'){
       let opts = f.options || optionsFor(f.optionsFrom);
@@ -1652,6 +1670,29 @@ function renderAttachmentUI(){
   el.innerHTML = (existingHtml + newHtml || '') + `<div class="hint" style="margin-top:2px;">${usedKB}KB of ~900KB used for this expense</div>`;
 }
 
+async function syncCallFollowUpMeeting(callId, callData){
+  if(!callData.nextFollowUp) return;
+  const existing = DB.meetings.find(m=>m.linkedCallId===callId);
+  const payload = {
+    title: `Follow-up call — ${callData.lead||'Lead'}`,
+    type: 'Call',
+    date: callData.nextFollowUp,
+    time: callData.nextFollowUpTime || '10:00',
+    notes: callData.outcome ? `Last outcome: ${callData.outcome}` : '',
+    linkedCallId: callId
+  };
+  try{
+    if(existing){
+      await db.collection('meetings').doc(existing.id).update(payload);
+    } else {
+      payload.createdBy = (DB.profile && DB.profile.name) || (auth.currentUser && auth.currentUser.email) || 'Unknown';
+      payload.createdByUid = auth.currentUser && auth.currentUser.uid;
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('meetings').add(payload);
+    }
+  }catch(err){ console.error('syncCallFollowUpMeeting failed', err); }
+}
+
 document.getElementById('modalForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const cfg = MODULES[currentModule];
@@ -1702,12 +1743,14 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     if(currentEditId){
       await db.collection(currentModule).doc(currentEditId).update(data);
       toast(cfg.label+' updated successfully','success');
+      if(currentModule==='calls') await syncCallFollowUpMeeting(currentEditId, data);
     } else {
       data.createdBy = actor;
       data.createdByUid = auth.currentUser && auth.currentUser.uid;
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection(currentModule).add(data);
+      const ref = await db.collection(currentModule).add(data);
       toast(cfg.label+' added successfully','success');
+      if(currentModule==='calls') await syncCallFollowUpMeeting(ref.id, data);
     }
     closeModal();
   }catch(err){
@@ -1716,6 +1759,97 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     submitBtn.disabled = false; submitBtn.textContent = 'Save Record';
   }
 });
+
+/* =========================================================
+   CALL DETAIL: follow-up remarks log + company call history
+========================================================= */
+let currentCallDetailId = null;
+
+function openCallDetail(callId){
+  const call = DB.calls.find(c=>c.id===callId);
+  if(!call) return;
+  if(!ownsRecord('calls', call)){ toast('You can only view remarks for calls you added','error'); return; }
+  currentCallDetailId = callId;
+  document.getElementById('callDetailTitle').textContent = 'Call Details — ' + (call.lead||'');
+  renderCallDetailBody(call);
+  document.getElementById('callDetailModalBg').classList.add('show');
+}
+function closeCallDetail(){
+  document.getElementById('callDetailModalBg').classList.remove('show');
+  currentCallDetailId = null;
+}
+
+function renderCallDetailBody(call){
+  const body = document.getElementById('callDetailBody');
+  const followUps = call.followUps || [];
+  const companyCalls = myRecords('calls')
+    .filter(c=>c.lead===call.lead)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+
+  const followUpRows = followUps.length
+    ? followUps.map((f,i)=>`<tr>
+        <td>${i+1}</td><td>${f.date||'—'}</td><td>${f.nextFollowUp||'—'}${f.nextFollowUpTime?' · '+f.nextFollowUpTime:''}</td>
+        <td>${f.remarks||'—'}</td><td>${f.addedBy||'—'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">No remarks logged yet</td></tr>`;
+
+  const historyRows = companyCalls.length
+    ? companyCalls.map(c=>`<tr>
+        <td>${c.date||'—'}</td>
+        <td><span class="pill ${({Incoming:'green',Outgoing:'blue',Missed:'red'}[c.type]||'grey')}">${c.type||'—'}</span></td>
+        <td>${c.duration||'—'}</td><td>${c.outcome||'—'}</td>
+        <td>${c.nextFollowUp||'—'}${c.nextFollowUpTime?' · '+c.nextFollowUpTime:''}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" style="text-align:center;color:var(--ink-soft);">No calls found</td></tr>`;
+
+  body.innerHTML = `
+    <h4 style="margin:0 0 4px;">Related Follow-up Remarks <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(${followUps.length})</span></h4>
+    <div class="table-wrap" style="margin-bottom:10px;"><table>
+      <thead><tr><th>S.No</th><th>Last Call Date</th><th>Next Follow-up</th><th>Remarks</th><th>Added By</th></tr></thead>
+      <tbody>${followUpRows}</tbody>
+    </table></div>
+    <div id="addRemarkFormWrap" style="display:none;margin-bottom:14px;">
+      <div class="field"><label>Last Call Date</label><input type="date" id="remarkLastCallDate" value="${todayISO()}"></div>
+      <div class="field"><label>Next Follow-up Date</label><input type="date" id="remarkNextFollowUp"></div>
+      <div class="field"><label>Next Follow-up Time</label><input type="time" id="remarkNextFollowUpTime"></div>
+      <div class="field"><label>Remarks</label><textarea id="remarkText" placeholder="What happened / next step…"></textarea></div>
+      <button type="button" class="btn-primary" style="margin-top:4px;" onclick="saveCallRemark()">Save Remark</button>
+    </div>
+    <button type="button" class="btn-sm" id="toggleAddRemarkBtn" onclick="document.getElementById('addRemarkFormWrap').style.display='block'; this.style.display='none';">+ Add Remark</button>
+
+    <h4 style="margin:22px 0 4px;">All Calls with ${call.lead||'this company'} <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(${companyCalls.length})</span></h4>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Type</th><th>Duration</th><th>Outcome</th><th>Next Follow-up</th></tr></thead>
+      <tbody>${historyRows}</tbody>
+    </table></div>
+  `;
+}
+
+async function saveCallRemark(){
+  const call = DB.calls.find(c=>c.id===currentCallDetailId);
+  if(!call) return;
+  const lastCallDate = document.getElementById('remarkLastCallDate').value;
+  const nextFollowUp = document.getElementById('remarkNextFollowUp').value;
+  const nextFollowUpTime = document.getElementById('remarkNextFollowUpTime').value;
+  const remarks = document.getElementById('remarkText').value.trim();
+  if(!lastCallDate || !remarks){ toast('Last Call Date and Remarks are required','error'); return; }
+
+  const entry = {
+    date: lastCallDate, nextFollowUp: nextFollowUp||'', nextFollowUpTime: nextFollowUpTime||'',
+    remarks, addedBy: (DB.profile && DB.profile.name) || (auth.currentUser && auth.currentUser.email) || 'Unknown',
+    addedAt: new Date().toISOString()
+  };
+  try{
+    const updatedFollowUps = [...(call.followUps||[]), entry];
+    const patch = { followUps: updatedFollowUps };
+    if(nextFollowUp){ patch.nextFollowUp = nextFollowUp; patch.nextFollowUpTime = nextFollowUpTime||''; }
+    await db.collection('calls').doc(call.id).update(patch);
+    if(nextFollowUp) await syncCallFollowUpMeeting(call.id, {...call, ...patch});
+    toast('Remark saved','success');
+    const merged = {...call, ...patch};
+    renderCallDetailBody(merged);
+  }catch(err){ toast('Failed to save remark: '+err.message,'error'); }
+}
 
 /* =========================================================
    LEADS KANBAN
