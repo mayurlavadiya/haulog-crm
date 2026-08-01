@@ -391,6 +391,7 @@ tbody tr:hover{background:var(--blue-50);}
     </form>
   </div>
 </div>
+
 <div class="modal-bg" id="callDetailModalBg">
   <div class="modal" style="max-width:920px;width:92vw;max-height:88vh;overflow-y:auto;">
     <div class="modal-head">
@@ -423,6 +424,10 @@ tbody tr:hover{background:var(--blue-50);}
       <button class="nav-item" data-page="leads" onclick="go('leads')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Leads <span class="nav-badge" id="badgeLeads">0</span>
+      </button>
+      <button class="nav-item" data-page="contacts" onclick="go('contacts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><circle cx="18" cy="7" r="3"/><path d="M22 21c0-3-2-5-4.5-5.6"/></svg>
+        Contacts <span class="nav-badge" id="badgeContacts">0</span>
       </button>
       <button class="nav-item" data-page="calls" onclick="go('calls')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
@@ -552,6 +557,23 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
       </section>
 
+      <!-- CONTACTS -->
+      <section class="page" id="page-contacts">
+        <div class="page-head">
+          <div><div class="eyebrow">Sales Pipeline</div><h1>Company Contacts</h1><p id="contactsCount">0 contacts</p></div>
+          <div class="head-actions"><button class="btn-primary" onclick="openForm('contacts')">+ New Contact</button></div>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <input class="search-input" placeholder="Search by name, company, designation…" oninput="renderTable('contacts', this.value)">
+            <select class="filter" id="contactsCompanyFilter" onchange="renderTable('contacts', document.querySelector('#page-contacts .search-input').value)">
+              <option value="">All Companies</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table><thead></thead><tbody id="tbody-contacts"></tbody></table></div>
+        </div>
+      </section>
+
       <!-- CALLS -->
       <section class="page" id="page-calls">
         <div class="page-head">
@@ -572,7 +594,7 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="head-actions">
             <button class="btn-ghost" onclick="shiftMonth(-1)">‹ Prev</button>
             <button class="btn-ghost" onclick="shiftMonth(1)">Next ›</button>
-            <button class="btn-primary" onclick="openForm('calls')">+ New Call</button>
+            <button class="btn-ghost" onclick="openForm('calls')">+ New Call</button>
             <button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button>
           </div>
         </div>
@@ -925,9 +947,9 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
-const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers'];
+const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts'];
 // collections that Firestore rules restrict to owner-or-Admin (must query with a matching where clause)
-const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers'];
+const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','contacts'];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -942,11 +964,11 @@ let DB = {
 };
 
 const DEFAULT_ROLES = [
-  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
-  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
-  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','profile','myreports']},
-  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','profile','myreports']},
-  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','expenses','quotations','reports','profile','myreports']},
+  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
+  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
+  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','profile','myreports']},
+  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','customers','profile','myreports']},
+  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','contacts','expenses','quotations','reports','profile','myreports']},
   {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','profile','myreports']}
 ];
 
@@ -1213,6 +1235,32 @@ const MODULES = {
       {key:'notes', label:'Notes', type:'textarea'}
     ]
   },
+  contacts:{
+    label:'Contact', idKey:'id',
+    columns:[
+      {key:'name', label:'Name'},
+      {key:'company', label:'Company'},
+      {key:'designation', label:'Designation'},
+      {key:'department', label:'Department'},
+      {key:'locationType', label:'Location', pill:t=>({'Head Office':'blue',Plant:'amber',Branch:'grey',Warehouse:'grey'}[t]||'grey')},
+      {key:'city', label:'City'},
+      {key:'phone', label:'Phone'},
+      {key:'isPrimary', label:'Primary', fmt:v=>v?'★ Primary':'—'}
+    ],
+    fields:[
+      {key:'company', label:'Company', type:'select', optionsFrom:'leadCompanies', required:true},
+      {key:'name', label:'Contact Name', type:'text', required:true},
+      {key:'designation', label:'Designation', type:'text', required:true},
+      {key:'department', label:'Department', type:'select', options:['Purchase','Logistics','Accounts','Plant / Production','Management','Sales','Other']},
+      {key:'phone', label:'Phone', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
+      {key:'email', label:'Email', type:'email'},
+      {key:'locationType', label:'Location Type', type:'select', options:['Head Office','Plant','Branch','Warehouse'], required:true},
+      {key:'address', label:'Address', type:'textarea'},
+      {key:'city', label:'City', type:'text', required:true},
+      {key:'isPrimary', label:'Set as Primary Contact', type:'select', options:['No','Yes']},
+      {key:'notes', label:'Notes', type:'textarea'}
+    ]
+  },
   calls:{
     label:'Call', idKey:'id',
     columns:[
@@ -1385,17 +1433,18 @@ function fmtTimestamp(v){
   if(!v) return '—';
   if(v.toDate) return v.toDate().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   return String(v);
-} 
+}
+
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','sitemap','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
   const match = (DB.roles||[]).find(r=>r.name===roleName);
   const base = match ? match.permissions : ((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions);
-  const forced = ['profile','myreports','sitemap','calendar'];
+  const forced = ['profile','myreports','sitemap','calendar','contacts'];
   return [...new Set([...base, ...forced])];
 }
 
@@ -1461,7 +1510,7 @@ document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.i
    otherwise a technical user can still read all documents
    directly via the Firebase SDK / network tab.
 ========================================================= */
-const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers'];
+const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers','contacts'];
 function isAdmin(){ return !!(DB.profile && ['Admin','Super Admin'].includes(DB.profile.role)); }
 function myRecords(moduleKey){
   const list = DB[moduleKey] || [];
@@ -1505,6 +1554,14 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
   const stageFilterEl = document.getElementById('leadsStageFilter');
   if(moduleKey==='leads' && stageFilterEl && stageFilterEl.value){
     rows = rows.filter(r=>r.stage===stageFilterEl.value);
+  }
+  const contactsCompanyFilterEl = document.getElementById('contactsCompanyFilter');
+  if(moduleKey==='contacts' && contactsCompanyFilterEl){
+    if(!contactsCompanyFilterEl.dataset.loaded){
+      contactsCompanyFilterEl.innerHTML = '<option value="">All Companies</option>' + optionsFor('leadCompanies').map(c=>`<option value="${c}">${c}</option>`).join('');
+      contactsCompanyFilterEl.dataset.loaded = '1';
+    }
+    if(contactsCompanyFilterEl.value) rows = rows.filter(r=>r.company===contactsCompanyFilterEl.value);
   }
 
   if(rows.length===0){
@@ -1554,9 +1611,10 @@ async function deleteRecord(moduleKey, id){
 let currentModule=null, currentEditId=null;
 function openForm(moduleKey, id){
   const cfg = MODULES[moduleKey];
-  const record = id ? DB[moduleKey].find(r=>r.id===id) : {};
+  const record = id ? {...DB[moduleKey].find(r=>r.id===id)} : {};
   if(id && !ownsRecord(moduleKey, record)){ toast('You can only edit records you added','error'); return; }
   if(moduleKey==='employees' && !isAdmin()){ toast('Only Admins can manage employee records','error'); return; }
+  if(moduleKey==='contacts' && record && 'isPrimary' in record) record.isPrimary = record.isPrimary ? 'Yes' : 'No';
   currentModule = moduleKey; currentEditId = id||null;
   document.getElementById('modalTitle').textContent = (id? 'Edit ':'Add New ') + cfg.label;
 
@@ -1762,6 +1820,7 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
     const errEl = fieldEl.querySelector('.err-msg');
     let val = fd.get(f.key);
     if(f.type==='number') val = val===''? '' : Number(val);
+    if(currentModule==='contacts' && f.key==='isPrimary') val = (val==='Yes');
     data[f.key] = val;
     fieldEl.classList.remove('error');
 
@@ -1979,7 +2038,8 @@ function renderCalendar(){
   let cells = [];
   for(let i=startDow-1;i>=0;i--) cells.push({d:daysInPrev-i, muted:true});
   for(let d=1; d<=daysInMonth; d++) cells.push({d, muted:false, iso:`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`});
-  let nextDay = 1;   while(cells.length % 7 !== 0) cells.push({d:nextDay++, muted:true});
+  let nextDay = 1;
+  while(cells.length % 7 !== 0) cells.push({d:nextDay++, muted:true});
 
   const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
@@ -2093,6 +2153,8 @@ function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[i
 function updateCounts(){
   document.getElementById('badgeLeads').textContent = myRecords('leads').length;
   document.getElementById('leadsCount').textContent = myRecords('leads').length+' leads';
+  document.getElementById('badgeContacts').textContent = myRecords('contacts').length;
+  document.getElementById('contactsCount').textContent = myRecords('contacts').length+' contacts';
   document.getElementById('callsCount').textContent = myRecords('calls').length+' calls logged';
   document.getElementById('quotesCount').textContent = myRecords('quotations').length+' quotations';
   document.getElementById('proposalsCount').textContent = myRecords('proposals').length+' proposals';
@@ -2653,13 +2715,14 @@ async function saveConfig(e){
    ROLES & RESPONSIBILITIES
 ========================================================= */
 const PAGE_LABELS = {
-  dashboard:'Dashboard', leads:'Leads', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
+  dashboard:'Dashboard', leads:'Leads', contacts:'Contacts', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
   reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
 };
 const MODULE_TILES = [
   {id:'dashboard', title:'Dashboard', desc:'KPIs, pipeline health and today\'s activity.'},
   {id:'leads', title:'Leads & Prospects', desc:'Capture, qualify and progress every opportunity.'},
+  {id:'contacts', title:'Company Contacts', desc:'Every person at every company — roles, plants, offices.'},
   {id:'calls', title:'Call Management', desc:'Log calls, auto-reminders, missed-call recovery.'},
   {id:'calendar', title:'Calendar', desc:'Month view of every scheduled meeting and follow-up.'},
   {id:'meetings', title:'Meetings', desc:'Log, search and manage demos, meetings and tasks.'},
