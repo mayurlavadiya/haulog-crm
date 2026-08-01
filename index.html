@@ -372,6 +372,25 @@ tbody tr:hover{background:var(--blue-50);}
   </div>
 </div>
 
+<div class="modal-bg" id="stageModalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Change Stage — <span id="stageChangeCompany"></span></h3>
+      <button class="modal-close" onclick="closeStageModal()">✕</button>
+    </div>
+    <form onsubmit="saveStageChange(event)">
+      <div class="modal-body">
+        <div class="field"><label>Date <span class="req">*</span></label><input type="date" id="stageChangeDate" required></div>
+        <div class="field"><label>Last Stage</label><input id="stageChangeLastStage" disabled style="background:#F3F4F8;"></div>
+        <div class="field"><label>New Stage <span class="req">*</span></label><select id="stageChangeNewStage" required></select></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-ghost" onclick="closeStageModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div class="modal-bg" id="callDetailModalBg">
   <div class="modal" style="max-width:920px;width:92vw;max-height:88vh;overflow-y:auto;">
     <div class="modal-head">
@@ -1165,23 +1184,32 @@ const MODULES = {
     columns:[
       {key:'company', label:'Company'},
       {key:'contact', label:'Contact'},
+      {key:'city', label:'City'},
       {key:'industry', label:'Industry'},
       {key:'stage', label:'Stage', pill:s=>stagePill(s)},
       {key:'owner', label:'Owner'},
       {key:'expectedClosing', label:'Expected'},
-      {key:'value', label:'Value', fmt:v=>fmtMoney(v)}
+      {key:'value', label:'Value', fmt:v=>fmtMoney(v)},
+      {key:'shipments', label:'Shipments'},
+      {key:'lastCallDate', label:'Last Call', fmt:(v,r)=>leadLastCallDate(r)||'—'},
+      {key:'proposal', label:'Proposal', fmt:(v,r)=>hasProposal(r.company)?'Y':'N'},
+      {key:'createdAt', label:'Created', fmt:v=>fmtTimestamp(v)},
+      {key:'notes', label:'Notes', fmt:v=>v?(v.length>24?v.slice(0,22)+'…':v):'—'}
     ],
     fields:[
       {key:'company', label:'Company Name', type:'text', required:true},
       {key:'contact', label:'Contact Person', type:'text', required:true},
       {key:'email', label:'Email', type:'email', required:true},
       {key:'phone', label:'Phone', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
+      {key:'address', label:'Address', type:'textarea'},
+      {key:'city', label:'City', type:'text', required:true},
       {key:'industry', label:'Industry', type:'select', optionsFrom:'industries', required:true},
       {key:'source', label:'Lead Source', type:'select', optionsFrom:'sources', required:true},
       {key:'stage', label:'Stage', type:'select', optionsFrom:'stages', required:true},
       {key:'owner', label:'Owner', type:'select', optionsFrom:'employeeNames', required:true},
       {key:'expectedClosing', label:'Expected Closing', type:'date'},
       {key:'value', label:'Deal Value (₹)', type:'number', min:1},
+      {key:'shipments', label:'No. of Shipments', type:'number', min:0},
       {key:'notes', label:'Notes', type:'textarea'}
     ]
   },
@@ -1348,7 +1376,16 @@ function lastCallRemark(call){
   return call.outcome || '—';
 }
 function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','Demo Scheduled':'amber','Proposal Sent':'blue',Negotiation:'amber',Won:'green',Lost:'red'}[s]||'grey'); }
-
+function hasProposal(company){ return myRecords('proposals').some(p=>p.company===company); }
+function leadLastCallDate(lead){
+  const calls = myRecords('calls').filter(c=>c.lead===lead.company).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  return calls.length ? calls[0].date : null;
+}
+function fmtTimestamp(v){
+  if(!v) return '—';
+  if(v.toDate) return v.toDate().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  return String(v);
+} 
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
@@ -1491,6 +1528,7 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
       }
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
         ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
+        ${moduleKey==='leads' ? `<button class="icon-action" title="Change Stage" onclick="openStageChangeModal('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg></button>` : ''}
         <button class="icon-action" title="Edit" onclick="openForm('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
@@ -1796,6 +1834,44 @@ function openCallDetail(callId){
 function closeCallDetail(){
   document.getElementById('callDetailModalBg').classList.remove('show');
   currentCallDetailId = null;
+}
+
+let currentStageLeadId = null;
+function openStageChangeModal(id){
+  const lead = DB.leads.find(l=>l.id===id);
+  if(!lead) return;
+  if(!ownsRecord('leads', lead)){ toast('You can only change stage for leads you added','error'); return; }
+  currentStageLeadId = id;
+  document.getElementById('stageChangeCompany').textContent = lead.company;
+  document.getElementById('stageChangeDate').value = todayISO();
+  document.getElementById('stageChangeLastStage').value = lead.stage;
+  const allStages = (DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES;
+  document.getElementById('stageChangeNewStage').innerHTML = allStages.map(s=>`<option value="${s}" ${s===lead.stage?'selected':''}>${s}</option>`).join('');
+  document.getElementById('stageModalBg').classList.add('show');
+}
+function closeStageModal(){
+  document.getElementById('stageModalBg').classList.remove('show');
+  currentStageLeadId = null;
+}
+async function saveStageChange(e){
+  e.preventDefault();
+  const lead = DB.leads.find(l=>l.id===currentStageLeadId);
+  if(!lead) return;
+  const date = document.getElementById('stageChangeDate').value;
+  const newStage = document.getElementById('stageChangeNewStage').value;
+  if(!date || !newStage){ toast('Date and New Stage are required','error'); return; }
+  const entry = {date, fromStage:lead.stage, toStage:newStage, changedBy:(DB.profile&&DB.profile.name)||'Unknown', changedAt:new Date().toISOString()};
+  try{
+    await db.collection('leads').doc(lead.id).update({
+      stage:newStage,
+      lastStage:lead.stage,
+      stageHistory: [...(lead.stageHistory||[]), entry],
+      updatedBy:(DB.profile&&DB.profile.name)||'Unknown',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Stage updated','success');
+    closeStageModal();
+  }catch(err){ toast('Failed: '+err.message,'error'); }
 }
 
 function renderCallDetailBody(call){
