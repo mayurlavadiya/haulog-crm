@@ -1860,6 +1860,7 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
       await db.collection(currentModule).doc(currentEditId).update(data);
       toast(cfg.label+' updated successfully','success');
       if(currentModule==='calls') await syncCallFollowUpMeeting(currentEditId, data);
+      if(currentModule==='leads' && data.stage==='Won') await syncCustomerFromWonLead({...data, id:currentEditId});
     } else {
       data.createdBy = actor;
       data.createdByUid = auth.currentUser && auth.currentUser.uid;
@@ -1930,7 +1931,31 @@ async function saveStageChange(e){
     });
     toast('Stage updated','success');
     closeStageModal();
+    await syncCustomerFromWonLead({...lead, stage:newStage});
   }catch(err){ toast('Failed: '+err.message,'error'); }
+}
+
+async function syncCustomerFromWonLead(lead){
+  if(lead.stage !== 'Won') return;
+  const already = DB.customers.find(c=>c.company===lead.company);
+  if(already) return; // no duplicate, don't overwrite manual edits
+  try{
+    await db.collection('customers').add({
+      company: lead.company,
+      industry: lead.industry || '',
+      contact: lead.contact || '',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      address: lead.address || '',
+      city: lead.city || '',
+      onboarded: todayISO(),
+      convertedFromLeadId: lead.id,
+      createdBy: (DB.profile && DB.profile.name) || 'System',
+      createdByUid: auth.currentUser && auth.currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast(`${lead.company} auto-added to Customers`,'success');
+  }catch(err){ console.error('Auto customer sync failed', err); }
 }
 
 function renderCallDetailBody(call){
