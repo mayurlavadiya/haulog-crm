@@ -987,13 +987,18 @@ function attachListeners(){
 
   const uidCurrent = auth.currentUser.uid;
   const unsubProfile = db.collection('users').doc(uidCurrent).onSnapshot(doc=>{
-    const data = doc.exists ? doc.data() : {};
+    if(!doc.exists){
+      // Doc not written yet (mid-signup race). Only handleAuthSubmit()
+      // creates it — no client-side defaults here, that was the leak
+      // that silently overwrote Admin -> Sales Executive.
+      return;
+    }
+    const data = doc.data();
     const patch = {};
     if(!data.name) patch.name = auth.currentUser.displayName || (auth.currentUser.email||'').split('@')[0] || 'User';
-    if(!data.email) patch.email = auth.currentUser.email || '';
-    if(!data.role) patch.role = 'Sales Executive';
     if(!data.status) patch.status = 'Active';
     DB.profile = {id:uidCurrent, ...data, ...patch};
+    
     if(Object.keys(patch).length){
       db.collection('users').doc(uidCurrent).set(patch, {merge:true}).catch(()=>{});
     }
