@@ -187,9 +187,11 @@ tbody tr:hover{background:var(--blue-50);}
 .cal .day.muted{opacity:.35;}
 .cal .day.today{border:1.5px solid var(--blue);background:var(--blue-50);}
 .cal .day .num{font-weight:700;font-size:12px;}
-.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-/* MODAL */
+.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.cal .evt:hover{opacity:.85;}
+.cal .evt.call{background:var(--amber);}
+  
+  /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,0,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
 .modal-bg.show{display:flex;}
 .modal{background:var(--paper);border-radius:18px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 70px rgba(0,0,50,.3);}
@@ -605,6 +607,7 @@ tbody tr:hover{background:var(--blue-50);}
           <div class="head-actions">
             <button class="btn-ghost" onclick="shiftMonth(-1)">‹ Prev</button>
             <button class="btn-ghost" onclick="shiftMonth(1)">Next ›</button>
+            <button class="btn-primary" onclick="openForm('calls')">+ New Call</button>
             <button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button>
           </div>
         </div>
@@ -1980,16 +1983,18 @@ function renderCalendar(){
   let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
   html += cells.map(c=>{
     const isToday = c.iso===todayStr;
-    const evts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
+    const meetingEvts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
+    const callEvts = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso || cl.nextFollowUp===c.iso) : [];
+    const meetingHtml = meetingEvts.map(e=>`<span class="evt" title="${e.title}" onclick="event.stopPropagation();openForm('meetings','${e.id}')">${e.title}</span>`).join('');
+    const callHtml = callEvts.map(e=>`<span class="evt call" title="${e.lead||'Call'}" onclick="event.stopPropagation();openCallDetail('${e.id}')">📞 ${e.lead||'Call'}</span>`).join('');
     return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
       <span class="num">${c.d}</span>
-      ${evts.map(e=>`<span class="evt" title="${e.title}">${e.title}</span>`).join('')}
+      ${meetingHtml}${callHtml}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
   renderTable('meetings');
 }
-
 /* =========================================================
    SETTINGS
 ========================================================= */
