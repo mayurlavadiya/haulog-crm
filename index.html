@@ -174,13 +174,16 @@ tbody tr:hover{background:var(--blue-50);}
 /* CALENDAR */
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
 .cal .dow{font-size:11px;font-weight:700;color:var(--ink-soft);text-align:center;padding-bottom:4px;}
-.cal .day{background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:78px;padding:7px;font-size:12px;position:relative;}
+.cal .day{background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:78px;padding:7px;font-size:12px;position:relative;transition:background .12s ease,border-color .12s ease;}
 .cal .day.muted{opacity:.35;}
 .cal .day.today{border:1.5px solid var(--blue);background:var(--blue-50);}
+.cal .day.drop-hover{background:var(--blue-50);border:1.5px dashed var(--blue);}
 .cal .day .num{font-weight:700;font-size:12px;}
-.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:grab;}
 .cal .evt:hover{opacity:.85;}
 .cal .evt.call{background:var(--amber);}
+.cal .evt.followup{background:transparent;color:var(--amber);border:1px dashed var(--amber);}
+.cal .evt.dragging{opacity:.35;cursor:grabbing;}
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,0,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
@@ -1979,16 +1982,77 @@ function renderCalendar(){
   html += cells.map(c=>{
     const isToday = c.iso===todayStr;
     const meetingEvts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
-    const callEvts = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso || cl.nextFollowUp===c.iso) : [];
-    const meetingHtml = meetingEvts.map(e=>`<span class="evt" title="${e.title}" onclick="event.stopPropagation();openForm('meetings','${e.id}')">${e.title}</span>`).join('');
-    const callHtml = callEvts.map(e=>`<span class="evt call" title="${e.lead||'Call'}" onclick="event.stopPropagation();openCallDetail('${e.id}')">📞 ${e.lead||'Call'}</span>`).join('');
-    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
+    const callsByDate = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso) : [];
+    const callsByFollowUp = c.iso? myRecords('calls').filter(cl=>cl.nextFollowUp===c.iso && cl.nextFollowUp!==cl.date) : [];
+
+    const meetingHtml = meetingEvts.map(e=>
+      `<span class="evt" draggable="true" title="${e.title}"
+        ondragstart="evtDragStart(event,'meeting','${e.id}','date')" ondragend="evtDragEnd(event)"
+        onclick="openForm('meetings','${e.id}')">${e.title}</span>`).join('');
+
+    const callDateHtml = callsByDate.map(e=>
+      `<span class="evt call" draggable="true" title="${e.lead||'Call'} — call date"
+        ondragstart="evtDragStart(event,'call','${e.id}','date')" ondragend="evtDragEnd(event)"
+        onclick="openCallDetail('${e.id}')">📞 ${e.lead||'Call'}</span>`).join('');
+
+    const callFollowUpHtml = callsByFollowUp.map(e=>
+      `<span class="evt call followup" draggable="true" title="${e.lead||'Call'} — next follow-up"
+        ondragstart="evtDragStart(event,'call','${e.id}','nextFollowUp')" ondragend="evtDragEnd(event)"
+        onclick="openCallDetail('${e.id}')">↻ ${e.lead||'Call'}</span>`).join('');
+
+    const dropAttrs = c.iso
+      ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')"`
+      : '';
+
+    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}" ${dropAttrs}>
       <span class="num">${c.d}</span>
-      ${meetingHtml}${callHtml}
+      ${meetingHtml}${callDateHtml}${callFollowUpHtml}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
   renderTable('meetings');
+}
+
+/* Drag & drop — reschedule a meeting or call by dropping it on another day */
+let calDragPayload = null;
+function evtDragStart(e, type, id, dateField){
+  calDragPayload = {type, id, dateField};
+  e.dataTransfer.effectAllowed = 'move';
+  try{ e.dataTransfer.setData('text/plain', id); }catch(err){}
+  e.currentTarget.classList.add('dragging');
+}
+function evtDragEnd(e){ e.currentTarget.classList.remove('dragging'); }
+function allowDrop(e){ e.preventDefault(); }
+async function handleCalDrop(e, iso){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drop-hover');
+  if(!calDragPayload || !iso) return;
+  const {type, id, dateField} = calDragPayload;
+  calDragPayload = null;
+
+  try{
+    if(type==='meeting'){
+      const meeting = DB.meetings.find(m=>m.id===id);
+      if(!meeting || meeting.date===iso) return;
+      await db.collection('meetings').doc(id).update({
+        date: iso, updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      toast('Meeting moved to '+iso,'success');
+    } else if(type==='call'){
+      const call = DB.calls.find(c=>c.id===id);
+      if(!call || call[dateField]===iso) return;
+      const patch = { [dateField]: iso };
+      await db.collection('calls').doc(id).update({
+        ...patch, updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // keep the auto-generated follow-up meeting (if any) in sync with the new date
+      const merged = {...call, ...patch};
+      if(merged.nextFollowUp) await syncCallFollowUpMeeting(id, merged);
+      toast((dateField==='date' ? 'Call date moved to ' : 'Follow-up moved to ')+iso,'success');
+    }
+  }catch(err){
+    toast('Failed to reschedule: '+err.message,'error');
+  }
 }
 
 /* =========================================================
