@@ -174,23 +174,11 @@ tbody tr:hover{background:var(--blue-50);}
 /* CALENDAR */
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
 .cal .dow{font-size:11px;font-weight:700;color:var(--ink-soft);text-align:center;padding-bottom:4px;}
-.cal .day{background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:78px;padding:7px;font-size:12px;position:relative;transition:background .12s ease,border-color .12s ease;}
+.cal .day{background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:78px;padding:7px;font-size:12px;position:relative;}
 .cal .day.muted{opacity:.35;}
 .cal .day.today{border:1.5px solid var(--blue);background:var(--blue-50);}
-.cal .day.drop-hover{background:var(--blue-50);border:1.5px dashed var(--blue);}
 .cal .day .num{font-weight:700;font-size:12px;}
-.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 4px 2px 5px;border-radius:6px;display:flex;align-items:center;gap:3px;overflow:hidden;cursor:grab;}
-.cal .evt:hover{opacity:.92;}
-.cal .evt.call{background:var(--amber);}
-.cal .evt.followup{background:transparent;color:var(--amber);border:1px dashed var(--amber);}
-.cal .evt.dragging{opacity:.35;cursor:grabbing;}
-.cal .evt .evt-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cal .evt .evt-actions{display:flex;gap:2px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .12s ease;}
-.cal .evt:hover .evt-actions{opacity:1;pointer-events:auto;}
-.cal .evt .evt-ic{width:14px;height:14px;border:none;border-radius:4px;background:rgba(255,255,255,.28);color:inherit;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;}
-.cal .evt .evt-ic:hover{background:rgba(255,255,255,.5);}
-.cal .evt.followup .evt-ic{background:rgba(247,144,9,.15);}
-.cal .evt.followup .evt-ic:hover{background:rgba(247,144,9,.3);}
+.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,0,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
@@ -440,6 +428,54 @@ tbody tr:hover{background:var(--blue-50);}
   </div>
 </div>
 
+<div class="modal-bg" id="dailySummaryModalBg">
+  <div class="modal" style="max-width:820px;width:92vw;max-height:88vh;overflow-y:auto;">
+    <div class="modal-head">
+      <h3 id="dailySummaryTitle">Daily Task Summary</h3>
+      <button class="modal-close" onclick="closeDailySummaryForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <div class="field"><label>Date <span class="req">*</span></label><input type="date" id="dsDate"></div>
+        <div class="field"><label>Total Time Spent (hrs) <span class="req">*</span></label><input type="number" id="dsTotalHours" min="0" max="24" step="0.25" placeholder="e.g. 8"></div>
+      </div>
+      <h4 style="margin:6px 0 10px;">Tasks Performed <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(add every task you worked on today)</span></h4>
+      <div class="table-wrap" style="margin-bottom:10px;"><table>
+        <thead><tr><th>Task Name</th><th>Sub-task / Detail</th><th>Time Spent</th><th>Status</th><th></th></tr></thead>
+        <tbody id="dsTaskRows"></tbody>
+      </table></div>
+      <button type="button" class="btn-sm" onclick="addDsTaskRow()">+ Add Task</button>
+      <div class="field" style="margin-top:16px;"><label>Notes / Blockers</label><textarea id="dsNotes" placeholder="Anything else to flag…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" onclick="closeDailySummaryForm()">Cancel</button>
+      <button type="button" class="btn-primary" onclick="saveDailySummary()">Save Summary</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="weeklyPlannerModalBg">
+  <div class="modal" style="max-width:820px;width:92vw;max-height:88vh;overflow-y:auto;">
+    <div class="modal-head">
+      <h3 id="weeklyPlannerTitle">Weekly Planner</h3>
+      <button class="modal-close" onclick="closeWeeklyPlannerForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Week Starting (Monday) <span class="req">*</span></label><input type="date" id="wpWeekStart"></div>
+      <h4 style="margin:6px 0 10px;">Planned Tasks <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(what you plan to work on this week)</span></h4>
+      <div class="table-wrap" style="margin-bottom:10px;"><table>
+        <thead><tr><th>Task Name</th><th>Target Day</th><th>Priority</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="wpTaskRows"></tbody>
+      </table></div>
+      <button type="button" class="btn-sm" onclick="addWpTaskRow()">+ Add Task</button>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-ghost" onclick="closeWeeklyPlannerForm()">Cancel</button>
+      <button type="button" class="btn-primary" onclick="saveWeeklyPlanner()">Save Plan</button>
+    </div>
+  </div>
+</div>
+
 <div class="app" id="appRoot" style="display:none;">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -492,6 +528,15 @@ tbody tr:hover{background:var(--blue-50);}
       <button class="nav-item" data-page="customers" onclick="go('customers')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         Customers
+      </button>
+      <div class="nav-section-title">Productivity</div>
+      <button class="nav-item" data-page="dailysummary" onclick="go('dailysummary')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Daily Summary
+      </button>
+      <button class="nav-item" data-page="weeklyplanner" onclick="go('weeklyplanner')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01"/></svg>
+        Weekly Planner
       </button>
       <div class="nav-section-title">Intelligence</div>
       <button class="nav-item" data-page="reports" onclick="go('reports')">
@@ -714,6 +759,38 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="card">
           <div class="toolbar"><input class="search-input" placeholder="Search customers…" oninput="renderTable('customers', this.value)"></div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-customers"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- DAILY SUMMARY -->
+      <section class="page" id="page-dailysummary">
+        <div class="page-head">
+          <div><div class="eyebrow">Productivity</div><h1>Daily Task Summary</h1><p id="dailySummaryCount">0 entries</p></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="exportDailySummaryExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportDailySummaryPdf()">Export PDF</button>
+            <button class="btn-primary" onclick="openDailySummaryForm()">+ Submit Today's Summary</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="toolbar"><input class="search-input" placeholder="Search by date or employee…" oninput="renderTable('dailysummaries', this.value)"></div>
+          <div class="table-wrap"><table><thead></thead><tbody id="tbody-dailysummaries"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- WEEKLY PLANNER -->
+      <section class="page" id="page-weeklyplanner">
+        <div class="page-head">
+          <div><div class="eyebrow">Productivity</div><h1>Weekly Planner</h1><p id="weeklyPlannerCount">0 plans</p></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="exportWeeklyPlannerExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportWeeklyPlannerPdf()">Export PDF</button>
+            <button class="btn-primary" onclick="openWeeklyPlannerForm()">+ Submit Monday's Plan</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="toolbar"><input class="search-input" placeholder="Search by week or employee…" oninput="renderTable('weeklyplanners', this.value)"></div>
+          <div class="table-wrap"><table><thead></thead><tbody id="tbody-weeklyplanners"></tbody></table></div>
         </div>
       </section>
 
@@ -965,9 +1042,9 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
-const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers'];
+const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','dailysummaries','weeklyplanners'];
 // collections that Firestore rules restrict to owner-or-Admin (must query with a matching where clause)
-const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers'];
+const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','dailysummaries','weeklyplanners'];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -982,12 +1059,15 @@ let DB = {
 };
 
 const DEFAULT_ROLES = [
-  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
-  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel']},
-  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','profile','myreports']},
-  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','profile','myreports']},
-  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','expenses','quotations','reports','profile','myreports']},
-  {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','profile','myreports']}
+  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
+  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
+  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Operations', responsibilities:'Handles day-to-day operational tasks, shipment/process coordination, and daily reporting.', permissions:['dashboard','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Tech', responsibilities:'Handles technical/support tasks, tickets, and daily engineering reporting.', permissions:['dashboard','expenses','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Team Leader', responsibilities:'Leads a team, tracks own pipeline and daily/weekly reporting like the rest of the team.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','expenses','quotations','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','dailysummary','weeklyplanner','profile','myreports']}
 ];
 
 let unsubscribers = [];
@@ -1365,12 +1445,33 @@ const MODULES = {
     ],
     fields:[
       {key:'name', label:'Full Name', type:'text', required:true},
-      {key:'role', label:'Role', type:'select', options:['Super Admin','Admin','Sales Manager','Sales Executive','Accounts','HR'], required:true},
+      {key:'role', label:'Role', type:'select', options:['Super Admin','Admin','Sales Manager','Team Leader','Sales Executive','Operations','Tech','Accounts','HR'], required:true},
       {key:'email', label:'Email', type:'email', required:true},
       {key:'phone', label:'Phone', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
       {key:'target', label:'Monthly Target (₹)', type:'number', required:true, min:0},
       {key:'achieved', label:'Achieved (₹)', type:'number', required:true, min:0}
     ]
+  },
+  dailysummaries:{
+    label:'Daily Summary', idKey:'id',
+    columns:[
+      {key:'date', label:'Date'},
+      {key:'createdBy', label:'Employee'},
+      {key:'totalHours', label:'Total Time', fmt:v=>v?v+' hrs':'—'},
+      {key:'tasks', label:'Tasks', fmt:v=>(v||[]).length+' task(s)'},
+      {key:'tasks', label:'Task Summary', fmt:v=>(v&&v.length)? v.map(t=>t.taskName).filter(Boolean).join(', ').slice(0,60) : '—'}
+    ],
+    fields:[]
+  },
+  weeklyplanners:{
+    label:'Weekly Planner', idKey:'id',
+    columns:[
+      {key:'weekStart', label:'Week Of'},
+      {key:'createdBy', label:'Employee'},
+      {key:'tasks', label:'Planned Tasks', fmt:v=>(v||[]).length+' task(s)'},
+      {key:'tasks', label:'Task Summary', fmt:v=>(v&&v.length)? v.map(t=>t.taskName).filter(Boolean).join(', ').slice(0,60) : '—'}
+    ],
+    fields:[]
   },
   customers:{
     label:'Customer', idKey:'id',
@@ -1428,13 +1529,16 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','sitemap','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
   const match = (DB.roles||[]).find(r=>r.name===roleName);
   const base = match ? match.permissions : ((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions);
-  const forced = ['profile','myreports','sitemap'];
+  // Daily Summary & Weekly Planner are personal productivity logs every
+  // role must be able to submit — available to everyone regardless of
+  // what's saved in their role's permission list.
+  const forced = ['profile','myreports','sitemap','dailysummary','weeklyplanner'];
   // Calendar is just a view of Meetings data — always available alongside it,
   // even for roles saved before Calendar existed as a separate page.
   const derived = base.includes('meetings') ? ['calendar'] : [];
@@ -1460,6 +1564,8 @@ function go(id){
   if(id==='myreports') renderMyReports();
   if(id==='expenses'){ populateReportEmpFilter(); renderReportHistory(); }
   if(id==='sitemap') renderSitemap();
+  if(id==='dailysummary') renderTable('dailysummaries');
+  if(id==='weeklyplanner') renderTable('weeklyplanners');
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
@@ -1503,7 +1609,7 @@ document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.i
    otherwise a technical user can still read all documents
    directly via the Firebase SDK / network tab.
 ========================================================= */
-const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers'];
+const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers','dailysummaries','weeklyplanners'];
 function isAdmin(){ return !!(DB.profile && ['Admin','Super Admin'].includes(DB.profile.role)); }
 function myRecords(moduleKey){
   const list = DB[moduleKey] || [];
@@ -1568,9 +1674,12 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
       if(moduleKey==='employees' && !isAdmin()){
         return `<tr>${tds}<td style="text-align:right;color:var(--ink-soft);font-size:12px;">View only</td></tr>`;
       }
+      const editHandler = moduleKey==='dailysummaries' ? `openDailySummaryForm('${r.id}')`
+        : moduleKey==='weeklyplanners' ? `openWeeklyPlannerForm('${r.id}')`
+        : `openForm('${moduleKey}','${r.id}')`;
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
         ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
-        <button class="icon-action" title="Edit" onclick="openForm('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+        <button class="icon-action" title="Edit" onclick="${editHandler}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
     }).join('');
@@ -1791,22 +1900,6 @@ async function syncCallFollowUpMeeting(callId, callData){
   }catch(err){ console.error('syncCallFollowUpMeeting failed', err); }
 }
 
-async function clearCallFollowUp(callId){
-  const call = DB.calls.find(c=>c.id===callId);
-  if(!call){ toast('Call not found','error'); return; }
-  if(!ownsRecord('calls', call)){ toast('You can only edit calls you added','error'); return; }
-  if(!confirm(`Remove the follow-up reminder for ${call.lead||'this call'}? The call record itself stays.`)) return;
-  try{
-    await db.collection('calls').doc(callId).update({
-      nextFollowUp: '', nextFollowUpTime: '',
-      updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const linkedMeeting = DB.meetings.find(m=>m.linkedCallId===callId);
-    if(linkedMeeting) await db.collection('meetings').doc(linkedMeeting.id).delete();
-    toast('Follow-up removed','success');
-  }catch(err){ toast('Failed to remove follow-up: '+err.message,'error'); }
-}
-
 document.getElementById('modalForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const cfg = MODULES[currentModule];
@@ -1966,6 +2059,220 @@ async function saveCallRemark(){
 }
 
 /* =========================================================
+   DAILY TASK SUMMARY
+========================================================= */
+let currentDsId = null;
+function rowInputStyle(extra){ return `width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--field-bg);color:var(--ink);font-size:13px;${extra||''}`; }
+
+function addDsTaskRow(task){
+  task = task || {};
+  const tbody = document.getElementById('dsTaskRows');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="ds-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task / detail" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="ds-task-time" value="${(task.timeSpent||'').replace(/"/g,'&quot;')}" placeholder="1h 30m" style="${rowInputStyle('width:100px;')}"></td>
+    <td><select class="ds-task-status" style="${rowInputStyle('width:130px;')}">
+      ${['Completed','In Progress','Pending'].map(s=>`<option value="${s}" ${task.status===s?'selected':''}>${s}</option>`).join('')}
+    </select></td>
+    <td><button type="button" class="icon-action danger" onclick="this.closest('tr').remove()" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>`;
+  tbody.appendChild(tr);
+}
+
+function openDailySummaryForm(id){
+  const record = id ? DB.dailysummaries.find(r=>r.id===id) : null;
+  if(id && !record) return;
+  if(id && !ownsRecord('dailysummaries', record)){ toast('You can only edit your own daily summary','error'); return; }
+  currentDsId = id||null;
+  document.getElementById('dailySummaryTitle').textContent = id ? 'Edit Daily Summary' : "Submit Today's Summary";
+  document.getElementById('dsDate').value = record ? record.date : todayISO();
+  document.getElementById('dsTotalHours').value = record ? record.totalHours : '';
+  document.getElementById('dsNotes').value = record ? (record.notes||'') : '';
+  const tbody = document.getElementById('dsTaskRows'); tbody.innerHTML='';
+  const tasks = record ? (record.tasks||[]) : [];
+  if(tasks.length) tasks.forEach(t=>addDsTaskRow(t)); else addDsTaskRow();
+  document.getElementById('dailySummaryModalBg').classList.add('show');
+}
+function closeDailySummaryForm(){ document.getElementById('dailySummaryModalBg').classList.remove('show'); currentDsId=null; }
+
+async function saveDailySummary(){
+  const date = document.getElementById('dsDate').value;
+  const totalHours = document.getElementById('dsTotalHours').value;
+  const notes = document.getElementById('dsNotes').value.trim();
+  if(!date){ toast('Date is required','error'); return; }
+  if(totalHours===''){ toast('Total time spent is required','error'); return; }
+  const rows = Array.from(document.querySelectorAll('#dsTaskRows tr'));
+  const tasks = rows.map(tr=>({
+    taskName: tr.querySelector('.ds-task-name').value.trim(),
+    subTask: tr.querySelector('.ds-task-sub').value.trim(),
+    timeSpent: tr.querySelector('.ds-task-time').value.trim(),
+    status: tr.querySelector('.ds-task-status').value
+  })).filter(t=>t.taskName);
+  if(!tasks.length){ toast('Add at least one task with a name','error'); return; }
+
+  const data = {
+    date, totalHours:Number(totalHours), tasks, notes,
+    updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try{
+    if(currentDsId){
+      await db.collection('dailysummaries').doc(currentDsId).update(data);
+      toast('Daily summary updated','success');
+    } else {
+      data.createdBy = (DB.profile&&DB.profile.name)||(auth.currentUser&&auth.currentUser.email)||'Unknown';
+      data.createdByUid = auth.currentUser && auth.currentUser.uid;
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('dailysummaries').add(data);
+      toast('Daily summary submitted','success');
+    }
+    closeDailySummaryForm();
+  }catch(err){ toast('Failed: '+err.message,'error'); }
+}
+
+function exportDailySummaryExcel(){
+  const rows = myRecords('dailysummaries');
+  if(!rows.length){ toast('No daily summary records to export','error'); return; }
+  const flat = [];
+  rows.forEach(r=>{
+    const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
+    tasks.forEach(t=>{
+      flat.push({
+        Date:r.date||'', Employee:r.createdBy||'', 'Total Hours (Day)':r.totalHours||'',
+        'Task Name':t.taskName||'', 'Sub-task Detail':t.subTask||'', 'Time Spent':t.timeSpent||'',
+        Status:t.status||'', Notes:r.notes||''
+      });
+    });
+  });
+  const ws = XLSX.utils.json_to_sheet(flat);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Daily Summary');
+  XLSX.writeFile(wb, `Daily_Summary_${todayISO()}.xlsx`);
+}
+function exportDailySummaryPdf(){
+  const rows = myRecords('dailysummaries');
+  if(!rows.length){ toast('No daily summary records to export','error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text('Haulog CRM - Daily Task Summary', 14, 16);
+  doc.setFontSize(10); doc.text(`Generated ${todayISO()}`, 14, 22);
+  const body = [];
+  rows.forEach(r=>{
+    const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
+    tasks.forEach(t=>{
+      body.push([r.date||'', r.createdBy||'', (r.totalHours!==undefined?r.totalHours:'')+' hrs', t.taskName||'', t.subTask||'', t.timeSpent||'', t.status||'']);
+    });
+  });
+  doc.autoTable({ startY:28, head:[['Date','Employee','Total (Day)','Task','Sub-task','Time Spent','Status']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
+  doc.save(`Daily_Summary_${todayISO()}.pdf`);
+}
+
+/* =========================================================
+   WEEKLY PLANNER
+========================================================= */
+let currentWpId = null;
+function mondayOfCurrentWeek(){
+  const d = new Date();
+  const day = d.getDay();
+  const diff = (day===0? -6 : 1-day);
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().slice(0,10);
+}
+
+function addWpTaskRow(task){
+  task = task || {};
+  const tbody = document.getElementById('wpTaskRows');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="wp-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Prepare monthly report" style="${rowInputStyle()}"></td>
+    <td><select class="wp-task-day" style="${rowInputStyle('width:120px;')}">
+      ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(d=>`<option value="${d}" ${task.day===d?'selected':''}>${d}</option>`).join('')}
+    </select></td>
+    <td><select class="wp-task-priority" style="${rowInputStyle('width:110px;')}">
+      ${['High','Medium','Low'].map(p=>`<option value="${p}" ${task.priority===p?'selected':''}>${p}</option>`).join('')}
+    </select></td>
+    <td><input type="text" class="wp-task-notes" value="${(task.notes||'').replace(/"/g,'&quot;')}" placeholder="Notes" style="${rowInputStyle()}"></td>
+    <td><button type="button" class="icon-action danger" onclick="this.closest('tr').remove()" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>`;
+  tbody.appendChild(tr);
+}
+
+function openWeeklyPlannerForm(id){
+  const record = id ? DB.weeklyplanners.find(r=>r.id===id) : null;
+  if(id && !record) return;
+  if(id && !ownsRecord('weeklyplanners', record)){ toast('You can only edit your own weekly plan','error'); return; }
+  currentWpId = id||null;
+  document.getElementById('weeklyPlannerTitle').textContent = id ? 'Edit Weekly Plan' : "Submit Monday's Plan";
+  document.getElementById('wpWeekStart').value = record ? record.weekStart : mondayOfCurrentWeek();
+  const tbody = document.getElementById('wpTaskRows'); tbody.innerHTML='';
+  const tasks = record ? (record.tasks||[]) : [];
+  if(tasks.length) tasks.forEach(t=>addWpTaskRow(t)); else addWpTaskRow();
+  document.getElementById('weeklyPlannerModalBg').classList.add('show');
+}
+function closeWeeklyPlannerForm(){ document.getElementById('weeklyPlannerModalBg').classList.remove('show'); currentWpId=null; }
+
+async function saveWeeklyPlanner(){
+  const weekStart = document.getElementById('wpWeekStart').value;
+  if(!weekStart){ toast('Week start date is required','error'); return; }
+  const dow = new Date(weekStart+'T00:00:00').getDay();
+  if(dow !== 1){ toast('Week Starting date must be a Monday','error'); return; }
+  const rows = Array.from(document.querySelectorAll('#wpTaskRows tr'));
+  const tasks = rows.map(tr=>({
+    taskName: tr.querySelector('.wp-task-name').value.trim(),
+    day: tr.querySelector('.wp-task-day').value,
+    priority: tr.querySelector('.wp-task-priority').value,
+    notes: tr.querySelector('.wp-task-notes').value.trim()
+  })).filter(t=>t.taskName);
+  if(!tasks.length){ toast('Add at least one planned task with a name','error'); return; }
+
+  const data = { weekStart, tasks, updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+  try{
+    if(currentWpId){
+      await db.collection('weeklyplanners').doc(currentWpId).update(data);
+      toast('Weekly plan updated','success');
+    } else {
+      data.createdBy = (DB.profile&&DB.profile.name)||(auth.currentUser&&auth.currentUser.email)||'Unknown';
+      data.createdByUid = auth.currentUser && auth.currentUser.uid;
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('weeklyplanners').add(data);
+      toast('Weekly plan submitted','success');
+    }
+    closeWeeklyPlannerForm();
+  }catch(err){ toast('Failed: '+err.message,'error'); }
+}
+
+function exportWeeklyPlannerExcel(){
+  const rows = myRecords('weeklyplanners');
+  if(!rows.length){ toast('No weekly plans to export','error'); return; }
+  const flat = [];
+  rows.forEach(r=>{
+    const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
+    tasks.forEach(t=>{
+      flat.push({ 'Week Of':r.weekStart||'', Employee:r.createdBy||'', 'Task Name':t.taskName||'', 'Target Day':t.day||'', Priority:t.priority||'', Notes:t.notes||'' });
+    });
+  });
+  const ws = XLSX.utils.json_to_sheet(flat);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Weekly Planner');
+  XLSX.writeFile(wb, `Weekly_Planner_${todayISO()}.xlsx`);
+}
+function exportWeeklyPlannerPdf(){
+  const rows = myRecords('weeklyplanners');
+  if(!rows.length){ toast('No weekly plans to export','error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text('Haulog CRM - Weekly Planner', 14, 16);
+  doc.setFontSize(10); doc.text(`Generated ${todayISO()}`, 14, 22);
+  const body = [];
+  rows.forEach(r=>{
+    const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
+    tasks.forEach(t=>{
+      body.push([r.weekStart||'', r.createdBy||'', t.taskName||'', t.day||'', t.priority||'', t.notes||'']);
+    });
+  });
+  doc.autoTable({ startY:28, head:[['Week Of','Employee','Task','Day','Priority','Notes']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
+  doc.save(`Weekly_Planner_${todayISO()}.pdf`);
+}
+
+/* =========================================================
    LEADS KANBAN
 ========================================================= */
 function renderKanban(){
@@ -2004,93 +2311,26 @@ function renderCalendar(){
   let html = dows.map(d=>`<div class="dow">${d}</div>`).join('');
   html += cells.map(c=>{
     const isToday = c.iso===todayStr;
-    const meetingEvts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
-    const callsByDate = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso) : [];
-    const callsByFollowUp = c.iso? myRecords('calls').filter(cl=>cl.nextFollowUp===c.iso && cl.nextFollowUp!==cl.date) : [];
-
-    const meetingHtml = meetingEvts.map(e=>
-      `<span class="evt" draggable="true" title="${e.title}"
-        ondragstart="evtDragStart(event,'meeting','${e.id}','date')" ondragend="evtDragEnd(event)">
-        <span class="evt-label" onclick="openForm('meetings','${e.id}')">${e.title}</span>
-        <span class="evt-actions">
-          <button type="button" class="evt-ic" title="Edit meeting" onclick="event.stopPropagation();openForm('meetings','${e.id}')">✎</button>
-          <button type="button" class="evt-ic" title="Delete meeting" onclick="event.stopPropagation();deleteRecord('meetings','${e.id}')">✕</button>
-        </span>
-      </span>`).join('');
-
-    const callDateHtml = callsByDate.map(e=>
-      `<span class="evt call" draggable="true" title="${e.lead||'Call'} — call date"
-        ondragstart="evtDragStart(event,'call','${e.id}','date')" ondragend="evtDragEnd(event)">
-        <span class="evt-label" onclick="openCallDetail('${e.id}')">📞 ${e.lead||'Call'}</span>
-        <span class="evt-actions">
-          <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
-          <button type="button" class="evt-ic" title="Delete call" onclick="event.stopPropagation();deleteRecord('calls','${e.id}')">✕</button>
-        </span>
-      </span>`).join('');
-
-    const callFollowUpHtml = callsByFollowUp.map(e=>
-      `<span class="evt call followup" draggable="true" title="${e.lead||'Call'} — next follow-up"
-        ondragstart="evtDragStart(event,'call','${e.id}','nextFollowUp')" ondragend="evtDragEnd(event)">
-        <span class="evt-label" onclick="openCallDetail('${e.id}')">↻ ${e.lead||'Call'}</span>
-        <span class="evt-actions">
-          <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
-          <button type="button" class="evt-ic" title="Remove follow-up" onclick="event.stopPropagation();clearCallFollowUp('${e.id}')">✕</button>
-        </span>
-      </span>`).join('');
-
-    const dropAttrs = c.iso
-      ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')"`
-      : '';
-
-    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}" ${dropAttrs}>
+    const evts = c.iso? myRecords('meetings').filter(mt=>mt.date===c.iso) : [];
+    const dayCalls = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso) : [];
+    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}">
       <span class="num">${c.d}</span>
-      ${meetingHtml}${callDateHtml}${callFollowUpHtml}
+      ${evts.map(e=>`<span class="evt" style="cursor:pointer" onclick="openCalendarEvent('${e.id}')" title="${e.title} — click to open">${e.title}</span>`).join('')}
+      ${dayCalls.map(cl=>`<span class="evt" style="cursor:pointer;background:var(--green);" onclick="openCallDetail('${cl.id}')" title="Call — ${cl.lead} — click to open">📞 ${cl.lead}</span>`).join('')}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
   renderTable('meetings');
 }
 
-/* Drag & drop — reschedule a meeting or call by dropping it on another day */
-let calDragPayload = null;
-function evtDragStart(e, type, id, dateField){
-  calDragPayload = {type, id, dateField};
-  e.dataTransfer.effectAllowed = 'move';
-  try{ e.dataTransfer.setData('text/plain', id); }catch(err){}
-  e.currentTarget.classList.add('dragging');
-}
-function evtDragEnd(e){ e.currentTarget.classList.remove('dragging'); }
-function allowDrop(e){ e.preventDefault(); }
-async function handleCalDrop(e, iso){
-  e.preventDefault();
-  e.currentTarget.classList.remove('drop-hover');
-  if(!calDragPayload || !iso) return;
-  const {type, id, dateField} = calDragPayload;
-  calDragPayload = null;
-
-  try{
-    if(type==='meeting'){
-      const meeting = DB.meetings.find(m=>m.id===id);
-      if(!meeting || meeting.date===iso) return;
-      await db.collection('meetings').doc(id).update({
-        date: iso, updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      toast('Meeting moved to '+iso,'success');
-    } else if(type==='call'){
-      const call = DB.calls.find(c=>c.id===id);
-      if(!call || call[dateField]===iso) return;
-      const patch = { [dateField]: iso };
-      await db.collection('calls').doc(id).update({
-        ...patch, updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      // keep the auto-generated follow-up meeting (if any) in sync with the new date
-      const merged = {...call, ...patch};
-      if(merged.nextFollowUp) await syncCallFollowUpMeeting(id, merged);
-      toast((dateField==='date' ? 'Call date moved to ' : 'Follow-up moved to ')+iso,'success');
-    }
-  }catch(err){
-    toast('Failed to reschedule: '+err.message,'error');
+function openCalendarEvent(meetingId){
+  const m = DB.meetings.find(x=>x.id===meetingId);
+  if(!m){ toast('Event not found','error'); return; }
+  if(m.linkedCallId){
+    const call = DB.calls.find(c=>c.id===m.linkedCallId);
+    if(call){ openCallDetail(call.id); return; }
   }
+  openForm('meetings', meetingId);
 }
 
 /* =========================================================
@@ -2185,6 +2425,8 @@ function updateCounts(){
   document.getElementById('empCount').textContent = DB.employees.length+' employees';
   document.getElementById('custCount').textContent = myRecords('customers').length+' customers';
   document.getElementById('meetingsCount').textContent = myRecords('meetings').length+' meetings';
+  document.getElementById('dailySummaryCount').textContent = myRecords('dailysummaries').length+' entries';
+  document.getElementById('weeklyPlannerCount').textContent = myRecords('weeklyplanners').length+' plans';
 }
 
 function renderDashboard(){
@@ -2749,8 +2991,9 @@ async function saveConfig(e){
    ROLES & RESPONSIBILITIES
 ========================================================= */
 const PAGE_LABELS = {
-  dashboard:'Dashboard', leads:'Leads', calls:'Calls', meetings:'Calendar', quotations:'Quotations',
+  dashboard:'Dashboard', leads:'Leads', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
+  dailysummary:'Daily Summary', weeklyplanner:'Weekly Planner',
   reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
 };
 
@@ -2765,6 +3008,8 @@ const MODULE_TILES = [
   {id:'expenses', title:'Expenses', desc:'Travel & field claims with approval routing.'},
   {id:'employees', title:'Employees', desc:'Targets, attendance, performance dashboards.'},
   {id:'customers', title:'Customers', desc:'Post-win timeline, AMC, renewals, support.'},
+  {id:'dailysummary', title:'Daily Summary', desc:'Log every task you worked on today and total hours.'},
+  {id:'weeklyplanner', title:'Weekly Planner', desc:'Plan the week ahead every Monday.'},
   {id:'reports', title:'Reports', desc:'Daily to custom-range analytics across modules.'},
   {id:'settings', title:'Masters & Settings', desc:'Sources, industries, roles, integrations.'},
   {id:'myreports', title:'My Reports', desc:'Your own pipeline, calls, and expenses.'},
