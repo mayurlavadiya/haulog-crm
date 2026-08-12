@@ -179,11 +179,18 @@ tbody tr:hover{background:var(--blue-50);}
 .cal .day.today{border:1.5px solid var(--blue);background:var(--blue-50);}
 .cal .day.drop-hover{background:var(--blue-50);border:1.5px dashed var(--blue);}
 .cal .day .num{font-weight:700;font-size:12px;}
-.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 5px;border-radius:6px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:grab;}
-.cal .evt:hover{opacity:.85;}
+.cal .evt{margin-top:4px;font-size:9.5px;background:var(--blue);color:#fff;padding:2px 4px 2px 5px;border-radius:6px;display:flex;align-items:center;gap:3px;overflow:hidden;cursor:grab;}
+.cal .evt:hover{opacity:.92;}
 .cal .evt.call{background:var(--amber);}
 .cal .evt.followup{background:transparent;color:var(--amber);border:1px dashed var(--amber);}
 .cal .evt.dragging{opacity:.35;cursor:grabbing;}
+.cal .evt .evt-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal .evt .evt-actions{display:flex;gap:2px;flex-shrink:0;opacity:0;pointer-events:none;transition:opacity .12s ease;}
+.cal .evt:hover .evt-actions{opacity:1;pointer-events:auto;}
+.cal .evt .evt-ic{width:14px;height:14px;border:none;border-radius:4px;background:rgba(255,255,255,.28);color:inherit;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;cursor:pointer;padding:0;flex-shrink:0;}
+.cal .evt .evt-ic:hover{background:rgba(255,255,255,.5);}
+.cal .evt.followup .evt-ic{background:rgba(247,144,9,.15);}
+.cal .evt.followup .evt-ic:hover{background:rgba(247,144,9,.3);}
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,0,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
@@ -1937,6 +1944,22 @@ function renderAttachmentUI(){
   el.innerHTML = (existingHtml + newHtml || '') + `<div class="hint" style="margin-top:2px;">${usedKB}KB of ~900KB used for this expense</div>`;
 }
 
+async function clearCallFollowUp(callId){
+  const call = DB.calls.find(c=>c.id===callId);
+  if(!call){ toast('Call not found','error'); return; }
+  if(!ownsRecord('calls', call)){ toast('You can only edit calls you added','error'); return; }
+  if(!confirm(`Remove the follow-up reminder for ${call.lead||'this call'}? The call record itself stays.`)) return;
+  try{
+    await db.collection('calls').doc(callId).update({
+      nextFollowUp: '', nextFollowUpTime: '',
+      updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const linkedMeeting = DB.meetings.find(m=>m.linkedCallId===callId);
+    if(linkedMeeting) await db.collection('meetings').doc(linkedMeeting.id).delete();
+    toast('Follow-up removed','success');
+  }catch(err){ toast('Failed to remove follow-up: '+err.message,'error'); }
+}
+
 async function syncCallFollowUpMeeting(callId, callData){
   if(!callData.nextFollowUp) return;
   const existing = DB.meetings.find(m=>m.linkedCallId===callId);
@@ -2377,18 +2400,33 @@ function renderCalendar(){
 
     const meetingHtml = meetingEvts.map(e=>
       `<span class="evt" draggable="true" title="${e.title} — click to open"
-        ondragstart="evtDragStart(event,'meeting','${e.id}','date')" ondragend="evtDragEnd(event)"
-        onclick="openCalendarEvent('${e.id}')">${e.title}</span>`).join('');
+        ondragstart="evtDragStart(event,'meeting','${e.id}','date')" ondragend="evtDragEnd(event)">
+        <span class="evt-label" onclick="openCalendarEvent('${e.id}')">${e.title}</span>
+        <span class="evt-actions">
+          <button type="button" class="evt-ic" title="Edit meeting" onclick="event.stopPropagation();openForm('meetings','${e.id}')">✎</button>
+          <button type="button" class="evt-ic" title="Delete meeting" onclick="event.stopPropagation();deleteRecord('meetings','${e.id}')">✕</button>
+        </span>
+      </span>`).join('');
 
     const callDateHtml = callsByDate.map(e=>
       `<span class="evt call" draggable="true" title="Call — ${e.lead} — call date — click to open"
-        ondragstart="evtDragStart(event,'call','${e.id}','date')" ondragend="evtDragEnd(event)"
-        onclick="openCallDetail('${e.id}')">📞 ${e.lead}</span>`).join('');
+        ondragstart="evtDragStart(event,'call','${e.id}','date')" ondragend="evtDragEnd(event)">
+        <span class="evt-label" onclick="openCallDetail('${e.id}')">📞 ${e.lead}</span>
+        <span class="evt-actions">
+          <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
+          <button type="button" class="evt-ic" title="Delete call" onclick="event.stopPropagation();deleteRecord('calls','${e.id}')">✕</button>
+        </span>
+      </span>`).join('');
 
     const callFollowUpHtml = callsByFollowUp.map(e=>
       `<span class="evt call followup" draggable="true" title="Call — ${e.lead} — next follow-up — click to open"
-        ondragstart="evtDragStart(event,'call','${e.id}','nextFollowUp')" ondragend="evtDragEnd(event)"
-        onclick="openCallDetail('${e.id}')">↻ ${e.lead}</span>`).join('');
+        ondragstart="evtDragStart(event,'call','${e.id}','nextFollowUp')" ondragend="evtDragEnd(event)">
+        <span class="evt-label" onclick="openCallDetail('${e.id}')">↻ ${e.lead}</span>
+        <span class="evt-actions">
+          <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
+          <button type="button" class="evt-ic" title="Remove follow-up" onclick="event.stopPropagation();clearCallFollowUp('${e.id}')">✕</button>
+        </span>
+      </span>`).join('');
 
     const dropAttrs = c.iso
       ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')"`
