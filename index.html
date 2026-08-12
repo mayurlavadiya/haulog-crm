@@ -441,7 +441,7 @@ tbody tr:hover{background:var(--blue-50);}
 </div>
 
 <div class="modal-bg" id="dailySummaryModalBg">
-  <div class="modal" style="max-width:820px;width:92vw;max-height:88vh;overflow-y:auto;">
+  <div class="modal" style="max-width:900px;width:94vw;max-height:88vh;overflow-y:auto;">
     <div class="modal-head">
       <h3 id="dailySummaryTitle">Daily Task Summary</h3>
       <button class="modal-close" onclick="closeDailySummaryForm()">✕</button>
@@ -449,15 +449,24 @@ tbody tr:hover{background:var(--blue-50);}
     <div class="modal-body">
       <div class="two-col">
         <div class="field"><label>Date <span class="req">*</span></label><input type="date" id="dsDate"></div>
-        <div class="field"><label>Total Time Spent (hrs) <span class="req">*</span></label><input type="number" id="dsTotalHours" min="0" max="24" step="0.25" placeholder="e.g. 8"></div>
+        <div class="field"><label>Total Time Spent (auto-calculated)</label><input type="text" id="dsTotalHours" disabled style="background:var(--grey-bg);font-weight:700;"></div>
       </div>
-      <h4 style="margin:6px 0 10px;">Tasks Performed <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(add every task you worked on today)</span></h4>
+      <h4 style="margin:6px 0 10px;">Tasks Performed <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(add every task you worked on today — duration auto-fills from start/end time)</span></h4>
       <div class="table-wrap" style="margin-bottom:10px;"><table>
-        <thead><tr><th>Task Name</th><th>Sub-task / Detail</th><th>Time Spent</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Task Name</th><th>Sub-task / Detail</th><th>Start</th><th>End</th><th>Duration</th><th>Status</th><th></th></tr></thead>
         <tbody id="dsTaskRows"></tbody>
       </table></div>
       <button type="button" class="btn-sm" onclick="addDsTaskRow()">+ Add Task</button>
       <div class="field" style="margin-top:16px;"><label>Notes / Blockers</label><textarea id="dsNotes" placeholder="Anything else to flag…"></textarea></div>
+      <div class="field">
+        <label>Attachments <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(optional — Excel, PDF, Word, HTML, or any file)</span></label>
+        <div class="upload-zone" onclick="document.getElementById('dsFileInput').click()">
+          <input type="file" id="dsFileInput" multiple accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.html,.htm,.txt,.zip,image/*" onchange="handleDsFiles(this.files)">
+          <div>📎 Click to choose files</div>
+          <div class="hint">Excel, PDF, Word, HTML, images, etc. · max 3 files per entry</div>
+        </div>
+        <div class="attach-list" id="dsAttachListUI"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn-ghost" onclick="closeDailySummaryForm()">Cancel</button>
@@ -1492,7 +1501,8 @@ const MODULES = {
       {key:'createdBy', label:'Employee'},
       {key:'totalHours', label:'Total Time', fmt:v=>v?v+' hrs':'—'},
       {key:'tasks', label:'Tasks', fmt:v=>(v||[]).length+' task(s)'},
-      {key:'tasks', label:'Task Summary', fmt:v=>(v&&v.length)? v.map(t=>t.taskName).filter(Boolean).join(', ').slice(0,60) : '—'}
+      {key:'tasks', label:'Task Summary', fmt:v=>(v&&v.length)? v.map(t=>t.taskName).filter(Boolean).join(', ').slice(0,60) : '—'},
+      {key:'attachments', label:'Docs', fmt:v=>(v&&v.length)?`📎 ${v.length}`:'—'}
     ],
     fields:[]
   },
@@ -1848,8 +1858,77 @@ const MAX_TOTAL_ATTACHMENT_BYTES = 900*1024; // keep well under Firestore's 1MB 
 function fileIcon(type){
   if(type && type.startsWith('image/')) return '🖼️';
   if(type === 'application/pdf') return '📄';
+  if(type && (type.includes('sheet') || type.includes('excel') || type==='text/csv')) return '📊';
+  if(type && (type.includes('word') || type.includes('document'))) return '📃';
+  if(type === 'text/html') return '🌐';
+  if(type === 'application/zip') return '🗜️';
   return '📝';
 }
+
+/* Daily Summary attachments — same Base64-in-Firestore pattern as expenses,
+   but accepts general doc types (xlsx/pdf/doc/html/etc), not just bills. */
+let dsExistingAttachments = [];
+let dsNewFiles = [];
+const MAX_ATTACHMENTS_PER_DS = 3;
+const MAX_DS_DOC_KB = 300;
+const MAX_DS_TOTAL_BYTES = 900*1024;
+
+function dsTotalAttachmentBytes(){
+  return [...dsExistingAttachments, ...dsNewFiles]
+    .reduce((sum,a)=> sum + Math.round((a.dataUrl||'').length*0.75), 0);
+}
+
+async function handleDsFiles(fileList){
+  for(const file of Array.from(fileList)){
+    if(dsExistingAttachments.length + dsNewFiles.length >= MAX_ATTACHMENTS_PER_DS){
+      toast(`Max ${MAX_ATTACHMENTS_PER_DS} attachments per entry`, 'error');
+      break;
+    }
+    let dataUrl;
+    try{
+      if(file.type.startsWith('image/')){
+        dataUrl = await compressImage(file);
+      } else {
+        if(file.size > MAX_DS_DOC_KB*1024){
+          toast(`${file.name} is over ${MAX_DS_DOC_KB}KB — try a smaller/zipped file`, 'error');
+          continue;
+        }
+        dataUrl = await fileToDataUrl(file);
+      }
+    }catch(err){ toast('Could not read '+file.name, 'error'); continue; }
+
+    const projectedTotal = dsTotalAttachmentBytes() + Math.round(dataUrl.length*0.75);
+    if(projectedTotal > MAX_DS_TOTAL_BYTES){
+      toast(`Adding ${file.name} would exceed the storage limit for this entry — remove another file first`, 'error');
+      continue;
+    }
+    dsNewFiles.push({name:file.name, type: file.type.startsWith('image/') ? 'image/jpeg' : (file.type||'application/octet-stream'), size: Math.round(dataUrl.length*0.75), dataUrl});
+  }
+  document.getElementById('dsFileInput').value = '';
+  renderDsAttachmentUI();
+}
+function removeDsExistingAttachment(idx){ dsExistingAttachments.splice(idx,1); renderDsAttachmentUI(); }
+function removeDsNewFile(idx){ dsNewFiles.splice(idx,1); renderDsAttachmentUI(); }
+
+function renderDsAttachmentUI(){
+  const el = document.getElementById('dsAttachListUI');
+  if(!el) return;
+  const usedKB = (dsTotalAttachmentBytes()/1024).toFixed(0);
+  const existingHtml = dsExistingAttachments.map((a,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(a.type)}</div>
+      <a href="${a.dataUrl}" target="_blank" rel="noopener" download="${a.name}">${a.name}</a>
+      <button type="button" class="rm" onclick="removeDsExistingAttachment(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  const newHtml = dsNewFiles.map((f,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(f.type)}</div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name} <span style="color:var(--ink-soft);font-weight:400;">(new — ${(f.size/1024).toFixed(0)}KB)</span></span>
+      <button type="button" class="rm" onclick="removeDsNewFile(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  el.innerHTML = (existingHtml + newHtml || '') + `<div class="hint" style="margin-top:2px;">${usedKB}KB of ~900KB used for this entry</div>`;
+}
+
 
 function fileToDataUrl(file){
   return new Promise((resolve,reject)=>{
@@ -2147,6 +2226,41 @@ async function saveCallRemark(){
 let currentDsId = null;
 function rowInputStyle(extra){ return `width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--field-bg);color:var(--ink);font-size:13px;${extra||''}`; }
 
+function calcDurationHM(start, end){
+  if(!start || !end) return {label:'—', minutes:0};
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  let mins = (eh*60+em) - (sh*60+sm);
+  if(mins < 0) mins += 24*60; // handles overnight shift, e.g. 22:00 -> 02:00
+  const h = Math.floor(mins/60), m = mins%60;
+  const label = (h?`${h}h `:'') + (m || !h ? `${m}m` : '');
+  return {label: label.trim() || '0m', minutes: mins};
+}
+
+function updateDsRowDuration(tr){
+  const start = tr.querySelector('.ds-task-start').value;
+  const end = tr.querySelector('.ds-task-end').value;
+  const {label} = calcDurationHM(start, end);
+  tr.querySelector('.ds-task-duration').textContent = label;
+  updateDsTotalHours();
+}
+
+function updateDsTotalHours(){
+  const rows = Array.from(document.querySelectorAll('#dsTaskRows tr'));
+  let totalMinutes = 0;
+  rows.forEach(tr=>{
+    const start = tr.querySelector('.ds-task-start').value;
+    const end = tr.querySelector('.ds-task-end').value;
+    totalMinutes += calcDurationHM(start, end).minutes;
+  });
+  const h = Math.floor(totalMinutes/60), m = totalMinutes%60;
+  const el = document.getElementById('dsTotalHours');
+  if(el){
+    el.value = totalMinutes ? `${h}h ${m}m (${(totalMinutes/60).toFixed(2)} hrs)` : '—';
+    el.dataset.hoursDecimal = (totalMinutes/60).toFixed(2);
+  }
+}
+
 function addDsTaskRow(task){
   task = task || {};
   const tbody = document.getElementById('dsTaskRows');
@@ -2154,12 +2268,16 @@ function addDsTaskRow(task){
   tr.innerHTML = `
     <td><input type="text" class="ds-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
     <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task / detail" style="${rowInputStyle()}"></td>
-    <td><input type="text" class="ds-task-time" value="${(task.timeSpent||'').replace(/"/g,'&quot;')}" placeholder="1h 30m" style="${rowInputStyle('width:100px;')}"></td>
+    <td><input type="time" class="ds-task-start" value="${task.startTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
+    <td><input type="time" class="ds-task-end" value="${task.endTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
+    <td><span class="ds-task-duration" style="font-size:12.5px;font-weight:600;color:var(--blue);white-space:nowrap;">${task.timeSpent||'—'}</span></td>
     <td><select class="ds-task-status" style="${rowInputStyle('width:130px;')}">
       ${['Completed','In Progress','Pending'].map(s=>`<option value="${s}" ${task.status===s?'selected':''}>${s}</option>`).join('')}
     </select></td>
-    <td><button type="button" class="icon-action danger" onclick="this.closest('tr').remove()" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>`;
+    <td><button type="button" class="icon-action danger" onclick="this.closest('tr').remove();updateDsTotalHours()" title="Remove"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button></td>`;
   tbody.appendChild(tr);
+  if(task.startTime || task.endTime) updateDsRowDuration(tr);
+  updateDsTotalHours();
 }
 
 function openDailySummaryForm(id){
@@ -2169,32 +2287,43 @@ function openDailySummaryForm(id){
   currentDsId = id||null;
   document.getElementById('dailySummaryTitle').textContent = id ? 'Edit Daily Summary' : "Submit Today's Summary";
   document.getElementById('dsDate').value = record ? record.date : todayISO();
-  document.getElementById('dsTotalHours').value = record ? record.totalHours : '';
   document.getElementById('dsNotes').value = record ? (record.notes||'') : '';
   const tbody = document.getElementById('dsTaskRows'); tbody.innerHTML='';
   const tasks = record ? (record.tasks||[]) : [];
   if(tasks.length) tasks.forEach(t=>addDsTaskRow(t)); else addDsTaskRow();
+  updateDsTotalHours();
+
+  dsExistingAttachments = (record && record.attachments || []).slice();
+  dsNewFiles = [];
+  renderDsAttachmentUI();
+
   document.getElementById('dailySummaryModalBg').classList.add('show');
 }
 function closeDailySummaryForm(){ document.getElementById('dailySummaryModalBg').classList.remove('show'); currentDsId=null; }
 
 async function saveDailySummary(){
   const date = document.getElementById('dsDate').value;
-  const totalHours = document.getElementById('dsTotalHours').value;
   const notes = document.getElementById('dsNotes').value.trim();
   if(!date){ toast('Date is required','error'); return; }
-  if(totalHours===''){ toast('Total time spent is required','error'); return; }
   const rows = Array.from(document.querySelectorAll('#dsTaskRows tr'));
-  const tasks = rows.map(tr=>({
-    taskName: tr.querySelector('.ds-task-name').value.trim(),
-    subTask: tr.querySelector('.ds-task-sub').value.trim(),
-    timeSpent: tr.querySelector('.ds-task-time').value.trim(),
-    status: tr.querySelector('.ds-task-status').value
-  })).filter(t=>t.taskName);
+  const tasks = rows.map(tr=>{
+    const startTime = tr.querySelector('.ds-task-start').value;
+    const endTime = tr.querySelector('.ds-task-end').value;
+    return {
+      taskName: tr.querySelector('.ds-task-name').value.trim(),
+      subTask: tr.querySelector('.ds-task-sub').value.trim(),
+      startTime, endTime,
+      timeSpent: calcDurationHM(startTime, endTime).label,
+      status: tr.querySelector('.ds-task-status').value
+    };
+  }).filter(t=>t.taskName);
   if(!tasks.length){ toast('Add at least one task with a name','error'); return; }
 
+  const totalHoursDecimal = Number(document.getElementById('dsTotalHours').dataset.hoursDecimal || 0);
+
   const data = {
-    date, totalHours:Number(totalHours), tasks, notes,
+    date, totalHours: totalHoursDecimal, tasks, notes,
+    attachments: [...dsExistingAttachments, ...dsNewFiles],
     updatedBy:(DB.profile&&DB.profile.name)||'Unknown', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   try{
