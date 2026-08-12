@@ -501,6 +501,10 @@ tbody tr:hover{background:var(--blue-50);}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Leads <span class="nav-badge" id="badgeLeads">0</span>
       </button>
+      <button class="nav-item" data-page="contacts" onclick="go('contacts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><circle cx="18" cy="7" r="3"/><path d="M22 21c0-3-2-5-4.5-5.6"/></svg>
+        Contacts <span class="nav-badge" id="badgeContacts">0</span>
+      </button>
       <button class="nav-item" data-page="calls" onclick="go('calls')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z"/></svg>
         Calls
@@ -639,6 +643,23 @@ tbody tr:hover{background:var(--blue-50);}
             </select>
           </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-leads"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- CONTACTS -->
+      <section class="page" id="page-contacts">
+        <div class="page-head">
+          <div><div class="eyebrow">Sales Pipeline</div><h1>Contacts</h1><p id="contactsCount">0 contacts</p></div>
+          <div class="head-actions"><button class="btn-primary" onclick="openForm('contacts')">+ New Contact</button></div>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <input class="search-input" placeholder="Search by name, company, email, phone…" oninput="renderTable('contacts', this.value)">
+            <select class="filter" id="contactsCompanyFilter" onchange="renderTable('contacts', document.querySelector('#page-contacts .search-input').value)">
+              <option value="">All Companies</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table><thead></thead><tbody id="tbody-contacts"></tbody></table></div>
         </div>
       </section>
 
@@ -1047,9 +1068,9 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
-const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','dailysummaries','weeklyplanners'];
+const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts','dailysummaries','weeklyplanners'];
 // collections that Firestore rules restrict to owner-or-Admin (must query with a matching where clause)
-const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','dailysummaries','weeklyplanners'];
+const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','contacts','dailysummaries','weeklyplanners'];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -1064,14 +1085,14 @@ let DB = {
 };
 
 const DEFAULT_ROLES = [
-  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
-  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
-  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
-  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
-  {name:'Operations', responsibilities:'Handles day-to-day operational tasks, shipment/process coordination, and daily reporting.', permissions:['dashboard','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
+  {name:'Super Admin', responsibilities:'Same full access as Admin — sees and manages every user\'s data across all modules.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
+  {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Operations', responsibilities:'Handles day-to-day operational tasks, shipment/process coordination, and daily reporting.', permissions:['dashboard','contacts','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
   {name:'Tech', responsibilities:'Handles technical/support tasks, tickets, and daily engineering reporting.', permissions:['dashboard','expenses','dailysummary','weeklyplanner','profile','myreports']},
-  {name:'Team Leader', responsibilities:'Leads a team, tracks own pipeline and daily/weekly reporting like the rest of the team.', permissions:['dashboard','leads','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
-  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','expenses','quotations','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'Team Leader', responsibilities:'Leads a team, tracks own pipeline and daily/weekly reporting like the rest of the team.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
+  {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','contacts','expenses','quotations','dailysummary','weeklyplanner','reports','profile','myreports']},
   {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','dailysummary','weeklyplanner','profile','myreports']}
 ];
 
@@ -1478,6 +1499,27 @@ const MODULES = {
     ],
     fields:[]
   },
+  contacts:{
+    label:'Contact', idKey:'id',
+    columns:[
+      {key:'name', label:'Name'},
+      {key:'company', label:'Company', fmt:v=>v||'—'},
+      {key:'designation', label:'Designation', fmt:v=>v||'—'},
+      {key:'phone', label:'Phone'},
+      {key:'email', label:'Email'},
+      {key:'city', label:'City', fmt:v=>v||'—'}
+    ],
+    fields:[
+      {key:'name', label:'Contact Name', type:'text', required:true},
+      {key:'company', label:'Company / Client', type:'select', optionsFrom:'contactCompanies', required:false},
+      {key:'designation', label:'Designation', type:'text'},
+      {key:'phone', label:'Contact Number', type:'tel', required:true, pattern:/^[0-9]{10}$/, patternMsg:'Enter a valid 10-digit phone number'},
+      {key:'email', label:'Email', type:'email', required:true},
+      {key:'address', label:'Address', type:'textarea'},
+      {key:'city', label:'City', type:'text'},
+      {key:'pincode', label:'Pincode', type:'text', pattern:/^[0-9]{6}$/, patternMsg:'Enter a valid 6-digit pincode'}
+    ]
+  },
   customers:{
     label:'Customer', idKey:'id',
     columns:[
@@ -1520,6 +1562,11 @@ function optionsFor(name){
   if(name==='branches') return DB.masters.branches;
   if(name==='employeeNames') return DB.employees.map(e=>e.name);
   if(name==='leadCompanies') return [...new Set([...myRecords('leads').map(l=>l.company), ...myRecords('customers').map(c=>c.company)])];
+  if(name==='contactCompanies') return [...new Set([
+    ...myRecords('leads').map(l=>l.company),
+    ...myRecords('customers').map(c=>c.company),
+    ...myRecords('contacts').map(ct=>ct.company)
+  ].filter(Boolean))];
   if(name==='roleNames') return (DB.roles||[]).map(r=>r.name);
   return [];
 }
@@ -1534,7 +1581,7 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','sitemap','leads','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
@@ -1614,7 +1661,7 @@ document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.i
    otherwise a technical user can still read all documents
    directly via the Firebase SDK / network tab.
 ========================================================= */
-const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers','dailysummaries','weeklyplanners'];
+const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers','contacts','dailysummaries','weeklyplanners'];
 function isAdmin(){ return !!(DB.profile && ['Admin','Super Admin'].includes(DB.profile.role)); }
 function myRecords(moduleKey){
   const list = DB[moduleKey] || [];
@@ -1658,6 +1705,12 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
   const stageFilterEl = document.getElementById('leadsStageFilter');
   if(moduleKey==='leads' && stageFilterEl && stageFilterEl.value){
     rows = rows.filter(r=>r.stage===stageFilterEl.value);
+  }
+  const contactsCompanyFilterEl = document.getElementById('contactsCompanyFilter');
+  if(moduleKey==='contacts' && contactsCompanyFilterEl){
+    const prevVal = contactsCompanyFilterEl.value;
+    contactsCompanyFilterEl.innerHTML = '<option value="">All Companies</option>' + optionsFor('contactCompanies').map(c=>`<option value="${c}" ${c===prevVal?'selected':''}>${c}</option>`).join('');
+    if(contactsCompanyFilterEl.value) rows = rows.filter(r=>r.company===contactsCompanyFilterEl.value);
   }
 
   if(rows.length===0){
@@ -1730,10 +1783,12 @@ function openForm(moduleKey, id){
       }
       const MASTER_BACKED = ['sources','industries','stages'];
       const isMasterBacked = MASTER_BACKED.includes(f.optionsFrom);
-      input = `<select name="${f.key}" data-required="${!!f.required}" ${isMasterBacked?`onchange="handleAddNewOption(this,'${f.optionsFrom}')"`:''}>
+      const isFreeTextAddable = f.optionsFrom==='contactCompanies';
+      const addNewHandler = isMasterBacked ? `handleAddNewOption(this,'${f.optionsFrom}')` : isFreeTextAddable ? `handleAddFreeTextOption(this)` : '';
+      input = `<select name="${f.key}" data-required="${!!f.required}" ${addNewHandler?`onchange="${addNewHandler}"`:''}>
         <option value="">Select ${f.label}</option>
         ${opts.map(o=>`<option value="${o}" ${String(o).trim()===String(lockedVal||'').trim()?'selected':''}>${o}</option>`).join('')}
-        ${isMasterBacked?'<option value="__add_new__">+ Add new…</option>':''}
+        ${(isMasterBacked||isFreeTextAddable)?'<option value="__add_new__">+ Add new…</option>':''}
       </select>`;
     } else if(f.type==='textarea'){
       input = `<textarea name="${f.key}">${val}</textarea>`;
@@ -2456,6 +2511,17 @@ async function handleAddNewOption(selectEl, masterKey){
     selectEl.value = '';
   }
 }
+function handleAddFreeTextOption(selectEl){
+  if(selectEl.value !== '__add_new__') return;
+  const val = (prompt('Enter new company / client name (not yet registered as a Lead or Customer is fine):')||'').trim();
+  if(!val){ selectEl.value=''; return; }
+  const existing = Array.from(selectEl.options).find(o=>o.value.toLowerCase()===val.toLowerCase() && o.value!=='__add_new__');
+  if(existing){ selectEl.value = existing.value; return; }
+  const opt = document.createElement('option');
+  opt.value = val; opt.textContent = val;
+  selectEl.insertBefore(opt, selectEl.querySelector('option[value="__add_new__"]'));
+  selectEl.value = val;
+}
 
 async function addMaster(key){
   const input = document.getElementById('add-'+key);
@@ -2487,6 +2553,8 @@ function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[i
 function updateCounts(){
   document.getElementById('badgeLeads').textContent = myRecords('leads').length;
   document.getElementById('leadsCount').textContent = myRecords('leads').length+' leads';
+  document.getElementById('badgeContacts').textContent = myRecords('contacts').length;
+  document.getElementById('contactsCount').textContent = myRecords('contacts').length+' contacts';
   document.getElementById('callsCount').textContent = myRecords('calls').length+' calls logged';
   document.getElementById('quotesCount').textContent = myRecords('quotations').length+' quotations';
   document.getElementById('proposalsCount').textContent = myRecords('proposals').length+' proposals';
@@ -3060,7 +3128,7 @@ async function saveConfig(e){
    ROLES & RESPONSIBILITIES
 ========================================================= */
 const PAGE_LABELS = {
-  dashboard:'Dashboard', leads:'Leads', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
+  dashboard:'Dashboard', leads:'Leads', contacts:'Contacts', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
   dailysummary:'Daily Summary', weeklyplanner:'Weekly Planner',
   reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
@@ -3069,6 +3137,7 @@ const PAGE_LABELS = {
 const MODULE_TILES = [
   {id:'dashboard', title:'Dashboard', desc:'KPIs, pipeline health and today\'s activity.'},
   {id:'leads', title:'Leads & Prospects', desc:'Capture, qualify and progress every opportunity.'},
+  {id:'contacts', title:'Contacts', desc:'Every person at every company — registered client or not.'},
   {id:'calls', title:'Call Management', desc:'Log calls, auto-reminders, missed-call recovery.'},
   {id:'calendar', title:'Calendar', desc:'Month view of every scheduled meeting and follow-up.'},
   {id:'meetings', title:'Meetings', desc:'Log, search and manage demos, meetings and tasks.'},
