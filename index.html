@@ -451,6 +451,15 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="field"><label>Date <span class="req">*</span></label><input type="date" id="dsDate"></div>
         <div class="field"><label>Total Time Spent (auto-calculated)</label><input type="text" id="dsTotalHours" disabled style="background:var(--grey-bg);font-weight:700;"></div>
       </div>
+      <div class="field" style="margin-top:4px;background:var(--blue-50);border:1px dashed var(--blue-100);border-radius:12px;padding:12px 14px;">
+        <label style="margin-bottom:4px;">✨ Quick-Fill Tasks <span style="font-weight:400;font-size:11.5px;color:var(--ink-soft);">(optional — auto-extract from pasted notes or an Excel file; you can still add/edit rows manually below)</span></label>
+        <textarea id="dsQuickText" rows="3" placeholder="One task per line, e.g.&#10;9:00-10:30 Called Radiant Textiles, discussed quote - completed&#10;11:00-12:00 site visit prep, in progress&#10;2pm-3pm sent quotation to GreenVolt"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <button type="button" class="btn-sm" onclick="autoExtractDsTasks()">🪄 Auto-Extract from Text</button>
+          <button type="button" class="btn-sm" onclick="document.getElementById('dsExcelImportInput').click()">📥 Import from Excel</button>
+          <input type="file" id="dsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="importDsTasksFromExcel(this.files[0])">
+        </div>
+      </div>
       <h4 style="margin:6px 0 10px;">Tasks Performed <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(add every task you worked on today — duration auto-fills from start/end time)</span></h4>
       <div class="table-wrap" style="margin-bottom:10px;"><table>
         <thead><tr><th>Task Name</th><th>Sub-task / Detail</th><th>Start</th><th>End</th><th>Duration</th><th>Status</th><th></th></tr></thead>
@@ -2279,6 +2288,135 @@ function addDsTaskRow(task){
   if(task.startTime || task.endTime) updateDsRowDuration(tr);
   updateDsTotalHours();
 }
+
+/* =========================================================
+   DAILY SUMMARY — QUICK-FILL (free, regex-based, no AI/API cost)
+   1) Auto-Extract from pasted text — splits by line, pulls out a
+      time range ("9:00-10:30" / "9am-11am"), a status keyword,
+      and treats the rest as task/sub-task.
+   2) Import from Excel — reads Task/Sub-task/Start/End/Status
+      columns (header names matched loosely) via the bundled
+      SheetJS lib, one row = one task.
+   Manual "+ Add Task" always stays available alongside both.
+========================================================= */
+function fmtHM(t){ return String(t.h).padStart(2,'0')+':'+String(t.min).padStart(2,'0'); }
+
+function parseTimeToken(tok){
+  if(!tok) return null;
+  tok = String(tok).trim().toLowerCase();
+  const m = tok.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if(!m) return null;
+  let h = parseInt(m[1],10), min = m[2]?parseInt(m[2],10):0, ap = m[3];
+  if(h>23 || min>59) return null;
+  if(ap==='pm' && h<12) h+=12;
+  if(ap==='am' && h===12) h=0;
+  return {h,min};
+}
+
+function extractTimeRange(line){
+  const re = /(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*(?:-|to|–|—)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i;
+  const m = line.match(re);
+  if(!m) return {start:'', end:'', remainder:line.trim()};
+  let rawStart = m[1], rawEnd = m[2];
+  const apEnd = rawEnd.match(/am|pm/i);
+  const apStart = rawStart.match(/am|pm/i);
+  if(!apStart && apEnd) rawStart += ' '+apEnd[0]; // "9-10am" -> assume 9am
+  const start = parseTimeToken(rawStart);
+  const end = parseTimeToken(rawEnd);
+  const remainder = (line.slice(0,m.index)+line.slice(m.index+m[0].length))
+    .trim().replace(/^[-:,.\s]+|[-:,.\s]+$/g,'');
+  return {start: start?fmtHM(start):'', end: end?fmtHM(end):'', remainder};
+}
+
+function parseQuickTextLine(line){
+  line = (line||'').trim();
+  if(!line) return null;
+  line = line.replace(/^[-*•]+\s*|^\d+[.)]\s*/,''); // strip leading bullet/number
+  if(!line) return null;
+  const {start, end, remainder} = extractTimeRange(line);
+  let text = remainder;
+  const lower = text.toLowerCase();
+  let status = 'Completed';
+  if(/\b(in progress|ongoing|working on|wip)\b/.test(lower)) status = 'In Progress';
+  else if(/\b(pending|not done|not started|to-?do)\b/.test(lower)) status = 'Pending';
+
+  let taskName = text, subTask = '';
+  const sep = text.match(/^(.{3,}?)\s*[-–—:]\s*(.{3,})$/);
+  if(sep){ taskName = sep[1].trim(); subTask = sep[2].trim(); }
+  if(!taskName) taskName = text || 'Task';
+
+  return {taskName: taskName.slice(0,120), subTask: subTask.slice(0,160), startTime:start, endTime:end, status};
+}
+
+function clearDsEmptyDefaultRow(){
+  const tbody = document.getElementById('dsTaskRows');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  if(rows.length===1 && !rows[0].querySelector('.ds-task-name').value.trim()) tbody.innerHTML='';
+}
+
+function autoExtractDsTasks(){
+  const raw = document.getElementById('dsQuickText').value;
+  if(!raw.trim()){ toast('Paste some notes first','error'); return; }
+  clearDsEmptyDefaultRow();
+  let count = 0;
+  raw.split(/\n+/).forEach(line=>{
+    const t = parseQuickTextLine(line);
+    if(t && t.taskName){ addDsTaskRow(t); count++; }
+  });
+  if(!count){ toast('Could not detect any tasks — try one task per line, or add manually','error'); return; }
+  document.getElementById('dsQuickText').value = '';
+  toast(`Extracted ${count} task(s) — review & edit as needed`,'success');
+}
+
+function normalizeExcelTime(raw){
+  if(!raw && raw!==0) return '';
+  if(raw instanceof Date) return String(raw.getHours()).padStart(2,'0')+':'+String(raw.getMinutes()).padStart(2,'0');
+  const t = parseTimeToken(raw);
+  if(t) return fmtHM(t);
+  const m = String(raw).match(/^(\d{1,2}):(\d{2})/);
+  return m ? `${m[1].padStart(2,'0')}:${m[2]}` : '';
+}
+
+function mapExcelRowToTask(row){
+  const keys = Object.keys(row);
+  function find(...names){
+    for(const k of keys){ if(names.includes(k.toLowerCase().trim())) return row[k]; }
+    return '';
+  }
+  const taskName = String(find('task','task name','activity','title')||'').trim();
+  if(!taskName) return null;
+  const subTask = String(find('sub-task','subtask','sub task','detail','description')||'').trim();
+  const startTime = normalizeExcelTime(find('start','start time','from'));
+  const endTime = normalizeExcelTime(find('end','end time','to'));
+  let status = String(find('status')||'').trim();
+  if(!['Completed','In Progress','Pending'].includes(status)){
+    status = /progress|ongoing/i.test(status) ? 'In Progress' : /pending|to-?do/i.test(status) ? 'Pending' : 'Completed';
+  }
+  return {taskName, subTask, startTime, endTime, status};
+}
+
+function importDsTasksFromExcel(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:'', raw:false});
+      if(!rows.length){ toast('No rows found in the file','error'); return; }
+      clearDsEmptyDefaultRow();
+      let count = 0;
+      rows.forEach(row=>{
+        const t = mapExcelRowToTask(row);
+        if(t){ addDsTaskRow(t); count++; }
+      });
+      if(!count) toast('No usable rows found — expected a "Task" column at least','error');
+      else toast(`Imported ${count} task(s) from Excel`,'success');
+    }catch(err){ toast('Could not read file: '+err.message,'error'); }
+    document.getElementById('dsExcelImportInput').value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 
 function openDailySummaryForm(id){
   const record = id ? DB.dailysummaries.find(r=>r.id===id) : null;
