@@ -462,7 +462,7 @@ tbody tr:hover{background:var(--blue-50);}
       </div>
       <h4 style="margin:6px 0 10px;">Tasks Performed <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(add every task you worked on today — duration auto-fills from start/end time)</span></h4>
       <div class="table-wrap" style="margin-bottom:10px;"><table>
-        <thead><tr><th>Task Name</th><th>Sub-task / Detail</th><th>Start</th><th>End</th><th>Duration</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Task Name</th><th>Sub-task</th><th>Details</th><th>Start</th><th>End</th><th>Duration</th><th>Status</th><th></th></tr></thead>
         <tbody id="dsTaskRows"></tbody>
       </table></div>
       <button type="button" class="btn-sm" onclick="addDsTaskRow()">+ Add Task</button>
@@ -2295,7 +2295,8 @@ function addDsTaskRow(task){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><input type="text" class="ds-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
-    <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task / detail" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task" style="${rowInputStyle('min-width:120px;')}"></td>
+    <td><textarea class="ds-task-details" rows="1" placeholder="Full details / description…" style="${rowInputStyle('min-width:180px;resize:vertical;min-height:34px;')}">${(task.details||'')}</textarea></td>
     <td><input type="time" class="ds-task-start" value="${task.startTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
     <td><input type="time" class="ds-task-end" value="${task.endTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
     <td><span class="ds-task-duration" style="font-size:12.5px;font-weight:600;color:var(--blue);white-space:nowrap;">${task.timeSpent||'—'}</span></td>
@@ -2469,6 +2470,7 @@ async function saveDailySummary(){
     return {
       taskName: tr.querySelector('.ds-task-name').value.trim(),
       subTask: tr.querySelector('.ds-task-sub').value.trim(),
+      details: tr.querySelector('.ds-task-details').value.trim(),
       startTime, endTime,
       timeSpent: calcDurationHM(startTime, endTime).label,
       status: tr.querySelector('.ds-task-status').value
@@ -2507,7 +2509,7 @@ function exportDailySummaryExcel(){
     tasks.forEach(t=>{
       flat.push({
         Date:r.date||'', Employee:r.createdBy||'', 'Total Hours (Day)':r.totalHours||'',
-        'Task Name':t.taskName||'', 'Sub-task Detail':t.subTask||'', 'Time Spent':t.timeSpent||'',
+        'Task Name':t.taskName||'', 'Sub-task':t.subTask||'', Details:t.details||'', 'Time Spent':t.timeSpent||'',
         Status:t.status||'', Notes:r.notes||''
       });
     });
@@ -2528,10 +2530,10 @@ function exportDailySummaryPdf(){
   rows.forEach(r=>{
     const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
     tasks.forEach(t=>{
-      body.push([r.date||'', r.createdBy||'', (r.totalHours!==undefined?r.totalHours:'')+' hrs', t.taskName||'', t.subTask||'', t.timeSpent||'', t.status||'']);
+      body.push([r.date||'', r.createdBy||'', (r.totalHours!==undefined?r.totalHours:'')+' hrs', t.taskName||'', t.subTask||'', t.details||'', t.timeSpent||'', t.status||'']);
     });
   });
-  doc.autoTable({ startY:28, head:[['Date','Employee','Total (Day)','Task','Sub-task','Time Spent','Status']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
+  doc.autoTable({ startY:28, head:[['Date','Employee','Total (Day)','Task','Sub-task','Details','Time Spent','Status']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
   doc.save(`Daily_Summary_${todayISO()}.pdf`);
 }
 
