@@ -491,7 +491,13 @@ tbody tr:hover{background:var(--blue-50);}
       <button class="modal-close" onclick="closeWeeklyPlannerForm()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="field"><label>Week Starting (Monday) <span class="req">*</span></label><input type="date" id="wpWeekStart"></div>
+      <div class="field"><label>Week No. <span class="req">*</span></label>
+        <div style="display:flex;gap:8px;">
+          <select id="wpWeekYear" style="max-width:100px;" onchange="populateWpWeekNoOptions();syncWpWeekFromDropdown();"></select>
+          <select id="wpWeekNo" onchange="syncWpWeekFromDropdown()"></select>
+        </div>
+      </div>
+      <div class="field"><label>Week Starting (Monday) <span class="req">*</span></label><input type="date" id="wpWeekStart" onchange="syncWpDropdownFromDate()"></div>
       <h4 style="margin:6px 0 10px;">Planned Tasks <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(what you plan to work on this week)</span></h4>
       <div class="table-wrap" style="margin-bottom:10px;"><table>
         <thead><tr><th>Task Name</th><th>Target Day</th><th>Priority</th><th>Notes</th><th></th></tr></thead>
@@ -824,7 +830,13 @@ tbody tr:hover{background:var(--blue-50);}
           </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search by date or employee…" oninput="renderTable('dailysummaries', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" placeholder="Search by date or employee…" oninput="renderTable('dailysummaries', this.value)">
+            <input type="date" class="filter" id="dsFilterFrom" title="From date" onchange="renderTable('dailysummaries')">
+            <input type="date" class="filter" id="dsFilterTo" title="To date" onchange="renderTable('dailysummaries')">
+            <select class="filter" id="dsFilterEmp" style="display:none;" onchange="renderTable('dailysummaries')"><option value="">All Employees</option></select>
+            <button class="btn-ghost" onclick="clearDsFilters()">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-dailysummaries"></tbody></table></div>
         </div>
       </section>
@@ -840,7 +852,12 @@ tbody tr:hover{background:var(--blue-50);}
           </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search by week or employee…" oninput="renderTable('weeklyplanners', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" placeholder="Search by week or employee…" oninput="renderTable('weeklyplanners', this.value)">
+            <select class="filter" id="wpFilterWeek" onchange="renderTable('weeklyplanners')"><option value="">All Weeks</option></select>
+            <select class="filter" id="wpFilterEmp" style="display:none;" onchange="renderTable('weeklyplanners')"><option value="">All Employees</option></select>
+            <button class="btn-ghost" onclick="clearWpFilters()">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-weeklyplanners"></tbody></table></div>
         </div>
       </section>
@@ -1518,7 +1535,7 @@ const MODULES = {
   weeklyplanners:{
     label:'Weekly Planner', idKey:'id',
     columns:[
-      {key:'weekStart', label:'Week Of'},
+      {key:'weekStart', label:'Week', fmt:v=>{ if(!v) return '—'; const i=isoWeekInfo(v); return `Week ${i.week} · ${i.year}`; }},
       {key:'createdBy', label:'Employee'},
       {key:'tasks', label:'Planned Tasks', fmt:v=>(v||[]).length+' task(s)'},
       {key:'tasks', label:'Task Summary', fmt:v=>(v&&v.length)? v.map(t=>t.taskName).filter(Boolean).join(', ').slice(0,60) : '—'}
@@ -1642,8 +1659,8 @@ function go(id){
   if(id==='myreports') renderMyReports();
   if(id==='expenses'){ populateReportEmpFilter(); renderReportHistory(); }
   if(id==='sitemap') renderSitemap();
-  if(id==='dailysummary') renderTable('dailysummaries');
-  if(id==='weeklyplanner') renderTable('weeklyplanners');
+  if(id==='dailysummary'){ renderTable('dailysummaries'); refreshDsWpFilterVisibility(); }
+  if(id==='weeklyplanner'){ renderTable('weeklyplanners'); populateWpFilterWeekOptions(); refreshDsWpFilterVisibility(); }
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
@@ -1738,6 +1755,8 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
     contactsCompanyFilterEl.innerHTML = '<option value="">All Companies</option>' + optionsFor('contactCompanies').map(c=>`<option value="${c}" ${c===prevVal?'selected':''}>${c}</option>`).join('');
     if(contactsCompanyFilterEl.value) rows = rows.filter(r=>r.company===contactsCompanyFilterEl.value);
   }
+  if(moduleKey==='dailysummaries') rows = dsApplyFilters(rows);
+  if(moduleKey==='weeklyplanners') rows = wpApplyFilters(rows);
 
   if(rows.length===0){
     tbody.innerHTML = `<tr><td colspan="${cfg.columns.length+1}"><div class="empty-state">
@@ -2480,7 +2499,7 @@ async function saveDailySummary(){
 }
 
 function exportDailySummaryExcel(){
-  const rows = myRecords('dailysummaries');
+  const rows = dsApplyFilters(myRecords('dailysummaries'));
   if(!rows.length){ toast('No daily summary records to export','error'); return; }
   const flat = [];
   rows.forEach(r=>{
@@ -2499,7 +2518,7 @@ function exportDailySummaryExcel(){
   XLSX.writeFile(wb, `Daily_Summary_${todayISO()}.xlsx`);
 }
 function exportDailySummaryPdf(){
-  const rows = myRecords('dailysummaries');
+  const rows = dsApplyFilters(myRecords('dailysummaries'));
   if(!rows.length){ toast('No daily summary records to export','error'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -2528,6 +2547,110 @@ function mondayOfCurrentWeek(){
   return d.toISOString().slice(0,10);
 }
 
+/* ---- Week No. helpers (ISO-8601, Monday-based) ---- */
+function isoWeekInfo(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay()+6)%7;
+  target.setDate(target.getDate()-dayNr+3);
+  const firstThursday = new Date(target.getFullYear(),0,4);
+  const diff = target - firstThursday;
+  const week = 1 + Math.round(diff/(7*24*3600*1000));
+  return {week, year:target.getFullYear()};
+}
+function mondayFromWeek(year, week){
+  const jan4 = new Date(year,0,4);
+  const jan4Day = (jan4.getDay()+6)%7;
+  const week1Monday = new Date(jan4); week1Monday.setDate(jan4.getDate()-jan4Day);
+  const monday = new Date(week1Monday); monday.setDate(week1Monday.getDate()+(week-1)*7);
+  return monday.toISOString().slice(0,10);
+}
+function weekRangeLabel(mondayStr){
+  const mon = new Date(mondayStr+'T00:00:00');
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt = d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  return `${fmt(mon)} – ${fmt(sun)}`;
+}
+function populateWpWeekYearOptions(selectedYear){
+  const sel = document.getElementById('wpWeekYear');
+  if(!sel) return;
+  const cy = new Date().getFullYear();
+  sel.innerHTML = [cy-1,cy,cy+1].map(y=>`<option value="${y}" ${y===selectedYear?'selected':''}>${y}</option>`).join('');
+}
+function populateWpWeekNoOptions(selectedMonday){
+  const yearSel = document.getElementById('wpWeekYear');
+  const sel = document.getElementById('wpWeekNo');
+  if(!yearSel || !sel) return;
+  const year = Number(yearSel.value);
+  const lastWeekInfo = isoWeekInfo(`${year}-12-31`);
+  const maxWeek = lastWeekInfo.year===year ? lastWeekInfo.week : 52;
+  let opts = '';
+  for(let w=1; w<=maxWeek; w++){
+    const mon = mondayFromWeek(year, w);
+    opts += `<option value="${mon}">Week ${w} · ${weekRangeLabel(mon)}</option>`;
+  }
+  sel.innerHTML = opts;
+  if(selectedMonday) sel.value = selectedMonday;
+}
+function syncWpWeekFromDropdown(){
+  const mon = document.getElementById('wpWeekNo').value;
+  document.getElementById('wpWeekStart').value = mon;
+}
+function syncWpDropdownFromDate(){
+  const dateVal = document.getElementById('wpWeekStart').value;
+  if(!dateVal) return;
+  const dow = new Date(dateVal+'T00:00:00').getDay();
+  if(dow !== 1){ toast('Week Starting date must be a Monday','error'); return; }
+  const info = isoWeekInfo(dateVal);
+  populateWpWeekYearOptions(info.year);
+  populateWpWeekNoOptions(dateVal);
+}
+
+/* ---- Filter-wise view + export (Daily Summary / Weekly Planner) ---- */
+function dsApplyFilters(rows){
+  const df=document.getElementById('dsFilterFrom'), dt=document.getElementById('dsFilterTo'), de=document.getElementById('dsFilterEmp');
+  if(df && df.value) rows = rows.filter(r=>r.date>=df.value);
+  if(dt && dt.value) rows = rows.filter(r=>r.date<=dt.value);
+  if(de && de.value) rows = rows.filter(r=>r.createdBy===de.value);
+  return rows;
+}
+function wpApplyFilters(rows){
+  const wf=document.getElementById('wpFilterWeek'), we=document.getElementById('wpFilterEmp');
+  if(wf && wf.value) rows = rows.filter(r=>r.weekStart===wf.value);
+  if(we && we.value) rows = rows.filter(r=>r.createdBy===we.value);
+  return rows;
+}
+function clearDsFilters(){
+  ['dsFilterFrom','dsFilterTo','dsFilterEmp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  renderTable('dailysummaries');
+}
+function clearWpFilters(){
+  ['wpFilterWeek','wpFilterEmp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  renderTable('weeklyplanners');
+}
+function populateWpFilterWeekOptions(){
+  const sel = document.getElementById('wpFilterWeek');
+  if(!sel) return;
+  const weeks = [...new Set(DB.weeklyplanners.map(r=>r.weekStart).filter(Boolean))].sort();
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">All Weeks</option>' + weeks.map(w=>{
+    const i = isoWeekInfo(w);
+    return `<option value="${w}">Week ${i.week} · ${i.year} (${weekRangeLabel(w)})</option>`;
+  }).join('');
+  if(weeks.includes(prev)) sel.value = prev;
+}
+function refreshDsWpFilterVisibility(){
+  const admin = isAdmin();
+  const de = document.getElementById('dsFilterEmp'), we = document.getElementById('wpFilterEmp');
+  if(de) de.style.display = admin ? 'inline-block' : 'none';
+  if(we) we.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const opts = '<option value="">All Employees</option>' + optionsFor('employeeNames').map(n=>`<option value="${n}">${n}</option>`).join('');
+    if(de) de.innerHTML = opts;
+    if(we) we.innerHTML = opts;
+  }
+}
+
 function addWpTaskRow(task){
   task = task || {};
   const tbody = document.getElementById('wpTaskRows');
@@ -2552,6 +2675,7 @@ function openWeeklyPlannerForm(id){
   currentWpId = id||null;
   document.getElementById('weeklyPlannerTitle').textContent = id ? 'Edit Weekly Plan' : "Submit Monday's Plan";
   document.getElementById('wpWeekStart').value = record ? record.weekStart : mondayOfCurrentWeek();
+  syncWpDropdownFromDate();
   const tbody = document.getElementById('wpTaskRows'); tbody.innerHTML='';
   const tasks = record ? (record.tasks||[]) : [];
   if(tasks.length) tasks.forEach(t=>addWpTaskRow(t)); else addWpTaskRow();
@@ -2590,13 +2714,14 @@ async function saveWeeklyPlanner(){
 }
 
 function exportWeeklyPlannerExcel(){
-  const rows = myRecords('weeklyplanners');
+  const rows = wpApplyFilters(myRecords('weeklyplanners'));
   if(!rows.length){ toast('No weekly plans to export','error'); return; }
   const flat = [];
   rows.forEach(r=>{
+    const info = r.weekStart ? isoWeekInfo(r.weekStart) : null;
     const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
     tasks.forEach(t=>{
-      flat.push({ 'Week Of':r.weekStart||'', Employee:r.createdBy||'', 'Task Name':t.taskName||'', 'Target Day':t.day||'', Priority:t.priority||'', Notes:t.notes||'' });
+      flat.push({ 'Week':info?`Week ${info.week} · ${info.year}`:'', 'Week Start':r.weekStart||'', Employee:r.createdBy||'', 'Task Name':t.taskName||'', 'Target Day':t.day||'', Priority:t.priority||'', Notes:t.notes||'' });
     });
   });
   const ws = XLSX.utils.json_to_sheet(flat);
@@ -2605,7 +2730,7 @@ function exportWeeklyPlannerExcel(){
   XLSX.writeFile(wb, `Weekly_Planner_${todayISO()}.xlsx`);
 }
 function exportWeeklyPlannerPdf(){
-  const rows = myRecords('weeklyplanners');
+  const rows = wpApplyFilters(myRecords('weeklyplanners'));
   if(!rows.length){ toast('No weekly plans to export','error'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -2613,12 +2738,13 @@ function exportWeeklyPlannerPdf(){
   doc.setFontSize(10); doc.text(`Generated ${todayISO()}`, 14, 22);
   const body = [];
   rows.forEach(r=>{
+    const info = r.weekStart ? isoWeekInfo(r.weekStart) : null;
     const tasks = r.tasks && r.tasks.length ? r.tasks : [{}];
     tasks.forEach(t=>{
-      body.push([r.weekStart||'', r.createdBy||'', t.taskName||'', t.day||'', t.priority||'', t.notes||'']);
+      body.push([info?`Week ${info.week} · ${info.year}`:'', r.weekStart||'', r.createdBy||'', t.taskName||'', t.day||'', t.priority||'', t.notes||'']);
     });
   });
-  doc.autoTable({ startY:28, head:[['Week Of','Employee','Task','Day','Priority','Notes']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
+  doc.autoTable({ startY:28, head:[['Week','Week Start','Employee','Task','Day','Priority','Notes']], body, styles:{fontSize:8}, headStyles:{fillColor:[124,111,255]} });
   doc.save(`Weekly_Planner_${todayISO()}.pdf`);
 }
 
