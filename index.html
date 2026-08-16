@@ -906,12 +906,11 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
 
         <div class="card" style="margin-top:18px;">
-          <h3>Task Templates by Role</h3><p class="sub">Suggested tasks employees see (as auto-complete, still editable) while filling Daily Summary / Weekly Planner — tailored per role. Admin only.</p>
+          <h3>Task Templates by Role</h3><p class="sub">Ready-made Task + Sub-task suggestions per role — check to keep active, uncheck to hide. Admin only, nothing to type from scratch.</p>
           <div class="toolbar" style="margin-top:10px;">
-            <select class="filter" id="taskTemplateRoleSelect" onchange="renderTaskTemplateTags()"></select>
+            <select class="filter" id="taskTemplateRoleSelect" onchange="renderTaskTemplateChecklist()"></select>
           </div>
-          <div class="tag-list" id="tags-taskTemplates"></div>
-          <div class="add-row"><input id="add-taskTemplates" placeholder="Add task suggestion for this role…"><button class="btn-sm" onclick="addTaskTemplate()">Add</button></div>
+          <div id="taskTemplateChecklist" style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"></div>
         </div>
 
         <div class="card" style="margin-top:18px;">
@@ -1140,19 +1139,73 @@ function inNdays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toIS
 let DB = {
   settings:{ companyName:'Haulog Technologies Pvt. Ltd.', email:'sales@haulog.com', currency:'₹', fy:'April' },
   masters:{ sources:['Website','Referral','Exhibition','Cold Call','LinkedIn'], industries:['Manufacturer','Solar EPC','FMCG','Textiles','Ceramics','Plastics'], branches:['Rajkot HQ','Ahmedabad','Surat','Vadodara'], stages:[...STAGES],
-    taskTemplates:{
-      'Sales Executive':['Client Follow-up Call','Site Visit','Sent Quotation','Lead Qualification','Proposal Preparation','Negotiation Call','Customer Onboarding'],
-      'Sales Manager':['Team Review Meeting','Client Follow-up Call','Pipeline Review','Proposal Approval','Negotiation Call','Target Tracking'],
-      'Accounts':['Invoice Processing','Payment Follow-up','Expense Reconciliation','GST Filing Prep','Vendor Payment'],
-      'HR':['Recruitment Screening','Onboarding Formalities','Attendance Review','Employee Grievance','Policy Update'],
-      'Admin':['Team Review Meeting','System Configuration','Report Generation','Client Escalation Handling','Vendor Coordination'],
-      'Super Admin':['Team Review Meeting','System Configuration','Report Generation','Client Escalation Handling','Vendor Coordination']
-    }
+    taskTemplates:{} /* patched to buildDefaultTaskTemplates() right after TASK_TEMPLATE_LIBRARY is defined below */
   },
   employees:[], leads:[], calls:[], meetings:[], quotations:[], proposals:[], expenses:[], customers:[],
   profile:{ name:'', email:'', role:'', phone:'', status:'Active' }, users:[],
   roles:[], appConfig:{ selfSignupEnabled:true, idleTimeoutMinutes:45, defaultNewUserRole:'Sales Executive' }, reportLogs:[]
 };
+
+/* Ready-made Task + Sub-task suggestions per role. Admin checks/unchecks which
+   stay active (Settings -> Task Templates by Role) — nothing to type from scratch. */
+const TASK_TEMPLATE_LIBRARY = {
+  'Sales Executive':[
+    {task:'Client Follow-up Call', subTask:'Called to check status and next steps'},
+    {task:'Site Visit', subTask:'Visited client site for requirement discussion'},
+    {task:'Sent Quotation', subTask:'Prepared and emailed quotation to client'},
+    {task:'Lead Qualification', subTask:'Assessed new lead for budget and fit'},
+    {task:'Proposal Preparation', subTask:'Drafted proposal document for client review'},
+    {task:'Negotiation Call', subTask:'Discussed pricing and terms with client'},
+    {task:'Customer Onboarding', subTask:'Completed handover after deal closure'}
+  ],
+  'Sales Manager':[
+    {task:'Team Review Meeting', subTask:'Reviewed pipeline and targets with team'},
+    {task:'Pipeline Review', subTask:'Checked stage-wise lead movement'},
+    {task:'Proposal Approval', subTask:'Reviewed and approved team proposal before sending'},
+    {task:'Client Escalation Handling', subTask:'Resolved escalated client issue'},
+    {task:'Target Tracking', subTask:'Updated team achievement vs target'},
+    {task:'Negotiation Call', subTask:'Joined high-value client negotiation'}
+  ],
+  'Tech Team':[
+    {task:'Bug Fixing', subTask:'Fixed reported issue in module'},
+    {task:'Feature Development', subTask:'Built new feature as per requirement'},
+    {task:'Code Review', subTask:"Reviewed teammate's pull request / code"},
+    {task:'Server Maintenance', subTask:'Checked server health and backups'},
+    {task:'Client Support Ticket', subTask:'Resolved technical support ticket'},
+    {task:'Testing / QA', subTask:'Tested module before deployment'},
+    {task:'Deployment', subTask:'Deployed update to production'}
+  ],
+  'HR':[
+    {task:'Recruitment Screening', subTask:'Screened resumes / candidates for open role'},
+    {task:'Interview Coordination', subTask:'Scheduled and conducted interview'},
+    {task:'Onboarding Formalities', subTask:'Completed new joinee documentation'},
+    {task:'Attendance Review', subTask:'Checked attendance / leave records'},
+    {task:'Employee Grievance', subTask:"Addressed employee's concern or query"},
+    {task:'Policy Update', subTask:'Updated or communicated HR policy'}
+  ],
+  'Accounts':[
+    {task:'Invoice Processing', subTask:'Generated / verified client invoice'},
+    {task:'Payment Follow-up', subTask:'Followed up on pending payment'},
+    {task:'Expense Reconciliation', subTask:'Reconciled team expense claims'},
+    {task:'GST Filing Prep', subTask:'Prepared data for GST filing'},
+    {task:'Vendor Payment', subTask:'Processed vendor payment'}
+  ],
+  'Admin':[
+    {task:'Team Review Meeting', subTask:'Reviewed overall team performance'},
+    {task:'System Configuration', subTask:'Updated CRM settings / configuration'},
+    {task:'Report Generation', subTask:'Generated management report'},
+    {task:'Client Escalation Handling', subTask:'Resolved major client escalation'},
+    {task:'Vendor Coordination', subTask:'Coordinated with vendor for deliverables'}
+  ]
+};
+TASK_TEMPLATE_LIBRARY['Super Admin'] = TASK_TEMPLATE_LIBRARY['Admin'];
+
+function buildDefaultTaskTemplates(){
+  const obj = {};
+  Object.keys(TASK_TEMPLATE_LIBRARY).forEach(role=>{ obj[role] = TASK_TEMPLATE_LIBRARY[role].slice(); });
+  return obj;
+}
+DB.masters.taskTemplates = buildDefaultTaskTemplates();
 
 const DEFAULT_ROLES = [
   {name:'Admin', responsibilities:'Full system access. Manages users, roles, configuration, and can clear team data.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel']},
@@ -2322,7 +2375,7 @@ function addDsTaskRow(task){
   const tbody = document.getElementById('dsTaskRows');
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" class="ds-task-name" list="dsTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="ds-task-name" list="dsTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}" onchange="autoFillTemplateDetail(this,'.ds-task-details')"></td>
     <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task" style="${rowInputStyle('min-width:120px;')}"></td>
     <td><textarea class="ds-task-details" rows="1" placeholder="Full details / description…" style="${rowInputStyle('min-width:180px;resize:vertical;min-height:34px;')}">${(task.details||'')}</textarea></td>
     <td><input type="time" class="ds-task-start" value="${task.startTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
@@ -2687,7 +2740,7 @@ function addWpTaskRow(task){
   const tbody = document.getElementById('wpTaskRows');
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" class="wp-task-name" list="wpTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Prepare monthly report" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="wp-task-name" list="wpTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Prepare monthly report" style="${rowInputStyle()}" onchange="autoFillTemplateDetail(this,'.wp-task-notes')"></td>
     <td><select class="wp-task-day" style="${rowInputStyle('width:120px;')}">
       ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(d=>`<option value="${d}" ${task.day===d?'selected':''}>${d}</option>`).join('')}
     </select></td>
@@ -3042,41 +3095,42 @@ async function removeMaster(key, val){
   catch(err){ toast('Failed: '+err.message,'error'); }
 }
 
-/* ---- Task Templates by Role (Settings, Admin only) ---- */
+/* ---- Task Templates by Role (Settings, Admin only) — ready-made, check/uncheck ---- */
 function populateTaskTemplateRoleSelect(){
   const sel = document.getElementById('taskTemplateRoleSelect');
   if(!sel) return;
   const prev = sel.value;
-  sel.innerHTML = (DB.roles||[]).map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
-  if(prev && (DB.roles||[]).some(r=>r.name===prev)) sel.value = prev;
-  renderTaskTemplateTags();
+  const names = [...new Set([...Object.keys(TASK_TEMPLATE_LIBRARY), ...(DB.roles||[]).map(r=>r.name)])];
+  sel.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(prev && names.includes(prev)) sel.value = prev;
+  renderTaskTemplateChecklist();
 }
-function renderTaskTemplateTags(){
+function renderTaskTemplateChecklist(){
   const sel = document.getElementById('taskTemplateRoleSelect');
-  const el = document.getElementById('tags-taskTemplates');
+  const el = document.getElementById('taskTemplateChecklist');
   if(!sel || !el) return;
   const role = sel.value;
-  const list = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
-  el.innerHTML = list.map(v=>`<span class="tag">${v}<button onclick="removeTaskTemplate('${role.replace(/'/g,"\\'")}','${v.replace(/'/g,"\\'")}')">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--ink-soft)">None yet for this role</span>';
+  const library = TASK_TEMPLATE_LIBRARY[role] || [];
+  const active = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  if(!library.length){
+    el.innerHTML = '<span style="font-size:12px;color:var(--ink-soft)">No ready-made suggestions for this role yet — ask Claude to add a set for it.</span>';
+    return;
+  }
+  el.innerHTML = library.map((item,i)=>{
+    const checked = active.some(a=>a.task===item.task && a.subTask===item.subTask);
+    return `<label class="perm-chip" style="justify-content:flex-start;">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleTaskTemplateItem('${role.replace(/'/g,"\\'")}',${i})">
+      <span><b>${item.task}</b> — ${item.subTask}</span>
+    </label>`;
+  }).join('');
 }
-async function addTaskTemplate(){
-  const role = document.getElementById('taskTemplateRoleSelect').value;
-  const input = document.getElementById('add-taskTemplates');
-  const val = input.value.trim();
-  if(!role){ toast('Pick a role first','error'); return; }
-  if(!val){ toast('Enter a task suggestion first','error'); return; }
+async function toggleTaskTemplateItem(role, idx){
+  const item = (TASK_TEMPLATE_LIBRARY[role]||[])[idx];
+  if(!item) return;
   const current = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
-  if(current.includes(val)){ toast('Already exists for this role','error'); return; }
-  const updatedTemplates = {...(DB.masters.taskTemplates||{}), [role]: [...current, val]};
-  try{
-    await db.collection('meta').doc('masters').set({...DB.masters, taskTemplates: updatedTemplates});
-    input.value='';
-    toast('Added task suggestion for '+role,'success');
-  }catch(err){ toast('Failed: '+err.message,'error'); }
-}
-async function removeTaskTemplate(role, val){
-  const current = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
-  const updatedTemplates = {...(DB.masters.taskTemplates||{}), [role]: current.filter(v=>v!==val)};
+  const exists = current.some(a=>a.task===item.task && a.subTask===item.subTask);
+  const updatedList = exists ? current.filter(a=>!(a.task===item.task && a.subTask===item.subTask)) : [...current, item];
+  const updatedTemplates = {...(DB.masters.taskTemplates||{}), [role]: updatedList};
   try{ await db.collection('meta').doc('masters').set({...DB.masters, taskTemplates: updatedTemplates}); }
   catch(err){ toast('Failed: '+err.message,'error'); }
 }
@@ -3087,7 +3141,17 @@ function populateTaskSuggestionsDatalist(datalistId){
   if(!dl) return;
   const role = DB.profile && DB.profile.role;
   const list = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
-  dl.innerHTML = list.map(t=>`<option value="${String(t).replace(/"/g,'&quot;')}"></option>`).join('');
+  dl.innerHTML = list.map(item=>`<option value="${String(item.task).replace(/"/g,'&quot;')}"></option>`).join('');
+}
+/* Picking a suggested task also fills the matching detail field, if it's empty */
+function autoFillTemplateDetail(nameInput, targetSelector){
+  const role = DB.profile && DB.profile.role;
+  const list = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  const match = list.find(item=>item.task===nameInput.value);
+  if(!match) return;
+  const tr = nameInput.closest('tr');
+  const targetEl = tr && tr.querySelector(targetSelector);
+  if(targetEl && !targetEl.value.trim()) targetEl.value = match.subTask;
 }
 
 /* =========================================================
