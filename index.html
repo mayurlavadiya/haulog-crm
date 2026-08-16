@@ -175,6 +175,9 @@ tbody tr:hover{background:var(--blue-50);}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
 .cal .dow{font-size:11px;font-weight:700;color:var(--ink-soft);text-align:center;padding-bottom:4px;}
 .cal .day{background:var(--paper);border:1px solid var(--line);border-radius:12px;min-height:78px;padding:7px;font-size:12px;position:relative;transition:background .12s ease,border-color .12s ease;}
+.cal .day:not(.muted){cursor:pointer;}
+.cal-quickadd{display:none;position:fixed;z-index:150;background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:8px;flex-direction:column;gap:6px;min-width:150px;}
+.cal-quickadd.show{display:flex;}
 .cal .day.muted{opacity:.35;}
 .cal .day.today{border:1.5px solid var(--blue);background:var(--blue-50);}
 .cal .day.drop-hover{background:var(--blue-50);border:1.5px dashed var(--blue);}
@@ -438,6 +441,11 @@ tbody tr:hover{background:var(--blue-50);}
       <button type="button" class="btn-ghost" onclick="closeCallDetail()">Close</button>
     </div>
   </div>
+</div>
+
+<div class="cal-quickadd" id="calQuickAddPopup">
+  <button type="button" class="btn-sm" onclick="quickAddCalCall()">📞 New Call</button>
+  <button type="button" class="btn-sm" onclick="quickAddCalMeeting()">🗓️ New Meeting</button>
 </div>
 
 <div class="modal-bg" id="dailySummaryModalBg">
@@ -2824,7 +2832,7 @@ function renderCalendar(){
       </span>`).join('');
 
     const dropAttrs = c.iso
-      ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')"`
+      ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')" onclick="openCalQuickAdd(event,'${c.iso}')"`
       : '';
 
     return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}" ${dropAttrs}>
@@ -2846,6 +2854,40 @@ function evtDragStart(e, type, id, dateField){
 }
 function evtDragEnd(e){ e.currentTarget.classList.remove('dragging'); }
 function allowDrop(e){ e.preventDefault(); }
+
+/* Click any empty spot on a calendar date -> quick-add popup (New Call / New Meeting).
+   Clicking an existing chip is ignored here (chip has its own click handler). */
+function openCalQuickAdd(e, iso){
+  if(e.target.closest('.evt')) return;
+  e.stopPropagation();
+  const popup = document.getElementById('calQuickAddPopup');
+  popup.dataset.iso = iso;
+  popup.style.left = Math.min(e.clientX, window.innerWidth-170)+'px';
+  popup.style.top = Math.min(e.clientY, window.innerHeight-90)+'px';
+  popup.classList.add('show');
+}
+function closeCalQuickAdd(){
+  const popup = document.getElementById('calQuickAddPopup');
+  if(popup) popup.classList.remove('show');
+}
+document.addEventListener('click', function(e){
+  const popup = document.getElementById('calQuickAddPopup');
+  if(popup && popup.classList.contains('show') && !popup.contains(e.target)) closeCalQuickAdd();
+});
+function quickAddCalCall(){
+  const iso = document.getElementById('calQuickAddPopup').dataset.iso;
+  closeCalQuickAdd();
+  openForm('calls');
+  const el = document.querySelector('#modalBody [name="date"]');
+  if(el) el.value = iso;
+}
+function quickAddCalMeeting(){
+  const iso = document.getElementById('calQuickAddPopup').dataset.iso;
+  closeCalQuickAdd();
+  openForm('meetings');
+  const el = document.querySelector('#modalBody [name="date"]');
+  if(el) el.value = iso;
+}
 async function handleCalDrop(e, iso){
   e.preventDefault();
   e.currentTarget.classList.remove('drop-hover');
