@@ -1836,7 +1836,7 @@ function openForm(moduleKey, id){
       }
       const MASTER_BACKED = ['sources','industries','stages'];
       const isMasterBacked = MASTER_BACKED.includes(f.optionsFrom);
-      const isFreeTextAddable = f.optionsFrom==='contactCompanies';
+      const isFreeTextAddable = f.optionsFrom==='contactCompanies' || (f.optionsFrom==='leadCompanies' && f.key==='lead');
       const addNewHandler = isMasterBacked ? `handleAddNewOption(this,'${f.optionsFrom}')` : isFreeTextAddable ? `handleAddFreeTextOption(this)` : '';
       input = `<select name="${f.key}" data-required="${!!f.required}" ${addNewHandler?`onchange="${addNewHandler}"`:''}>
         <option value="">Select ${f.label}</option>
