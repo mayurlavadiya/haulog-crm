@@ -473,6 +473,7 @@ tbody tr:hover{background:var(--blue-50);}
         <thead><tr><th>Task Name</th><th>Sub-task</th><th>Details</th><th>Start</th><th>End</th><th>Duration</th><th>Status</th><th></th></tr></thead>
         <tbody id="dsTaskRows"></tbody>
       </table></div>
+      <datalist id="dsTaskSuggestList"></datalist>
       <button type="button" class="btn-sm" onclick="addDsTaskRow()">+ Add Task</button>
       <div class="field" style="margin-top:16px;"><label>Notes / Blockers</label><textarea id="dsNotes" placeholder="Anything else to flag…"></textarea></div>
       <div class="field">
@@ -511,6 +512,7 @@ tbody tr:hover{background:var(--blue-50);}
         <thead><tr><th>Task Name</th><th>Target Day</th><th>Priority</th><th>Notes</th><th></th></tr></thead>
         <tbody id="wpTaskRows"></tbody>
       </table></div>
+      <datalist id="wpTaskSuggestList"></datalist>
       <button type="button" class="btn-sm" onclick="addWpTaskRow()">+ Add Task</button>
     </div>
     <div class="modal-foot">
@@ -904,6 +906,15 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
 
         <div class="card" style="margin-top:18px;">
+          <h3>Task Templates by Role</h3><p class="sub">Suggested tasks employees see (as auto-complete, still editable) while filling Daily Summary / Weekly Planner — tailored per role. Admin only.</p>
+          <div class="toolbar" style="margin-top:10px;">
+            <select class="filter" id="taskTemplateRoleSelect" onchange="renderTaskTemplateTags()"></select>
+          </div>
+          <div class="tag-list" id="tags-taskTemplates"></div>
+          <div class="add-row"><input id="add-taskTemplates" placeholder="Add task suggestion for this role…"><button class="btn-sm" onclick="addTaskTemplate()">Add</button></div>
+        </div>
+
+        <div class="card" style="margin-top:18px;">
           <h3>Data</h3><p class="sub">Live in Firestore — every signed-in teammate sees the same data instantly.</p>
           <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
             <button class="btn-ghost" onclick="exportData()">Export JSON Backup</button>
@@ -1128,7 +1139,16 @@ function inNdays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toIS
 
 let DB = {
   settings:{ companyName:'Haulog Technologies Pvt. Ltd.', email:'sales@haulog.com', currency:'₹', fy:'April' },
-  masters:{ sources:['Website','Referral','Exhibition','Cold Call','LinkedIn'], industries:['Manufacturer','Solar EPC','FMCG','Textiles','Ceramics','Plastics'], branches:['Rajkot HQ','Ahmedabad','Surat','Vadodara'], stages:[...STAGES] },
+  masters:{ sources:['Website','Referral','Exhibition','Cold Call','LinkedIn'], industries:['Manufacturer','Solar EPC','FMCG','Textiles','Ceramics','Plastics'], branches:['Rajkot HQ','Ahmedabad','Surat','Vadodara'], stages:[...STAGES],
+    taskTemplates:{
+      'Sales Executive':['Client Follow-up Call','Site Visit','Sent Quotation','Lead Qualification','Proposal Preparation','Negotiation Call','Customer Onboarding'],
+      'Sales Manager':['Team Review Meeting','Client Follow-up Call','Pipeline Review','Proposal Approval','Negotiation Call','Target Tracking'],
+      'Accounts':['Invoice Processing','Payment Follow-up','Expense Reconciliation','GST Filing Prep','Vendor Payment'],
+      'HR':['Recruitment Screening','Onboarding Formalities','Attendance Review','Employee Grievance','Policy Update'],
+      'Admin':['Team Review Meeting','System Configuration','Report Generation','Client Escalation Handling','Vendor Coordination'],
+      'Super Admin':['Team Review Meeting','System Configuration','Report Generation','Client Escalation Handling','Vendor Coordination']
+    }
+  },
   employees:[], leads:[], calls:[], meetings:[], quotations:[], proposals:[], expenses:[], customers:[],
   profile:{ name:'', email:'', role:'', phone:'', status:'Active' }, users:[],
   roles:[], appConfig:{ selfSignupEnabled:true, idleTimeoutMinutes:45, defaultNewUserRole:'Sales Executive' }, reportLogs:[]
@@ -1207,7 +1227,7 @@ function attachListeners(){
 
   subscribeDataCollections(); // initial pass — filtered by uid until profile/role loads below
   const unsubMasters = db.collection('meta').doc('masters').onSnapshot(doc=>{
-    if(doc.exists) DB.masters = {sources:[], industries:[], branches:[], stages:[...STAGES], ...doc.data()};
+    if(doc.exists) DB.masters = {sources:[], industries:[], branches:[], stages:[...STAGES], taskTemplates:{}, ...doc.data()};
     else db.collection('meta').doc('masters').set(DB.masters);
     onDataChange();
   }, err=>console.error(err));
@@ -2302,7 +2322,7 @@ function addDsTaskRow(task){
   const tbody = document.getElementById('dsTaskRows');
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" class="ds-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="ds-task-name" list="dsTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Client follow-up" style="${rowInputStyle()}"></td>
     <td><input type="text" class="ds-task-sub" value="${(task.subTask||'').replace(/"/g,'&quot;')}" placeholder="Sub-task" style="${rowInputStyle('min-width:120px;')}"></td>
     <td><textarea class="ds-task-details" rows="1" placeholder="Full details / description…" style="${rowInputStyle('min-width:180px;resize:vertical;min-height:34px;')}">${(task.details||'')}</textarea></td>
     <td><input type="time" class="ds-task-start" value="${task.startTime||''}" style="${rowInputStyle('width:110px;')}" onchange="updateDsRowDuration(this.closest('tr'))"></td>
@@ -2451,6 +2471,7 @@ function openDailySummaryForm(id){
   if(id && !record) return;
   if(id && !ownsRecord('dailysummaries', record)){ toast('You can only edit your own daily summary','error'); return; }
   currentDsId = id||null;
+  populateTaskSuggestionsDatalist('dsTaskSuggestList');
   document.getElementById('dailySummaryTitle').textContent = id ? 'Edit Daily Summary' : "Submit Today's Summary";
   document.getElementById('dsDate').value = record ? record.date : todayISO();
   document.getElementById('dsNotes').value = record ? (record.notes||'') : '';
@@ -2666,7 +2687,7 @@ function addWpTaskRow(task){
   const tbody = document.getElementById('wpTaskRows');
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" class="wp-task-name" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Prepare monthly report" style="${rowInputStyle()}"></td>
+    <td><input type="text" class="wp-task-name" list="wpTaskSuggestList" value="${(task.taskName||'').replace(/"/g,'&quot;')}" placeholder="e.g. Prepare monthly report" style="${rowInputStyle()}"></td>
     <td><select class="wp-task-day" style="${rowInputStyle('width:120px;')}">
       ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(d=>`<option value="${d}" ${task.day===d?'selected':''}>${d}</option>`).join('')}
     </select></td>
@@ -2683,6 +2704,7 @@ function openWeeklyPlannerForm(id){
   if(id && !record) return;
   if(id && !ownsRecord('weeklyplanners', record)){ toast('You can only edit your own weekly plan','error'); return; }
   currentWpId = id||null;
+  populateTaskSuggestionsDatalist('wpTaskSuggestList');
   document.getElementById('weeklyPlannerTitle').textContent = id ? 'Edit Weekly Plan' : "Submit Monday's Plan";
   document.getElementById('wpWeekStart').value = record ? record.weekStart : mondayOfCurrentWeek();
   syncWpDropdownFromDate();
@@ -2962,6 +2984,7 @@ function renderMasterTags(){
     if(!el) return;
     el.innerHTML = (DB.masters[k]||[]).map(v=>`<span class="tag">${v}<button onclick="removeMaster('${k}','${v.replace(/'/g,"\\'")}')">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--ink-soft)">None yet</span>';
   });
+  populateTaskTemplateRoleSelect();
 }
 async function handleAddNewOption(selectEl, masterKey){
   if(selectEl.value !== '__add_new__') return;
@@ -3017,6 +3040,54 @@ async function removeMaster(key, val){
   const updated = {...DB.masters, [key]: DB.masters[key].filter(v=>v!==val)};
   try{ await db.collection('meta').doc('masters').set(updated); }
   catch(err){ toast('Failed: '+err.message,'error'); }
+}
+
+/* ---- Task Templates by Role (Settings, Admin only) ---- */
+function populateTaskTemplateRoleSelect(){
+  const sel = document.getElementById('taskTemplateRoleSelect');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = (DB.roles||[]).map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  if(prev && (DB.roles||[]).some(r=>r.name===prev)) sel.value = prev;
+  renderTaskTemplateTags();
+}
+function renderTaskTemplateTags(){
+  const sel = document.getElementById('taskTemplateRoleSelect');
+  const el = document.getElementById('tags-taskTemplates');
+  if(!sel || !el) return;
+  const role = sel.value;
+  const list = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  el.innerHTML = list.map(v=>`<span class="tag">${v}<button onclick="removeTaskTemplate('${role.replace(/'/g,"\\'")}','${v.replace(/'/g,"\\'")}')">✕</button></span>`).join('') || '<span style="font-size:12px;color:var(--ink-soft)">None yet for this role</span>';
+}
+async function addTaskTemplate(){
+  const role = document.getElementById('taskTemplateRoleSelect').value;
+  const input = document.getElementById('add-taskTemplates');
+  const val = input.value.trim();
+  if(!role){ toast('Pick a role first','error'); return; }
+  if(!val){ toast('Enter a task suggestion first','error'); return; }
+  const current = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  if(current.includes(val)){ toast('Already exists for this role','error'); return; }
+  const updatedTemplates = {...(DB.masters.taskTemplates||{}), [role]: [...current, val]};
+  try{
+    await db.collection('meta').doc('masters').set({...DB.masters, taskTemplates: updatedTemplates});
+    input.value='';
+    toast('Added task suggestion for '+role,'success');
+  }catch(err){ toast('Failed: '+err.message,'error'); }
+}
+async function removeTaskTemplate(role, val){
+  const current = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  const updatedTemplates = {...(DB.masters.taskTemplates||{}), [role]: current.filter(v=>v!==val)};
+  try{ await db.collection('meta').doc('masters').set({...DB.masters, taskTemplates: updatedTemplates}); }
+  catch(err){ toast('Failed: '+err.message,'error'); }
+}
+
+/* ---- Role-wise task suggestion datalist (Daily Summary / Weekly Planner) ---- */
+function populateTaskSuggestionsDatalist(datalistId){
+  const dl = document.getElementById(datalistId);
+  if(!dl) return;
+  const role = DB.profile && DB.profile.role;
+  const list = (DB.masters.taskTemplates && DB.masters.taskTemplates[role]) || [];
+  dl.innerHTML = list.map(t=>`<option value="${String(t).replace(/"/g,'&quot;')}"></option>`).join('');
 }
 
 /* =========================================================
