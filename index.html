@@ -650,14 +650,87 @@ tbody tr:hover{background:var(--blue-50);}
           <h1 id="heroGreeting">Good day, Mayur.</h1>
           <p id="heroSub">Here's your live pipeline snapshot — all figures update automatically as you work.</p>
         </div>
-        <div class="grid g-4" style="margin-bottom:18px;" id="kpiGrid"></div>
-        <div class="grid g-2-1" style="margin-bottom:18px;">
-          <div class="card"><h3>Pipeline Value Trend</h3><p class="sub">Based on leads created, by month</p><div class="chart-box"><canvas id="chartRevenue"></canvas></div></div>
-          <div class="card"><h3>Lead Source Mix</h3><p class="sub">Live from your Leads data</p><div class="chart-box"><canvas id="chartSource"></canvas></div></div>
+        <div class="toolbar" style="margin-bottom:16px;">
+          <button class="btn-sm dash-tab-btn active" data-dtab="overview" onclick="dashTab('overview')">Overview</button>
+          <button class="btn-sm dash-tab-btn" data-dtab="sales" onclick="dashTab('sales')">Sales &amp; Leads</button>
+          <button class="btn-sm dash-tab-btn" data-dtab="expenses" onclick="dashTab('expenses')">Expenses</button>
+          <button class="btn-sm dash-tab-btn" data-dtab="activity" onclick="dashTab('activity')">Recent Activity</button>
+          <button class="btn-sm dash-tab-btn" data-dtab="quotes" onclick="dashTab('quotes')">Quotations &amp; Proposals</button>
         </div>
-        <div class="grid g-2-1">
-          <div class="card"><h3>Sales Pipeline by Stage</h3><p class="sub" id="pipelineSub">—</p><div class="chart-box short"><canvas id="chartPipeline"></canvas></div></div>
-          <div class="card"><h3>Recent Activity</h3><p class="sub">Auto-logged from your actions</p><div id="activityFeed" style="display:flex;flex-direction:column;gap:12px;margin-top:6px;max-height:230px;overflow-y:auto;"></div></div>
+
+        <div class="dash-tab-panel" id="dashTab-overview">
+          <div class="grid g-4" style="margin-bottom:18px;" id="kpiGrid"></div>
+          <div class="grid g-2-1" style="margin-bottom:18px;">
+            <div class="card"><h3>Pipeline Value Trend</h3><p class="sub">Based on leads created, by month</p><div class="chart-box"><canvas id="chartRevenue"></canvas></div></div>
+            <div class="card"><h3>Lead Source Mix</h3><p class="sub">Live from your Leads data</p><div class="chart-box"><canvas id="chartSource"></canvas></div></div>
+          </div>
+          <div class="grid g-2-1">
+            <div class="card"><h3>Sales Pipeline by Stage</h3><p class="sub" id="pipelineSub">—</p><div class="chart-box short"><canvas id="chartPipeline"></canvas></div></div>
+            <div class="card"><h3>Recent Activity</h3><p class="sub">Auto-logged from your actions</p><div id="activityFeed" style="display:flex;flex-direction:column;gap:12px;margin-top:6px;max-height:230px;overflow-y:auto;"></div></div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="dashTab-sales" style="display:none;">
+          <div class="toolbar" style="margin-bottom:14px;">
+            <select class="filter" id="salesDashEmpFilter" style="display:none;" onchange="renderSalesDashboard()"><option value="">All Employees</option></select>
+          </div>
+          <div class="grid g-3" style="margin-bottom:18px;" id="salesDashKpis"></div>
+          <div class="card" style="margin-bottom:18px;">
+            <h3>Target vs Achieved</h3><p class="sub">Revenue target progress</p>
+            <div class="chart-box"><canvas id="chartSalesDashTarget"></canvas></div>
+          </div>
+          <div class="card" id="salesDashEmpTableWrap" style="display:none;">
+            <h3>Employee-wise Breakdown</h3><p class="sub">Admin view — every team member's numbers</p>
+            <div class="table-wrap" style="margin-top:12px;">
+              <table><thead><tr><th>Employee</th><th>Leads</th><th>Open Pipeline</th><th>Revenue Won</th><th>Win Rate</th><th>Target Achieved</th></tr></thead><tbody id="tbody-salesDashEmp"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="dashTab-expenses" style="display:none;">
+          <div class="toolbar" style="margin-bottom:14px;">
+            <select class="filter" id="expDashEmpFilter" style="display:none;" onchange="renderExpenseDashboard()"><option value="">All Employees</option></select>
+            <input type="month" class="filter" id="expDashMonth" onchange="renderExpenseDashboard()">
+            <button class="btn-ghost" onclick="document.getElementById('expDashMonth').value='';renderExpenseDashboard()">Clear Month</button>
+          </div>
+          <div class="grid g-4" style="margin-bottom:18px;" id="expDashKpis"></div>
+          <div class="grid g-2-1" style="margin-bottom:18px;">
+            <div class="card"><h3>Expenses by Category</h3><p class="sub">Approved + Pending combined</p><div class="chart-box"><canvas id="chartExpDashCategory"></canvas></div></div>
+            <div class="card"><h3>Monthly Trend</h3><p class="sub">Total claimed per month</p><div class="chart-box"><canvas id="chartExpDashTrend"></canvas></div></div>
+          </div>
+          <div class="card" id="expDashEmpTableWrap" style="display:none;">
+            <h3>Employee-wise Breakdown</h3><p class="sub">Admin view — every team member's claims</p>
+            <div class="table-wrap" style="margin-top:12px;">
+              <table><thead><tr><th>Employee</th><th>Claims</th><th>Approved</th><th>Pending</th><th>Rejected</th><th>Total</th></tr></thead><tbody id="tbody-expDashEmp"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="dashTab-activity" style="display:none;">
+          <div class="toolbar" style="margin-bottom:14px;">
+            <select class="filter" id="activityDashEmpFilter" style="display:none;" onchange="renderActivityDashboard()"><option value="">All Employees</option></select>
+          </div>
+          <div class="card">
+            <h3>Activity Feed</h3><p class="sub">Auto-logged across Leads, Calls, Meetings, Quotations, Proposals, Expenses, Daily Summary &amp; Weekly Planner — most recent first</p>
+            <div id="activityDashList" style="display:flex;flex-direction:column;gap:2px;margin-top:12px;max-height:520px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="dashTab-quotes" style="display:none;">
+          <div class="toolbar" style="margin-bottom:14px;">
+            <select class="filter" id="quotesDashEmpFilter" style="display:none;" onchange="renderQuotesDashboard()"><option value="">All Employees</option></select>
+          </div>
+          <div class="grid g-3" style="margin-bottom:18px;" id="quotesDashKpis"></div>
+          <div class="grid g-2-1" style="margin-bottom:18px;">
+            <div class="card"><h3>Quotation Status</h3><p class="sub">Current breakdown</p><div class="chart-box"><canvas id="chartQuotesDashStatus"></canvas></div></div>
+            <div class="card"><h3>Proposal Status</h3><p class="sub">Current breakdown</p><div class="chart-box"><canvas id="chartProposalsDashStatus"></canvas></div></div>
+          </div>
+          <div class="card" id="quotesDashEmpTableWrap" style="display:none;">
+            <h3>Employee-wise Breakdown</h3><p class="sub">Admin view — every team member's quotations &amp; proposals</p>
+            <div class="table-wrap" style="margin-top:12px;">
+              <table><thead><tr><th>Employee</th><th>Quotations</th><th>Quote Value</th><th>Accepted Value</th><th>Proposals</th><th>Proposal Win Rate</th></tr></thead><tbody id="tbody-quotesDashEmp"></tbody></table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -3174,6 +3247,295 @@ function updateCounts(){
   document.getElementById('meetingsCount').textContent = myRecords('meetings').length+' meetings';
   document.getElementById('dailySummaryCount').textContent = myRecords('dailysummaries').length+' entries';
   document.getElementById('weeklyPlannerCount').textContent = myRecords('weeklyplanners').length+' plans';
+}
+
+/* ---- Dashboard sub-tabs ---- */
+const DASH_TABS = ['overview','sales','expenses','activity','quotes'];
+function dashTab(name){
+  DASH_TABS.forEach(t=>{ const el=document.getElementById('dashTab-'+t); if(el) el.style.display = (t===name)?'block':'none'; });
+  document.querySelectorAll('.dash-tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.dtab===name));
+  if(name==='sales'){ populateSalesDashEmpFilter(); renderSalesDashboard(); }
+  if(name==='expenses'){ populateExpDashEmpFilter(); renderExpenseDashboard(); }
+  if(name==='activity'){ populateActivityDashEmpFilter(); renderActivityDashboard(); }
+  if(name==='quotes'){ populateQuotesDashEmpFilter(); renderQuotesDashboard(); }
+}
+function populateSalesDashEmpFilter(){
+  const sel = document.getElementById('salesDashEmpFilter');
+  if(!sel) return;
+  const admin = isAdmin();
+  sel.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
+}
+function renderSalesDashboard(){
+  if(!document.getElementById('salesDashKpis')) return;
+  const admin = isAdmin();
+  const empSel = document.getElementById('salesDashEmpFilter');
+  const filterVal = admin && empSel ? empSel.value : '';
+
+  let leadsScope = myRecords('leads');
+  if(filterVal) leadsScope = leadsScope.filter(l=>l.owner===filterVal);
+
+  const totalLeads = leadsScope.length;
+  const openValue = leadsScope.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
+  const wonLeads = leadsScope.filter(l=>l.stage==='Won');
+  const wonValue = wonLeads.reduce((a,l)=>a+Number(l.value||0),0);
+  const closedCount = leadsScope.filter(l=>['Won','Lost'].includes(l.stage)).length;
+  const winRate = closedCount ? Math.round(wonLeads.length/closedCount*100) : 0;
+  const avgDeal = wonLeads.length ? Math.round(wonValue/wonLeads.length) : 0;
+
+  let targetTotal=0, achievedTotal=0;
+  if(filterVal){
+    const emp = DB.employees.find(e=>e.name===filterVal);
+    targetTotal = emp?Number(emp.target||0):0; achievedTotal = emp?Number(emp.achieved||0):0;
+  } else if(admin){
+    DB.employees.forEach(e=>{ targetTotal+=Number(e.target||0); achievedTotal+=Number(e.achieved||0); });
+  } else {
+    const emp = DB.employees.find(e=>e.name===(DB.profile&&DB.profile.name));
+    targetTotal = emp?Number(emp.target||0):0; achievedTotal = emp?Number(emp.achieved||0):0;
+  }
+  const targetPct = targetTotal ? Math.round(achievedTotal/targetTotal*100) : 0;
+
+  document.getElementById('salesDashKpis').innerHTML = `
+    <div class="card kpi"><div class="val">${totalLeads}</div><div class="lbl">Total Leads</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(openValue)}</div><div class="lbl">Open Pipeline Value</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(wonValue)}</div><div class="lbl">Revenue Won</div></div>
+    <div class="card kpi"><div class="val">${winRate}%</div><div class="lbl">Win Rate</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(avgDeal)}</div><div class="lbl">Avg Deal Size</div></div>
+    <div class="card kpi"><div class="val">${targetPct}%</div><div class="lbl">Target Achieved (${fmtMoney(achievedTotal)} / ${fmtMoney(targetTotal)})</div></div>
+  `;
+
+  const tblWrap = document.getElementById('salesDashEmpTableWrap');
+  if(admin){
+    tblWrap.style.display='block';
+    document.getElementById('tbody-salesDashEmp').innerHTML = DB.employees.map(e=>{
+      const empLeads = DB.leads.filter(l=>l.owner===e.name);
+      const empWon = empLeads.filter(l=>l.stage==='Won');
+      const empOpenVal = empLeads.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
+      const empWonVal = empWon.reduce((a,l)=>a+Number(l.value||0),0);
+      const empClosed = empLeads.filter(l=>['Won','Lost'].includes(l.stage)).length;
+      const empWinRate = empClosed?Math.round(empWon.length/empClosed*100):0;
+      const empTargetPct = e.target?Math.round((e.achieved||0)/e.target*100):0;
+      return `<tr><td>${e.name}</td><td>${empLeads.length}</td><td>${fmtMoney(empOpenVal)}</td><td>${fmtMoney(empWonVal)}</td><td>${empWinRate}%</td><td>${empTargetPct}%</td></tr>`;
+    }).join('') || `<tr><td colspan="6"><div class="empty-state">No employees yet.</div></td></tr>`;
+  } else {
+    tblWrap.style.display='none';
+  }
+
+  const tc = themeColors();
+  destroyChart('salesDashTarget');
+  const noFilter = admin && !filterVal;
+  const chartLabels = noFilter ? DB.employees.map(e=>e.name.split(' ')[0]) : [(filterVal||(DB.profile&&DB.profile.name)||'Me').split(' ')[0]];
+  const chartTargetData = noFilter ? DB.employees.map(e=>Number(e.target||0)/100000) : [targetTotal/100000];
+  const chartAchievedData = noFilter ? DB.employees.map(e=>Number(e.achieved||0)/100000) : [achievedTotal/100000];
+  charts.salesDashTarget = new Chart(document.getElementById('chartSalesDashTarget'), {
+    type:'bar',
+    data:{labels:chartLabels, datasets:[
+      {label:'Target', data:chartTargetData, backgroundColor:tc.palette[2], borderRadius:8},
+      {label:'Achieved', data:chartAchievedData, backgroundColor:tc.accent, borderRadius:8}
+    ]},
+    options:{plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:tc.grid}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+  });
+}
+
+function populateExpDashEmpFilter(){
+  const sel = document.getElementById('expDashEmpFilter');
+  if(!sel) return;
+  const admin = isAdmin();
+  sel.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
+}
+function renderExpenseDashboard(){
+  if(!document.getElementById('expDashKpis')) return;
+  const admin = isAdmin();
+  const empSel = document.getElementById('expDashEmpFilter');
+  const filterVal = admin && empSel ? empSel.value : '';
+  const monthVal = (document.getElementById('expDashMonth')||{}).value || '';
+
+  let scope = admin ? DB.expenses.slice() : DB.expenses.filter(e=>e.employee===(DB.profile&&DB.profile.name));
+  if(filterVal) scope = scope.filter(e=>e.employee===filterVal);
+  if(monthVal) scope = scope.filter(e=>(e.date||'').slice(0,7)===monthVal);
+
+  const total = scope.reduce((a,e)=>a+Number(e.amount||0),0);
+  const approved = scope.filter(e=>e.status==='Approved').reduce((a,e)=>a+Number(e.amount||0),0);
+  const pending = scope.filter(e=>e.status==='Pending').reduce((a,e)=>a+Number(e.amount||0),0);
+  const rejected = scope.filter(e=>e.status==='Rejected').reduce((a,e)=>a+Number(e.amount||0),0);
+
+  document.getElementById('expDashKpis').innerHTML = `
+    <div class="card kpi"><div class="val">${fmtMoney(total)}</div><div class="lbl">Total Claimed (${scope.length})</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(approved)}</div><div class="lbl">Approved</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(pending)}</div><div class="lbl">Pending</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(rejected)}</div><div class="lbl">Rejected</div></div>
+  `;
+
+  const tc = themeColors();
+  const catMap = {};
+  scope.forEach(e=>{ if(e.status!=='Rejected') catMap[e.category]=(catMap[e.category]||0)+Number(e.amount||0); });
+  destroyChart('expDashCategory');
+  charts.expDashCategory = new Chart(document.getElementById('chartExpDashCategory'), {
+    type:'pie',
+    data:{labels:Object.keys(catMap), datasets:[{data:Object.values(catMap), backgroundColor:tc.palette, borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const monthMap = {};
+  scope.forEach(e=>{ const m=(e.date||'').slice(0,7); if(!m) return; monthMap[m]=(monthMap[m]||0)+Number(e.amount||0); });
+  const months = Object.keys(monthMap).sort();
+  destroyChart('expDashTrend');
+  charts.expDashTrend = new Chart(document.getElementById('chartExpDashTrend'), {
+    type:'line',
+    data:{labels:months, datasets:[{label:'Claimed', data:months.map(m=>monthMap[m]/1000), borderColor:tc.accent, backgroundColor:tc.accentSoft, fill:true, tension:.4, borderWidth:2.5, pointRadius:3}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'₹'+v+'K'}, grid:{color:tc.grid}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const tblWrap = document.getElementById('expDashEmpTableWrap');
+  if(admin){
+    tblWrap.style.display='block';
+    document.getElementById('tbody-expDashEmp').innerHTML = DB.employees.map(e=>{
+      const empRows = DB.expenses.filter(x=>x.employee===e.name && (!monthVal || (x.date||'').slice(0,7)===monthVal));
+      const a = empRows.filter(x=>x.status==='Approved').reduce((s,x)=>s+Number(x.amount||0),0);
+      const p = empRows.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.amount||0),0);
+      const r = empRows.filter(x=>x.status==='Rejected').reduce((s,x)=>s+Number(x.amount||0),0);
+      return `<tr><td>${e.name}</td><td>${empRows.length}</td><td>${fmtMoney(a)}</td><td>${fmtMoney(p)}</td><td>${fmtMoney(r)}</td><td>${fmtMoney(a+p+r)}</td></tr>`;
+    }).join('') || `<tr><td colspan="6"><div class="empty-state">No employees yet.</div></td></tr>`;
+  } else {
+    tblWrap.style.display='none';
+  }
+}
+
+function populateActivityDashEmpFilter(){
+  const sel = document.getElementById('activityDashEmpFilter');
+  if(!sel) return;
+  const admin = isAdmin();
+  sel.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
+}
+function getActivityItems(filterEmpName){
+  const items = [];
+  const push = (arr, mapper) => (arr||[]).forEach(r=>{ const it = r.createdAt ? mapper(r) : null; if(it) items.push(it); });
+
+  push(myRecords('leads'), l=>({ts:l.createdAt, by:l.createdBy, icon:'👤', text:`New lead: ${l.company} (${l.stage})`, page:'leads'}));
+  push(myRecords('calls'), c=>({ts:c.createdAt, by:c.createdBy, icon:'📞', text:`Call logged with ${c.lead||'—'} — ${lastCallRemark(c)}`, page:'calls'}));
+  push(myRecords('meetings'), m=>({ts:m.createdAt, by:m.createdBy, icon:'🗓️', text:`Meeting: ${m.title} on ${m.date}`, page:'meetings'}));
+  push(myRecords('quotations'), q=>({ts:q.createdAt, by:q.createdBy, icon:'📄', text:`Quotation ${q.quoteNo} · ${q.company} · ${q.status}`, page:'quotations'}));
+  push(myRecords('proposals'), p=>({ts:p.createdAt, by:p.createdBy, icon:'📃', text:`Proposal "${p.title}" · ${p.status}`, page:'proposals'}));
+  push(myRecords('expenses'), e=>({ts:e.createdAt, by:e.employee||e.createdBy, icon:'💳', text:`Expense claim: ${e.category} — ${fmtMoney(e.amount)} (${e.status})`, page:'expenses'}));
+  push(myRecords('dailysummaries'), d=>({ts:d.createdAt, by:d.createdBy, icon:'📝', text:`Daily summary submitted for ${d.date}`, page:'dailysummary'}));
+  push(myRecords('weeklyplanners'), w=>({ts:w.createdAt, by:w.createdBy, icon:'📆', text:`Weekly plan submitted for week of ${w.weekStart}`, page:'weeklyplanner'}));
+
+  let filtered = filterEmpName ? items.filter(it=>it.by===filterEmpName) : items;
+  filtered.sort((a,b)=>{
+    const at = a.ts && a.ts.toDate ? a.ts.toDate().getTime() : 0;
+    const bt = b.ts && b.ts.toDate ? b.ts.toDate().getTime() : 0;
+    return bt-at;
+  });
+  return filtered;
+}
+function renderActivityDashboard(){
+  const el = document.getElementById('activityDashList');
+  if(!el) return;
+  const admin = isAdmin();
+  const empSel = document.getElementById('activityDashEmpFilter');
+  const filterVal = admin && empSel ? empSel.value : '';
+  const items = getActivityItems(filterVal).slice(0,60);
+  if(!items.length){ el.innerHTML = '<div class="empty-state">No activity yet.</div>'; return; }
+  el.innerHTML = items.map(it=>{
+    const when = it.ts && it.ts.toDate ? it.ts.toDate().toLocaleString() : '—';
+    return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;" onclick="go('${it.page}')">
+      <div style="font-size:16px;">${it.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;">${it.text}</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${it.by||'Unknown'} · ${when}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateQuotesDashEmpFilter(){
+  const sel = document.getElementById('quotesDashEmpFilter');
+  if(!sel) return;
+  const admin = isAdmin();
+  sel.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
+}
+function renderQuotesDashboard(){
+  if(!document.getElementById('quotesDashKpis')) return;
+  const admin = isAdmin();
+  const empSel = document.getElementById('quotesDashEmpFilter');
+  const filterVal = admin && empSel ? empSel.value : '';
+
+  let quotesScope = myRecords('quotations');
+  let proposalsScope = myRecords('proposals');
+  if(filterVal){
+    quotesScope = quotesScope.filter(q=>q.createdBy===filterVal);
+    proposalsScope = proposalsScope.filter(p=>p.createdBy===filterVal);
+  }
+
+  const totalQuoteValue = quotesScope.reduce((a,q)=>a+Number(q.amount||0),0);
+  const acceptedValue = quotesScope.filter(q=>q.status==='Accepted').reduce((a,q)=>a+Number(q.amount||0),0);
+  const wonProposals = proposalsScope.filter(p=>p.status==='Won').length;
+  const closedProposals = proposalsScope.filter(p=>['Won','Lost'].includes(p.status)).length;
+  const proposalWinRate = closedProposals ? Math.round(wonProposals/closedProposals*100) : 0;
+
+  document.getElementById('quotesDashKpis').innerHTML = `
+    <div class="card kpi"><div class="val">${quotesScope.length}</div><div class="lbl">Total Quotations</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(totalQuoteValue)}</div><div class="lbl">Total Quote Value</div></div>
+    <div class="card kpi"><div class="val">${fmtMoney(acceptedValue)}</div><div class="lbl">Accepted Value</div></div>
+    <div class="card kpi"><div class="val">${proposalsScope.length}</div><div class="lbl">Total Proposals</div></div>
+    <div class="card kpi"><div class="val">${wonProposals}</div><div class="lbl">Proposals Won</div></div>
+    <div class="card kpi"><div class="val">${proposalWinRate}%</div><div class="lbl">Proposal Win Rate</div></div>
+  `;
+
+  const tc = themeColors();
+  const quoteStatusMap = {};
+  quotesScope.forEach(q=>{ quoteStatusMap[q.status]=(quoteStatusMap[q.status]||0)+1; });
+  destroyChart('quotesDashStatus');
+  charts.quotesDashStatus = new Chart(document.getElementById('chartQuotesDashStatus'), {
+    type:'doughnut',
+    data:{labels:Object.keys(quoteStatusMap), datasets:[{data:Object.values(quoteStatusMap), backgroundColor:tc.palette, borderWidth:0}]},
+    options:{cutout:'68%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const propStatusMap = {};
+  proposalsScope.forEach(p=>{ propStatusMap[p.status]=(propStatusMap[p.status]||0)+1; });
+  destroyChart('proposalsDashStatus');
+  charts.proposalsDashStatus = new Chart(document.getElementById('chartProposalsDashStatus'), {
+    type:'doughnut',
+    data:{labels:Object.keys(propStatusMap), datasets:[{data:Object.values(propStatusMap), backgroundColor:tc.palette, borderWidth:0}]},
+    options:{cutout:'68%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const tblWrap = document.getElementById('quotesDashEmpTableWrap');
+  if(admin){
+    tblWrap.style.display='block';
+    document.getElementById('tbody-quotesDashEmp').innerHTML = DB.employees.map(e=>{
+      const empQuotes = DB.quotations.filter(q=>q.createdBy===e.name);
+      const empQuoteVal = empQuotes.reduce((a,q)=>a+Number(q.amount||0),0);
+      const empAcceptedVal = empQuotes.filter(q=>q.status==='Accepted').reduce((a,q)=>a+Number(q.amount||0),0);
+      const empProposals = DB.proposals.filter(p=>p.createdBy===e.name);
+      const empWon = empProposals.filter(p=>p.status==='Won').length;
+      const empClosed = empProposals.filter(p=>['Won','Lost'].includes(p.status)).length;
+      const empWinRate = empClosed?Math.round(empWon/empClosed*100):0;
+      return `<tr><td>${e.name}</td><td>${empQuotes.length}</td><td>${fmtMoney(empQuoteVal)}</td><td>${fmtMoney(empAcceptedVal)}</td><td>${empProposals.length}</td><td>${empWinRate}%</td></tr>`;
+    }).join('') || `<tr><td colspan="6"><div class="empty-state">No employees yet.</div></td></tr>`;
+  } else {
+    tblWrap.style.display='none';
+  }
 }
 
 function renderDashboard(){
