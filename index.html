@@ -1630,14 +1630,20 @@ const MODULES = {
       {key:'company', label:'Company'},
       {key:'amount', label:'Amount', fmt:v=>fmtMoney(v)},
       {key:'status', label:'Status', pill:s=>({Draft:'grey',Sent:'blue','Awaiting Approval':'amber',Accepted:'green',Expired:'red'}[s]||'grey')},
-      {key:'validity', label:'Valid Till'}
+      {key:'quoteDate', label:'Quote Date', fmt:v=>v||'—'},
+      {key:'validity', label:'Valid Till'},
+      {key:'shipmentType', label:'Shipment', fmt:v=>(v&&v.length)?v.join(', '):'—'},
+      {key:'attachments', label:'Docs', fmt:v=>(v&&v.length)?`📎 ${v.length}`:'—'}
     ],
     fields:[
       {key:'quoteNo', label:'Quote Number', type:'text', required:true},
       {key:'company', label:'Company', type:'select', optionsFrom:'leadCompanies', required:true},
       {key:'amount', label:'Amount (₹)', type:'number', required:true, min:1},
       {key:'status', label:'Status', type:'select', options:['Draft','Sent','Awaiting Approval','Accepted','Expired'], required:true},
-      {key:'validity', label:'Valid Till', type:'date', required:true}
+      {key:'quoteDate', label:'Quote Date (Generated)', type:'date', required:true},
+      {key:'validity', label:'Valid Till', type:'date', required:true},
+      {key:'shipmentVolume', label:'Shipment Volume', type:'text', required:false},
+      {key:'shipmentType', label:'Shipment Type', type:'checkbox-group', options:['Domestic','Exim'], required:false}
     ]
   },
   proposals:{
@@ -1647,14 +1653,18 @@ const MODULES = {
       {key:'company', label:'Company'},
       {key:'status', label:'Status', pill:s=>({Draft:'grey','In Review':'blue',Negotiation:'amber',Won:'green',Lost:'red'}[s]||'grey')},
       {key:'progress', label:'Progress', fmt:v=>v+'%'},
-      {key:'sentDate', label:'Sent'}
+      {key:'sentDate', label:'Sent'},
+      {key:'shipmentType', label:'Shipment', fmt:v=>(v&&v.length)?v.join(', '):'—'},
+      {key:'attachments', label:'Docs', fmt:v=>(v&&v.length)?`📎 ${v.length}`:'—'}
     ],
     fields:[
       {key:'title', label:'Proposal Title', type:'text', required:true},
       {key:'company', label:'Company', type:'select', optionsFrom:'leadCompanies', required:true},
       {key:'status', label:'Status', type:'select', options:['Draft','In Review','Negotiation','Won','Lost'], required:true},
       {key:'progress', label:'Progress %', type:'number', required:true, min:0, max:100},
-      {key:'sentDate', label:'Sent Date', type:'date'}
+      {key:'sentDate', label:'Sent Date', type:'date'},
+      {key:'shipmentVolume', label:'Shipment Volume', type:'text', required:false},
+      {key:'shipmentType', label:'Shipment Type', type:'checkbox-group', options:['Domestic','Exim'], required:false}
     ]
   },
   expenses:{
@@ -1993,10 +2003,12 @@ function openForm(moduleKey, id){
 
   const body = document.getElementById('modalBody');
   body.innerHTML = cfg.fields.map(f=>{
-    let val = record[f.key]!==undefined? record[f.key] : '';
+    let val = record[f.key]!==undefined? record[f.key] : (f.type==='checkbox-group'?[]:'');
     if(!id && moduleKey==='calls' && f.key==='date' && !val) val = todayISO();
     let input='';
-    if(f.type==='select'){
+    if(f.type==='checkbox-group'){
+      input = `<div style="display:flex;gap:16px;flex-wrap:wrap;">${(f.options||[]).map(o=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;"><input type="checkbox" name="${f.key}" value="${o}" ${(Array.isArray(val)&&val.includes(o))?'checked':''}> ${o}</label>`).join('')}</div>`;
+    } else if(f.type==='select'){
       let opts = f.options || optionsFor(f.optionsFrom);
       let lockedVal = val;
       if(f.optionsFrom==='employeeNames' && !isAdmin()){
@@ -2006,7 +2018,7 @@ function openForm(moduleKey, id){
       }
       const MASTER_BACKED = ['sources','industries','stages'];
       const isMasterBacked = MASTER_BACKED.includes(f.optionsFrom);
-      const isFreeTextAddable = f.optionsFrom==='contactCompanies' || (f.optionsFrom==='leadCompanies' && f.key==='lead');
+      const isFreeTextAddable = f.optionsFrom==='contactCompanies' || (f.optionsFrom==='leadCompanies' && (f.key==='lead' || f.key==='company'));
       const addNewHandler = isMasterBacked ? `handleAddNewOption(this,'${f.optionsFrom}')` : isFreeTextAddable ? `handleAddFreeTextOption(this)` : '';
       input = `<select name="${f.key}" data-required="${!!f.required}" ${addNewHandler?`onchange="${addNewHandler}"`:''}>
         <option value="">Select ${f.label}</option>
@@ -2046,6 +2058,22 @@ function openForm(moduleKey, id){
     `);
     renderAttachmentUI();
   }
+  if(moduleKey==='quotations' || moduleKey==='proposals'){
+    docExistingAttachments = (record.attachments || []).slice();
+    docNewFiles = [];
+    body.insertAdjacentHTML('beforeend', `
+      <div class="field">
+        <label>Attachments <span style="font-size:12px;color:var(--ink-soft);font-weight:400;">(optional — PDF, Word, Excel, images, multiple allowed)</span></label>
+        <div class="upload-zone" onclick="document.getElementById('docFileInput').click()">
+          <input type="file" id="docFileInput" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.html,.htm,image/*" onchange="handleDocFiles(this.files)">
+          <div>📎 Click to choose files</div>
+          <div class="hint">Photos auto-compressed · other files up to 300KB · max 5 files</div>
+        </div>
+        <div class="attach-list" id="docAttachListUI"></div>
+      </div>
+    `);
+    renderDocAttachmentUI();
+  }
 
   document.getElementById('modalBg').classList.add('show');
 }
@@ -2060,6 +2088,67 @@ let expenseNewFiles = [];
 const MAX_DOC_ATTACHMENT_KB = 200;      // raw size cap for PDF/DOC (can't be compressed)
 const MAX_ATTACHMENTS_PER_EXPENSE = 3;
 const MAX_TOTAL_ATTACHMENT_BYTES = 900*1024; // keep well under Firestore's 1MB document limit
+
+/* Quotations & Proposals attachments — shared pair since only one modal is
+   ever open at a time, same Base64-in-Firestore pattern as expenses. */
+let docExistingAttachments = [];
+let docNewFiles = [];
+const MAX_DOC_FILE_KB = 300;
+const MAX_ATTACHMENTS_PER_DOC = 5;
+
+function docTotalAttachmentBytes(){
+  return [...docExistingAttachments, ...docNewFiles]
+    .reduce((sum,a)=> sum + Math.round((a.dataUrl||'').length*0.75), 0);
+}
+async function handleDocFiles(fileList){
+  for(const file of Array.from(fileList)){
+    if(docExistingAttachments.length + docNewFiles.length >= MAX_ATTACHMENTS_PER_DOC){
+      toast(`Max ${MAX_ATTACHMENTS_PER_DOC} attachments allowed`, 'error');
+      break;
+    }
+    let dataUrl;
+    try{
+      if(file.type.startsWith('image/')){
+        dataUrl = await compressImage(file);
+      } else {
+        if(file.size > MAX_DOC_FILE_KB*1024){
+          toast(`${file.name} is over ${MAX_DOC_FILE_KB}KB — try a smaller/zipped file`, 'error');
+          continue;
+        }
+        dataUrl = await fileToDataUrl(file);
+      }
+    }catch(err){ toast('Could not read '+file.name, 'error'); continue; }
+
+    const projectedTotal = docTotalAttachmentBytes() + Math.round(dataUrl.length*0.75);
+    if(projectedTotal > MAX_TOTAL_ATTACHMENT_BYTES){
+      toast(`Adding ${file.name} would exceed the storage limit — remove another file first`, 'error');
+      continue;
+    }
+    docNewFiles.push({name:file.name, type: file.type.startsWith('image/') ? 'image/jpeg' : (file.type||'application/octet-stream'), size: Math.round(dataUrl.length*0.75), dataUrl});
+  }
+  document.getElementById('docFileInput').value = '';
+  renderDocAttachmentUI();
+}
+function removeDocExistingAttachment(idx){ docExistingAttachments.splice(idx,1); renderDocAttachmentUI(); }
+function removeDocNewFile(idx){ docNewFiles.splice(idx,1); renderDocAttachmentUI(); }
+function renderDocAttachmentUI(){
+  const el = document.getElementById('docAttachListUI');
+  if(!el) return;
+  const usedKB = (docTotalAttachmentBytes()/1024).toFixed(0);
+  const existingHtml = docExistingAttachments.map((a,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(a.type)}</div>
+      <a href="${a.dataUrl}" target="_blank" rel="noopener" download="${a.name}">${a.name}</a>
+      <button type="button" class="rm" onclick="removeDocExistingAttachment(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  const newHtml = docNewFiles.map((f,i)=>`
+    <div class="attach-chip">
+      <div class="ic">${fileIcon(f.type)}</div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name} <span style="color:var(--ink-soft);font-weight:400;">(new — ${(f.size/1024).toFixed(0)}KB)</span></span>
+      <button type="button" class="rm" onclick="removeDocNewFile(${i})" title="Remove">✕</button>
+    </div>`).join('');
+  el.innerHTML = (existingHtml + newHtml || '') + `<div class="hint" style="margin-top:2px;">${usedKB}KB of ~900KB used</div>`;
+}
 
 function fileIcon(type){
   if(type && type.startsWith('image/')) return '🖼️';
@@ -2278,11 +2367,12 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
   cfg.fields.forEach(f=>{
     const fieldEl = document.querySelector(`#modalBody .field[data-key="${f.key}"]`);
     const errEl = fieldEl.querySelector('.err-msg');
-    let val = fd.get(f.key);
+    let val = f.type==='checkbox-group' ? fd.getAll(f.key) : fd.get(f.key);
     if(f.type==='number') val = val===''? '' : Number(val);
     data[f.key] = val;
     fieldEl.classList.remove('error');
 
+    if(f.type==='checkbox-group') return; // optional, no further validation needed
     if(f.required && (val===''||val===undefined||val===null)){
       fieldEl.classList.add('error'); errEl.textContent = f.label+' is required.'; valid=false; return;
     }
@@ -2310,6 +2400,9 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
   try{
     if(currentModule==='expenses'){
       data.attachments = [...expenseExistingAttachments, ...expenseNewFiles];
+    }
+    if(currentModule==='quotations' || currentModule==='proposals'){
+      data.attachments = [...docExistingAttachments, ...docNewFiles];
     }
     if(currentModule==='employees' && data.email){
       data.email = String(data.email).trim().toLowerCase();
