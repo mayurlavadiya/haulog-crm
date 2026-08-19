@@ -1653,6 +1653,9 @@ const MODULES = {
       {key:'company', label:'Company'},
       {key:'status', label:'Status', pill:s=>({Draft:'grey','In Review':'blue',Negotiation:'amber',Won:'green',Lost:'red'}[s]||'grey')},
       {key:'progress', label:'Progress', fmt:v=>v+'%'},
+      {key:'finalAmount', label:'Final Amount', fmt:v=>v?fmtMoney(v):'—'},
+      {key:'paymentTerms', label:'Payment Terms', fmt:v=>v||'—'},
+      {key:'duration', label:'Duration', fmt:v=>v||'—'},
       {key:'sentDate', label:'Sent'},
       {key:'shipmentType', label:'Shipment', fmt:v=>(v&&v.length)?v.join(', '):'—'},
       {key:'attachments', label:'Docs', fmt:v=>(v&&v.length)?`📎 ${v.length}`:'—'}
@@ -1662,6 +1665,9 @@ const MODULES = {
       {key:'company', label:'Company', type:'select', optionsFrom:'leadCompanies', required:true},
       {key:'status', label:'Status', type:'select', options:['Draft','In Review','Negotiation','Won','Lost'], required:true},
       {key:'progress', label:'Progress %', type:'number', required:true, min:0, max:100},
+      {key:'finalAmount', label:'Final Amount (₹)', type:'number', required:false, min:0},
+      {key:'paymentTerms', label:'Payment Terms', type:'text', required:false},
+      {key:'duration', label:'Duration / Validity', type:'text', required:false},
       {key:'sentDate', label:'Sent Date', type:'date'},
       {key:'shipmentVolume', label:'Shipment Volume', type:'text', required:false},
       {key:'shipmentType', label:'Shipment Type', type:'checkbox-group', options:['Domestic','Exim'], required:false}
@@ -1970,6 +1976,7 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
         : `openForm('${moduleKey}','${r.id}')`;
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
         ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
+        ${moduleKey==='quotations' ? `<button class="icon-action" title="Convert to Proposal" onclick="convertQuoteToProposal('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>` : ''}
         <button class="icon-action" title="Edit" onclick="${editHandler}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
@@ -1993,13 +2000,13 @@ async function deleteRecord(moduleKey, id){
    GENERIC MODAL FORM
 ========================================================= */
 let currentModule=null, currentEditId=null;
-function openForm(moduleKey, id){
+function openForm(moduleKey, id, prefillData){
   const cfg = MODULES[moduleKey];
-  const record = id ? DB[moduleKey].find(r=>r.id===id) : {};
+  const record = id ? DB[moduleKey].find(r=>r.id===id) : (prefillData || {});
   if(id && !ownsRecord(moduleKey, record)){ toast('You can only edit records you added','error'); return; }
   if(moduleKey==='employees' && !isAdmin()){ toast('Only Admins can manage employee records','error'); return; }
   currentModule = moduleKey; currentEditId = id||null;
-  document.getElementById('modalTitle').textContent = (id? 'Edit ':'Add New ') + cfg.label;
+  document.getElementById('modalTitle').textContent = id ? 'Edit '+cfg.label : (prefillData ? 'New '+cfg.label+' (from Quotation)' : 'Add New '+cfg.label);
 
   const body = document.getElementById('modalBody');
   body.innerHTML = cfg.fields.map(f=>{
@@ -2078,6 +2085,28 @@ function openForm(moduleKey, id){
   document.getElementById('modalBg').classList.add('show');
 }
 function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+
+/* Convert a Quotation into a new Proposal — carries over common fields
+   (company, shipment details, attachments); Final Amount, Payment Terms,
+   and Duration are left blank for the person to decide manually. */
+function convertQuoteToProposal(quoteId){
+  const q = DB.quotations.find(x=>x.id===quoteId);
+  if(!q){ toast('Quotation not found','error'); return; }
+  if(!ownsRecord('quotations', q)){ toast('You can only convert quotations you added','error'); return; }
+  const prefill = {
+    title: `Proposal - ${q.company}`,
+    company: q.company,
+    status: 'Draft',
+    progress: 0,
+    shipmentVolume: q.shipmentVolume || '',
+    shipmentType: q.shipmentType || [],
+    attachments: (q.attachments || []).slice(),
+    linkedQuoteId: q.id,
+    linkedQuoteNo: q.quoteNo || ''
+  };
+  openForm('proposals', null, prefill);
+  toast('Pre-filled from quotation — add Final Amount, Payment Terms & Duration','success');
+}
 
 /* =========================================================
    EXPENSE ATTACHMENTS (Base64 stored directly in Firestore —
