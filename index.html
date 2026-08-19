@@ -656,6 +656,7 @@ tbody tr:hover{background:var(--blue-50);}
           <button class="btn-sm dash-tab-btn" data-dtab="expenses" onclick="dashTab('expenses')">Expenses</button>
           <button class="btn-sm dash-tab-btn" data-dtab="activity" onclick="dashTab('activity')">Recent Activity</button>
           <button class="btn-sm dash-tab-btn" data-dtab="quotes" onclick="dashTab('quotes')">Quotations &amp; Proposals</button>
+          <button class="btn-sm dash-tab-btn" data-dtab="meetdash" onclick="dashTab('meetdash')">Meetings &amp; Calendar</button>
         </div>
 
         <div class="dash-tab-panel" id="dashTab-overview">
@@ -729,6 +730,29 @@ tbody tr:hover{background:var(--blue-50);}
             <h3>Employee-wise Breakdown</h3><p class="sub">Admin view — every team member's quotations &amp; proposals</p>
             <div class="table-wrap" style="margin-top:12px;">
               <table><thead><tr><th>Employee</th><th>Quotations</th><th>Quote Value</th><th>Accepted Value</th><th>Proposals</th><th>Proposal Win Rate</th></tr></thead><tbody id="tbody-quotesDashEmp"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="dashTab-meetdash" style="display:none;">
+          <div class="toolbar" style="margin-bottom:14px;">
+            <select class="filter" id="meetDashEmpFilter" style="display:none;" onchange="renderMeetingsDashboard()"><option value="">All Employees</option></select>
+          </div>
+          <div class="grid g-4" style="margin-bottom:18px;" id="meetDashKpis"></div>
+          <div class="grid g-2-1" style="margin-bottom:18px;">
+            <div class="card"><h3>Meetings by Day of Week</h3><p class="sub">Busiest days at a glance</p><div class="chart-box"><canvas id="chartMeetDashDow"></canvas></div></div>
+            <div class="card"><h3>Meeting Type Mix</h3><p class="sub">Call / Meeting / Demo / Task</p><div class="chart-box"><canvas id="chartMeetDashType"></canvas></div></div>
+          </div>
+          <div class="grid g-2-1">
+            <div class="card">
+              <h3>Upcoming This Week</h3><p class="sub">Next 7 days, soonest first</p>
+              <div id="meetDashUpcoming" style="display:flex;flex-direction:column;gap:2px;margin-top:10px;max-height:280px;overflow-y:auto;"></div>
+            </div>
+            <div class="card" id="meetDashEmpTableWrap" style="display:none;">
+              <h3>Employee-wise Breakdown</h3><p class="sub">Admin view</p>
+              <div class="table-wrap" style="margin-top:10px;">
+                <table><thead><tr><th>Employee</th><th>Meetings</th><th>Upcoming</th><th>→ Deal Conversion</th></tr></thead><tbody id="tbody-meetDashEmp"></tbody></table>
+              </div>
             </div>
           </div>
         </div>
@@ -3250,7 +3274,7 @@ function updateCounts(){
 }
 
 /* ---- Dashboard sub-tabs ---- */
-const DASH_TABS = ['overview','sales','expenses','activity','quotes'];
+const DASH_TABS = ['overview','sales','expenses','activity','quotes','meetdash'];
 function dashTab(name){
   DASH_TABS.forEach(t=>{ const el=document.getElementById('dashTab-'+t); if(el) el.style.display = (t===name)?'block':'none'; });
   document.querySelectorAll('.dash-tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.dtab===name));
@@ -3258,6 +3282,7 @@ function dashTab(name){
   if(name==='expenses'){ populateExpDashEmpFilter(); renderExpenseDashboard(); }
   if(name==='activity'){ populateActivityDashEmpFilter(); renderActivityDashboard(); }
   if(name==='quotes'){ populateQuotesDashEmpFilter(); renderQuotesDashboard(); }
+  if(name==='meetdash'){ populateMeetDashEmpFilter(); renderMeetingsDashboard(); }
 }
 function populateSalesDashEmpFilter(){
   const sel = document.getElementById('salesDashEmpFilter');
@@ -3533,6 +3558,97 @@ function renderQuotesDashboard(){
       const empWinRate = empClosed?Math.round(empWon/empClosed*100):0;
       return `<tr><td>${e.name}</td><td>${empQuotes.length}</td><td>${fmtMoney(empQuoteVal)}</td><td>${fmtMoney(empAcceptedVal)}</td><td>${empProposals.length}</td><td>${empWinRate}%</td></tr>`;
     }).join('') || `<tr><td colspan="6"><div class="empty-state">No employees yet.</div></td></tr>`;
+  } else {
+    tblWrap.style.display='none';
+  }
+}
+
+function populateMeetDashEmpFilter(){
+  const sel = document.getElementById('meetDashEmpFilter');
+  if(!sel) return;
+  const admin = isAdmin();
+  sel.style.display = admin ? 'inline-block' : 'none';
+  if(admin){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">All Employees</option>' + DB.employees.map(e=>`<option value="${e.name}">${e.name}</option>`).join('');
+    if(prev) sel.value = prev;
+  }
+}
+/* Meetings have no direct company field — match by title containing a lead's company name,
+   so we can approximate which meetings tie to which deal. */
+function matchMeetingToLead(meeting, leadsList){
+  const title = (meeting.title||'').toLowerCase();
+  if(!title) return null;
+  return leadsList.find(l => l.company && title.includes(l.company.toLowerCase())) || null;
+}
+function renderMeetingsDashboard(){
+  if(!document.getElementById('meetDashKpis')) return;
+  const admin = isAdmin();
+  const empSel = document.getElementById('meetDashEmpFilter');
+  const filterVal = admin && empSel ? empSel.value : '';
+
+  let scope = myRecords('meetings');
+  if(filterVal) scope = scope.filter(m=>m.createdBy===filterVal);
+
+  const weekEnd = inNdays(6);
+  const upcoming = scope.filter(m=>m.date>=todayISO() && m.date<=weekEnd).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+
+  const allLeads = DB.leads;
+  const matched = scope.map(m=>({m, lead:matchMeetingToLead(m, allLeads)})).filter(x=>x.lead);
+  const wonMatched = matched.filter(x=>x.lead.stage==='Won').length;
+  const conversion = matched.length ? Math.round(wonMatched/matched.length*100) : null;
+
+  const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dowCounts = [0,0,0,0,0,0,0];
+  scope.forEach(m=>{ if(m.date){ const d=new Date(m.date+'T00:00:00').getDay(); dowCounts[d]++; } });
+  const maxCount = Math.max(...dowCounts);
+  const busiestDay = maxCount>0 ? dowNames[dowCounts.indexOf(maxCount)]+` (${maxCount})` : '—';
+
+  document.getElementById('meetDashKpis').innerHTML = `
+    <div class="card kpi"><div class="val">${upcoming.length}</div><div class="lbl">Upcoming This Week</div></div>
+    <div class="card kpi"><div class="val">${scope.length}</div><div class="lbl">Total Meetings</div></div>
+    <div class="card kpi"><div class="val">${busiestDay}</div><div class="lbl">Busiest Day</div></div>
+    <div class="card kpi"><div class="val">${conversion===null?'—':conversion+'%'}</div><div class="lbl">Meeting → Deal Conversion${matched.length?` (${matched.length} matched)`:''}</div></div>
+  `;
+
+  const tc = themeColors();
+  destroyChart('meetDashDow');
+  charts.meetDashDow = new Chart(document.getElementById('chartMeetDashDow'), {
+    type:'bar',
+    data:{labels:dowNames, datasets:[{data:dowCounts, backgroundColor:tc.accent, borderRadius:8, maxBarThickness:32}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{grid:{color:tc.grid}, ticks:{stepSize:1}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const typeMap = {};
+  scope.forEach(m=>{ typeMap[m.type||'Meeting']=(typeMap[m.type||'Meeting']||0)+1; });
+  destroyChart('meetDashType');
+  charts.meetDashType = new Chart(document.getElementById('chartMeetDashType'), {
+    type:'doughnut',
+    data:{labels:Object.keys(typeMap), datasets:[{data:Object.values(typeMap), backgroundColor:tc.palette, borderWidth:0}]},
+    options:{cutout:'68%', plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
+  });
+
+  const upcomingEl = document.getElementById('meetDashUpcoming');
+  upcomingEl.innerHTML = upcoming.length ? upcoming.map(m=>`
+    <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;" onclick="go('meetings')">
+      <div style="font-size:16px;">🗓️</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;">${m.title}</div>
+        <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">${m.date} · ${m.time||'—'} · ${m.type||'Meeting'}</div>
+      </div>
+    </div>`).join('') : '<div class="empty-state">No meetings in the next 7 days.</div>';
+
+  const tblWrap = document.getElementById('meetDashEmpTableWrap');
+  if(admin){
+    tblWrap.style.display='block';
+    document.getElementById('tbody-meetDashEmp').innerHTML = DB.employees.map(e=>{
+      const empMeetings = DB.meetings.filter(m=>m.createdBy===e.name);
+      const empUpcoming = empMeetings.filter(m=>m.date>=todayISO() && m.date<=weekEnd).length;
+      const empMatched = empMeetings.map(m=>matchMeetingToLead(m, allLeads)).filter(Boolean);
+      const empWon = empMatched.filter(l=>l.stage==='Won').length;
+      const empConv = empMatched.length ? Math.round(empWon/empMatched.length*100)+'%' : '—';
+      return `<tr><td>${e.name}</td><td>${empMeetings.length}</td><td>${empUpcoming}</td><td>${empConv}</td></tr>`;
+    }).join('') || `<tr><td colspan="4"><div class="empty-state">No employees yet.</div></td></tr>`;
   } else {
     tblWrap.style.display='none';
   }
