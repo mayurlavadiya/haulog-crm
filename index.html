@@ -3292,119 +3292,512 @@ function clearLeadFilters(){
 }
 
 function normalizeLeadImportHeader(value){
-  return String(value || '').trim().toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ');
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g,' ')
+    .replace(/\s+/g,' ');
 }
 
 function getLeadImportValue(row, aliases){
+  const normalizedAliases = aliases.map(normalizeLeadImportHeader);
+
   for(const key of Object.keys(row)){
-    if(aliases.includes(normalizeLeadImportHeader(key))) return row[key];
+    const normalizedKey = normalizeLeadImportHeader(key);
+
+    if(normalizedAliases.includes(normalizedKey)){
+      return row[key];
+    }
   }
+
   return '';
 }
 
 function normalizeLeadImportDate(value){
-  if(!value && value!==0) return '';
-  if(value instanceof Date){
+  if(value === null || value === undefined || value === '') return '';
+
+  if(value instanceof Date && !isNaN(value.getTime())){
     return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;
   }
-  const raw=String(value).trim();
+
+  const raw = String(value).trim();
+
   if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  let m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
-  m=raw.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
-  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+
+  let m = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m){
+    return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  }
+
+  m = raw.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  if(m){
+    return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  }
+
   return raw;
 }
 
-function normalizeLeadImportStage(value){
-  const raw=String(value || '').trim();
-  if(!raw) return '';
-  const stages=(DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES;
-  return stages.find(s=>String(s).toLowerCase()===raw.toLowerCase()) || raw;
-}
-
 function normalizeLeadImportNumber(value){
-  if(value===null || value===undefined || value==='') return 0;
-  if(typeof value==='number') return value;
-  const num=Number(String(value).replace(/₹/g,'').replace(/Rs\.?/gi,'').replace(/,/g,'').trim());
+  if(value === null || value === undefined || value === '') return 0;
+
+  if(typeof value === 'number'){
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const num = Number(
+    String(value)
+      .replace(/₹/g,'')
+      .replace(/Rs\.?/gi,'')
+      .replace(/,/g,'')
+      .trim()
+  );
+
   return Number.isFinite(num) ? num : 0;
 }
 
-function mapExcelRowToLead(row){
-  const company=String(getLeadImportValue(row,['company','company name','lead company','organization','organisation']) || '').trim();
-  const contact=String(getLeadImportValue(row,['contact','contact person','contact name','person']) || '').trim();
-  const email=String(getLeadImportValue(row,['email','email address']) || '').trim();
-  const phone=String(getLeadImportValue(row,['phone','phone number','mobile','mobile number','contact number']) || '').replace(/\D/g,'').trim();
-  const industry=String(getLeadImportValue(row,['industry','sector']) || '').trim();
-  const source=String(getLeadImportValue(row,['source','lead source','leadsource']) || '').trim();
-  const stage=normalizeLeadImportStage(getLeadImportValue(row,['stage','lead stage','status']));
-  const owner=String(getLeadImportValue(row,['owner','lead owner','employee','sales owner']) || '').trim();
-  const expectedClosing=normalizeLeadImportDate(getLeadImportValue(row,['expected closing','expected closing date','closing date','expected close','expected']));
-  const value=normalizeLeadImportNumber(getLeadImportValue(row,['value','deal value','deal value ₹','amount','deal amount']));
-  const notes=String(getLeadImportValue(row,['notes','note','remarks','remark','comments','comment']) || '').trim();
+/*
+ * Match an imported category against the CRM's existing master data.
+ * This prevents Excel from creating a second spelling for an existing
+ * Industry / Source / Stage.
+ *
+ * If the CRM has no master values loaded, the supplied value is kept.
+ */
+function matchExistingLeadMaster(value, masterName){
+  const raw = String(value || '').trim();
+  if(!raw) return '';
 
-  if(!company || !contact || !email || !phone || !industry || !source || !stage) return null;
-  if(!/^[0-9]{10}$/.test(phone)) return null;
+  const masters =
+    masterName === 'stages'
+      ? ((DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES)
+      : Array.isArray(DB.masters[masterName])
+        ? DB.masters[masterName]
+        : [];
+
+  if(!masters.length) return raw;
+
+  const match = masters.find(
+    item => String(item).trim().toLowerCase() === raw.toLowerCase()
+  );
+
+  return match || '';
+}
+
+function getLeadImportHeaderSet(rows){
+  if(!rows || !rows.length) return new Set();
+
+  return new Set(
+    Object.keys(rows[0]).map(normalizeLeadImportHeader)
+  );
+}
+
+function isLeadImportSheet(rows){
+  if(!rows || !rows.length) return false;
+
+  const headers = getLeadImportHeaderSet(rows);
+
+  const requiredHeaderGroups = [
+    ['company','company name'],
+    ['contact','contact person','contact name'],
+    ['email','email address'],
+    ['phone','phone number','mobile','mobile number']
+  ];
+
+  return requiredHeaderGroups.every(group =>
+    group.some(alias => headers.has(normalizeLeadImportHeader(alias)))
+  );
+}
+
+/*
+ * IMPORTANT:
+ * The Haulog sample workbook contains three sheets:
+ *   1. Instructions
+ *   2. Leads Import
+ *   3. Categories
+ *
+ * The old importer always read SheetNames[0], which meant it tried to
+ * import the Instructions sheet. That produced:
+ *
+ * "No valid Leads found..."
+ *
+ * This function now explicitly finds "Leads Import" and also has a
+ * header-based fallback for Excel files created outside the template.
+ */
+function findLeadsImportRows(workbook){
+  const preferredNames = [
+    'Leads Import',
+    'Leads',
+    'Lead Import',
+    'Lead Data'
+  ];
+
+  for(const sheetName of preferredNames){
+    const actualName = workbook.SheetNames.find(
+      name => String(name).trim().toLowerCase() === sheetName.toLowerCase()
+    );
+
+    if(actualName){
+      const rows = XLSX.utils.sheet_to_json(
+        workbook.Sheets[actualName],
+        {
+          defval:'',
+          raw:false
+        }
+      );
+
+      if(isLeadImportSheet(rows)){
+        return {
+          sheetName: actualName,
+          rows
+        };
+      }
+    }
+  }
+
+  /*
+   * Fallback: inspect every sheet and choose the one whose headers
+   * look like Lead data. This allows users to upload their own Excel
+   * without using the generated template.
+   */
+  for(const sheetName of workbook.SheetNames){
+    const rows = XLSX.utils.sheet_to_json(
+      workbook.Sheets[sheetName],
+      {
+        defval:'',
+        raw:false
+      }
+    );
+
+    if(isLeadImportSheet(rows)){
+      return {
+        sheetName,
+        rows
+      };
+    }
+  }
+
+  return null;
+}
+
+function mapExcelRowToLead(row){
+  const company = String(getLeadImportValue(row,[
+    'company',
+    'company name',
+    'lead company',
+    'organization',
+    'organisation'
+  ]) || '').trim();
+
+  const contact = String(getLeadImportValue(row,[
+    'contact',
+    'contact person',
+    'contact name',
+    'person'
+  ]) || '').trim();
+
+  const email = String(getLeadImportValue(row,[
+    'email',
+    'email address'
+  ]) || '').trim();
+
+  const phone = String(getLeadImportValue(row,[
+    'phone',
+    'phone number',
+    'mobile',
+    'mobile number',
+    'contact number'
+  ]) || '')
+    .replace(/\D/g,'')
+    .trim();
+
+  const industryRaw = String(getLeadImportValue(row,[
+    'industry',
+    'sector'
+  ]) || '').trim();
+
+  const sourceRaw = String(getLeadImportValue(row,[
+    'source',
+    'lead source',
+    'leadsource'
+  ]) || '').trim();
+
+  const stageRaw = String(getLeadImportValue(row,[
+    'stage',
+    'lead stage',
+    'status'
+  ]) || '').trim();
+
+  const owner = String(getLeadImportValue(row,[
+    'owner',
+    'lead owner',
+    'employee',
+    'sales owner'
+  ]) || '').trim();
+
+  const expectedClosing = normalizeLeadImportDate(
+    getLeadImportValue(row,[
+      'expected closing',
+      'expected closing date',
+      'closing date',
+      'expected close',
+      'expected'
+    ])
+  );
+
+  const value = normalizeLeadImportNumber(
+    getLeadImportValue(row,[
+      'value',
+      'deal value',
+      'deal value ₹',
+      'amount',
+      'deal amount'
+    ])
+  );
+
+  const notes = String(getLeadImportValue(row,[
+    'notes',
+    'note',
+    'remarks',
+    'remark',
+    'comments',
+    'comment'
+  ]) || '').trim();
+
+  /*
+   * Required fields match the existing Lead form.
+   */
+  if(!company || !contact || !email || !phone ||
+     !industryRaw || !sourceRaw || !stageRaw){
+    return {
+      error:'Missing required field',
+      data:null
+    };
+  }
+
+  if(!/^[0-9]{10}$/.test(phone)){
+    return {
+      error:'Phone must contain exactly 10 digits',
+      data:null
+    };
+  }
+
+  /*
+   * Use the existing CRM category values.
+   */
+  const industry = matchExistingLeadMaster(industryRaw,'industries');
+  const source = matchExistingLeadMaster(sourceRaw,'sources');
+  const stage = matchExistingLeadMaster(stageRaw,'stages');
+
+  if(!industry){
+    return {
+      error:`Industry "${industryRaw}" is not in the current CRM Industries master`,
+      data:null
+    };
+  }
+
+  if(!source){
+    return {
+      error:`Lead Source "${sourceRaw}" is not in the current CRM Lead Sources master`,
+      data:null
+    };
+  }
+
+  if(!stage){
+    return {
+      error:`Stage "${stageRaw}" is not in the current CRM Lead Stages master`,
+      data:null
+    };
+  }
 
   return {
-    company,contact,email,phone,industry,source,stage,
-    owner:owner || ((DB.profile && DB.profile.name) || ''),
-    expectedClosing,value,notes
+    error:'',
+    data:{
+      company,
+      contact,
+      email,
+      phone,
+      industry,
+      source,
+      stage,
+      owner:owner || ((DB.profile && DB.profile.name) || ''),
+      expectedClosing,
+      value,
+      notes
+    }
   };
 }
 
 async function importLeadsFromExcel(file){
   if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async function(e){
+
+  if(!auth.currentUser){
+    toast('You must be signed in to import Leads','error');
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e){
     try{
-      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
-      if(!wb.SheetNames.length){ toast('No worksheet found in the Excel file','error'); return; }
-      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
-      if(!rows.length){ toast('No rows found in the Excel file','error'); return; }
+      const workbook = XLSX.read(
+        new Uint8Array(e.target.result),
+        {
+          type:'array',
+          cellDates:true
+        }
+      );
 
-      const leads=[]; let skipped=0;
-      rows.forEach(row=>{
-        const lead=mapExcelRowToLead(row);
-        if(!lead){skipped++; return;}
-        leads.push(lead);
-      });
-
-      if(!leads.length){
-        toast('No valid Leads found. Check required columns and 10-digit phone numbers.','error');
+      if(!workbook.SheetNames.length){
+        toast('No worksheet found in the Excel file','error');
         return;
       }
 
-      if(!auth.currentUser){ toast('You must be signed in to import Leads','error'); return; }
+      /*
+       * FIX:
+       * Do not assume the first worksheet is the data sheet.
+       * The sample workbook has Instructions as Sheet 1.
+       */
+      const importSheet = findLeadsImportRows(workbook);
 
-      const chunkSize=450; let imported=0;
-      for(let i=0;i<leads.length;i+=chunkSize){
-        const chunk=leads.slice(i,i+chunkSize);
-        const batch=db.batch();
-        chunk.forEach(lead=>{
-          const ref=db.collection('leads').doc();
-          lead.createdByUid=auth.currentUser.uid;
-          lead.createdBy=(DB.profile && DB.profile.name) || auth.currentUser.email || 'Unknown';
-          lead.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-          batch.set(ref,lead);
-        });
-        await batch.commit();
-        imported+=chunk.length;
+      if(!importSheet){
+        toast(
+          'Could not find the Leads Import sheet. Use the Sample Excel format.',
+          'error'
+        );
+        return;
       }
 
-      const input=document.getElementById('leadsExcelImportInput');
-      if(input) input.value='';
-      let message=`${imported} Lead(s) imported successfully`;
-      if(skipped) message+=` · ${skipped} row(s) skipped`;
+      const rows = importSheet.rows;
+
+      if(!rows.length){
+        toast(
+          `The "${importSheet.sheetName}" sheet has no Lead rows.`,
+          'error'
+        );
+        return;
+      }
+
+      const leads = [];
+      const errors = [];
+
+      rows.forEach((row,index)=>{
+        /*
+         * Completely blank rows are ignored.
+         */
+        const hasAnyValue = Object.values(row).some(
+          value => String(value ?? '').trim() !== ''
+        );
+
+        if(!hasAnyValue) return;
+
+        const result = mapExcelRowToLead(row);
+
+        if(!result.data){
+          errors.push({
+            row:index + 2,
+            reason:result.error
+          });
+          return;
+        }
+
+        leads.push(result.data);
+      });
+
+      if(!leads.length){
+        const firstErrors = errors
+          .slice(0,3)
+          .map(e=>`Row ${e.row}: ${e.reason}`)
+          .join(' · ');
+
+        toast(
+          `No valid Leads found. ${firstErrors || 'Check the Leads Import sheet.'}`,
+          'error'
+        );
+
+        console.warn('Lead import validation errors:',errors);
+        return;
+      }
+
+      /*
+       * Firestore batches support up to 500 writes.
+       */
+      const chunkSize = 450;
+      let imported = 0;
+
+      for(let i=0;i<leads.length;i+=chunkSize){
+        const chunk = leads.slice(i,i + chunkSize);
+        const batch = db.batch();
+
+        chunk.forEach(lead=>{
+          const ref = db.collection('leads').doc();
+
+          /*
+           * Required by your Firestore create rule:
+           * request.resource.data.createdByUid == request.auth.uid
+           */
+          lead.createdByUid = auth.currentUser.uid;
+
+          lead.createdBy =
+            (DB.profile && DB.profile.name) ||
+            auth.currentUser.email ||
+            'Unknown';
+
+          lead.createdAt =
+            firebase.firestore.FieldValue.serverTimestamp();
+
+          batch.set(ref,lead);
+        });
+
+        await batch.commit();
+
+        imported += chunk.length;
+      }
+
+      const input =
+        document.getElementById('leadsExcelImportInput');
+
+      if(input) input.value = '';
+
+      let message =
+        `${imported} Lead(s) imported successfully`;
+
+      if(errors.length){
+        message += ` · ${errors.length} row(s) skipped`;
+      }
+
       toast(message,'success');
+
+      if(errors.length){
+        console.warn(
+          'Some Lead rows were skipped during import:',
+          errors
+        );
+      }
+
     }catch(err){
       console.error('Lead Excel import error:',err);
-      toast('Could not import Leads: '+err.message,'error');
+
+      toast(
+        'Could not import Leads: ' + err.message,
+        'error'
+      );
+
     }finally{
-      const input=document.getElementById('leadsExcelImportInput');
-      if(input) input.value='';
+      const input =
+        document.getElementById('leadsExcelImportInput');
+
+      if(input) input.value = '';
     }
   };
+
+  reader.onerror = function(){
+    toast('Could not read the Excel file','error');
+
+    const input =
+      document.getElementById('leadsExcelImportInput');
+
+    if(input) input.value = '';
+  };
+
   reader.readAsArrayBuffer(file);
 }
 
