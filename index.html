@@ -603,6 +603,10 @@ tbody tr:hover{background:var(--blue-50);}
         Admin Panel
       </button>
       <div class="nav-section-title">Account</div>
+      <button class="nav-item" data-page="notes" onclick="go('notes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 9h1M9 13h6M9 17h6"/></svg>
+        Notes
+      </button>
       <button class="nav-item" data-page="myreports" onclick="go('myreports')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
         My Reports
@@ -1025,6 +1029,18 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
       </section>
 
+      <!-- NOTES (strictly private — no Admin visibility) -->
+      <section class="page" id="page-notes">
+        <div class="page-head">
+          <div><div class="eyebrow">Account</div><h1>Notes</h1><p id="notesCount">0 notes — visible only to you, not even Admins</p></div>
+          <div class="head-actions"><button class="btn-primary" onclick="openForm('notes')">+ New Note</button></div>
+        </div>
+        <div class="card">
+          <div class="toolbar"><input class="search-input" placeholder="Search notes…" oninput="renderTable('notes', this.value)"></div>
+          <div class="table-wrap"><table><thead></thead><tbody id="tbody-notes"></tbody></table></div>
+        </div>
+      </section>
+
       <!-- MY REPORTS -->
       <section class="page" id="page-myreports">
         <div class="page-head">
@@ -1225,9 +1241,9 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
-const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts','dailysummaries','weeklyplanners'];
+const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts','dailysummaries','weeklyplanners','notes'];
 // collections that Firestore rules restrict to owner-or-Admin (must query with a matching where clause)
-const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','contacts','dailysummaries','weeklyplanners'];
+const QUERY_SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','expenses','customers','contacts','dailysummaries','weeklyplanners','notes'];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
@@ -1358,7 +1374,7 @@ function subscribeDataCollections(){
   const uid = auth.currentUser && auth.currentUser.uid;
   QUERY_SCOPED_MODULES.forEach(col=>{
     let ref = db.collection(col);
-    if(!admin) ref = ref.where('createdByUid','==', uid);
+    if(!admin || col==='notes') ref = ref.where('createdByUid','==', uid);
     const unsub = ref.onSnapshot(snap=>{
       DB[col] = snap.docs.map(d=>({id:d.id, ...d.data()}));
       onDataChange();
@@ -1562,6 +1578,21 @@ async function clearAllData(){
    MODULE SCHEMAS
 ========================================================= */
 const MODULES = {
+  notes:{
+    label:'Note', idKey:'id',
+    columns:[
+      {key:'date', label:'Date'},
+      {key:'title', label:'Title'},
+      {key:'description', label:'Description', fmt:v=>(v||'').length>80?(v.slice(0,80)+'…'):(v||'—')},
+      {key:'completed', label:'Status', pill:v=>v?'green':'amber', fmt:v=>v?'✔ Completed':'Pending'}
+    ],
+    fields:[
+      {key:'date', label:'Date', type:'date', required:true},
+      {key:'title', label:'Title', type:'text', required:true},
+      {key:'description', label:'Description', type:'textarea'},
+      {key:'completed', label:'Completed?', type:'checkbox', required:false}
+    ]
+  },
   leads:{
     label:'Lead', idKey:'id',
     columns:[
@@ -1818,7 +1849,7 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','notes','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
@@ -1827,7 +1858,7 @@ function allowedPagesForRole(){
   // Daily Summary & Weekly Planner are personal productivity logs every
   // role must be able to submit — available to everyone regardless of
   // what's saved in their role's permission list.
-  const forced = ['profile','myreports','sitemap','dailysummary','weeklyplanner'];
+  const forced = ['profile','myreports','sitemap','dailysummary','weeklyplanner','notes'];
   // Calendar is just a view of Meetings data — always available alongside it,
   // even for roles saved before Calendar existed as a separate page.
   const derived = base.includes('meetings') ? ['calendar'] : [];
@@ -1855,6 +1886,7 @@ function go(id){
   if(id==='sitemap') renderSitemap();
   if(id==='dailysummary'){ renderTable('dailysummaries'); refreshDsWpFilterVisibility(); }
   if(id==='weeklyplanner'){ renderTable('weeklyplanners'); populateWpFilterWeekOptions(); refreshDsWpFilterVisibility(); }
+  if(id==='notes') renderTable('notes');
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
@@ -1899,19 +1931,23 @@ document.querySelectorAll('.pw-toggle').forEach(b=>{ if(!b.innerHTML.trim()) b.i
    directly via the Firebase SDK / network tab.
 ========================================================= */
 const SCOPED_MODULES = ['leads','calls','meetings','quotations','proposals','customers','contacts','dailysummaries','weeklyplanners'];
+/* Notes is strictly private — unlike other modules, Admin does NOT get to see everyone's notes here. */
+const ALWAYS_OWN_MODULES = ['notes'];
 function isAdmin(){ return !!(DB.profile && ['Admin','Super Admin'].includes(DB.profile.role)); }
 function myRecords(moduleKey){
   const list = DB[moduleKey] || [];
+  const uid = auth.currentUser && auth.currentUser.uid;
+  if(ALWAYS_OWN_MODULES.includes(moduleKey)) return list.filter(r => r.createdByUid === uid);
   if(!SCOPED_MODULES.includes(moduleKey)) return list;
   if(isAdmin()) return list;
-  const uid = auth.currentUser && auth.currentUser.uid;
   return list.filter(r => r.createdByUid === uid);
 }
 function ownsRecord(moduleKey, record){
   if(moduleKey==='employees') return isAdmin();
+  const uid = auth.currentUser && auth.currentUser.uid;
+  if(ALWAYS_OWN_MODULES.includes(moduleKey)) return !!record && record.createdByUid === uid;
   if(!SCOPED_MODULES.includes(moduleKey)) return true;
   if(isAdmin()) return true;
-  const uid = auth.currentUser && auth.currentUser.uid;
   return !!record && record.createdByUid === uid;
 }
 
@@ -2010,10 +2046,12 @@ function openForm(moduleKey, id, prefillData){
 
   const body = document.getElementById('modalBody');
   body.innerHTML = cfg.fields.map(f=>{
-    let val = record[f.key]!==undefined? record[f.key] : (f.type==='checkbox-group'?[]:'');
+    let val = record[f.key]!==undefined? record[f.key] : (f.type==='checkbox-group'?[] : f.type==='checkbox'?false : '');
     if(!id && moduleKey==='calls' && f.key==='date' && !val) val = todayISO();
     let input='';
-    if(f.type==='checkbox-group'){
+    if(f.type==='checkbox'){
+      input = `<input type="checkbox" name="${f.key}" ${val?'checked':''} style="width:18px;height:18px;accent-color:var(--blue);">`;
+    } else if(f.type==='checkbox-group'){
       input = `<div style="display:flex;gap:16px;flex-wrap:wrap;">${(f.options||[]).map(o=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;"><input type="checkbox" name="${f.key}" value="${o}" ${(Array.isArray(val)&&val.includes(o))?'checked':''}> ${o}</label>`).join('')}</div>`;
     } else if(f.type==='select'){
       let opts = f.options || optionsFor(f.optionsFrom);
@@ -2396,12 +2434,12 @@ document.getElementById('modalForm').addEventListener('submit', async function(e
   cfg.fields.forEach(f=>{
     const fieldEl = document.querySelector(`#modalBody .field[data-key="${f.key}"]`);
     const errEl = fieldEl.querySelector('.err-msg');
-    let val = f.type==='checkbox-group' ? fd.getAll(f.key) : fd.get(f.key);
+    let val = f.type==='checkbox-group' ? fd.getAll(f.key) : f.type==='checkbox' ? (fd.get(f.key)==='on') : fd.get(f.key);
     if(f.type==='number') val = val===''? '' : Number(val);
     data[f.key] = val;
     fieldEl.classList.remove('error');
 
-    if(f.type==='checkbox-group') return; // optional, no further validation needed
+    if(f.type==='checkbox-group' || f.type==='checkbox') return; // optional, no further validation needed
     if(f.required && (val===''||val===undefined||val===null)){
       fieldEl.classList.add('error'); errEl.textContent = f.label+' is required.'; valid=false; return;
     }
@@ -3392,6 +3430,7 @@ function updateCounts(){
   document.getElementById('custCount').textContent = myRecords('customers').length+' customers';
   document.getElementById('meetingsCount').textContent = myRecords('meetings').length+' meetings';
   document.getElementById('dailySummaryCount').textContent = myRecords('dailysummaries').length+' entries';
+  document.getElementById('notesCount').textContent = myRecords('notes').length+' notes — visible only to you, not even Admins';
   document.getElementById('weeklyPlannerCount').textContent = myRecords('weeklyplanners').length+' plans';
 }
 
