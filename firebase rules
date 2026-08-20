@@ -1,83 +1,176 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null; }
-    function isAdmin() {
-  return isSignedIn() &&
-    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Admin','Super Admin'];
-}
-    function isOwnerOnCreate() {
-      return isSignedIn() && request.resource.data.createdByUid == request.auth.uid;
+
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ['Admin', 'Super Admin'];
+    }
+
+    function isTechUser() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ['Tech', 'Tech Team', 'Admin', 'Super Admin'];
+    }
+
+    function isOwnerOnCreate() {
+      return isSignedIn() &&
+        request.resource.data.createdByUid == request.auth.uid;
+    }
+
     function isOwnerOfExisting() {
-      return isSignedIn() && resource.data.createdByUid == request.auth.uid;
+      return isSignedIn() &&
+        resource.data.createdByUid == request.auth.uid;
+    }
+
+    function isValidContact() {
+      let d = request.resource.data;
+      return d.name is string && d.name.size() > 0 &&
+             d.email is string && d.email.size() > 0 &&
+             d.phone is string && d.phone.size() == 10;
     }
 
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isAdmin() ||
-        (isSignedIn() && request.auth.uid == userId && request.resource.data.role == resource.data.role);
+        (isSignedIn() &&
+         request.auth.uid == userId &&
+         request.resource.data.role == resource.data.role);
       allow delete: if isAdmin();
     }
-   match /roles/{roleId} {
-  allow read: if isSignedIn();
-  allow create, update, delete: if isAdmin();
-}
-match /meta/appConfig {
-  allow read: if true;
-  allow write: if isAdmin();
-}
-match /meta/masters {
-  allow read: if isSignedIn();
-  allow write: if isSignedIn();
-}
-match /meta/{docId} {
-  allow read: if isSignedIn();
-  allow write: if isAdmin();
-}
-match /leads/{id} {
-  allow read, update, delete: if isAdmin() || isOwnerOfExisting();
-  allow create: if isAdmin() || isOwnerOnCreate();
-}
-match /contacts/{id} {
-  allow read, update, delete: if isAdmin() || isOwnerOfExisting();
-  allow create: if isAdmin() || isOwnerOnCreate();
-}
+
+    match /roles/{roleId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /meta/appConfig {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /meta/masters {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /meta/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /leads/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+
+    match /contacts/{id} {
+      allow read, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if (isAdmin() || isOwnerOnCreate()) && isValidContact();
+      allow update: if (isAdmin() || isOwnerOfExisting()) && isValidContact();
+    }
+
     match /calls/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
+
     match /meetings/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
+
     match /quotations/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
+
     match /proposals/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
+
     match /customers/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
+
     match /expenses/{id} {
       allow read, update, delete: if isAdmin() || isOwnerOfExisting();
       allow create: if isAdmin() || isOwnerOnCreate();
     }
 
     match /employees/{id} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.email.lower() == request.auth.token.email.lower());
+      allow read: if isAdmin() ||
+        (isSignedIn() &&
+         resource.data.email.lower() == request.auth.token.email.lower());
       allow write: if isAdmin();
+    }
+
+    match /dailysummaries/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+
+    match /weeklyplanners/{id} {
+      allow read, update, delete: if isAdmin() || isOwnerOfExisting();
+      allow create: if isAdmin() || isOwnerOnCreate();
+    }
+
+    match /notes/{id} {
+      allow read, update, delete: if isSignedIn() &&
+        resource.data.createdByUid == request.auth.uid;
+      allow create: if isSignedIn() &&
+        request.resource.data.createdByUid == request.auth.uid;
     }
 
     match /expenseReportLogs/{id} {
       allow read: if isSignedIn();
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
+    }
+
+    // =========================================================
+    // TECH MANAGEMENT
+    // Shared workspace for Tech / Tech Team users only.
+    // All Tech Team members can read and modify shared records
+    // so tickets, projects and modules sync across the team.
+    // =========================================================
+
+    match /techProjects/{id} {
+      allow read, create, update, delete: if isTechUser();
+    }
+
+    match /techModules/{id} {
+      allow read, create, update, delete: if isTechUser();
+    }
+
+    match /techTickets/{id} {
+      allow read, create, update, delete: if isTechUser();
+    }
+
+    match /techTeamMembers/{id} {
+      allow read, create, update, delete: if isTechUser();
+    }
+
+    match /techUpdates/{id} {
+      allow read, create, update, delete: if isTechUser();
+    }
+
+    // Invitation tokens and outgoing mail are server-only.
+    // Cloud Functions/Admin SDK writes these; browser clients must not.
+    match /userInvites/{id} {
+      allow read, write: if false;
+    }
+
+    match /mail/{id} {
+      allow read, write: if false;
     }
   }
 }
