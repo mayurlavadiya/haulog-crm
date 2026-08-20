@@ -194,6 +194,190 @@ tbody tr:hover{background:var(--blue-50);}
 .cal .evt .evt-ic:hover{background:rgba(255,255,255,.5);}
 .cal .evt.followup .evt-ic{background:rgba(247,144,9,.15);}
 .cal .evt.followup .evt-ic:hover{background:rgba(247,144,9,.3);}
+.cal .evt.done{background:#16a34a !important;color:#fff !important;border-color:#16a34a !important;}
+.cal .evt.done .evt-ic{background:rgba(255,255,255,.24);color:#fff;}
+.cal .evt.done .evt-ic:hover{background:rgba(255,255,255,.42);}
+
+
+/* Calendar hover previews — keeps click behavior unchanged */
+.cal-hover-preview{
+  position:fixed;
+  z-index:9999;
+  max-width:min(320px, calc(100vw - 20px));
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:0 8px 28px rgba(0,0,0,.16);
+  font-size:12px;
+  line-height:1.45;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .12s ease, transform .12s ease;
+}
+.cal-hover-preview.show{opacity:1;transform:translateY(0);}
+.cal-hover-preview .preview-title{font-weight:700;margin-bottom:4px;}
+.cal-hover-preview .preview-line{white-space:normal;word-break:break-word;}
+.cal .day[data-preview]:hover{border-color:var(--blue);}
+.cal .evt[data-preview]:hover{outline:2px solid rgba(0,0,0,.08);}
+@media (max-width:768px){
+  .cal-hover-preview{font-size:11px;max-width:260px;padding:8px 10px;}
+}
+
+/* =========================================================
+   CALENDAR RESPONSIVE LAYOUT
+   Keeps the 7-day month structure intact while making the
+   calendar usable on desktop, tablet and mobile screens.
+========================================================= */
+.calendar-card{
+  overflow:hidden;
+  width:100%;
+}
+.calendar-scroll{
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  padding-bottom:2px;
+}
+.calendar-scroll .cal{
+  min-width:760px;
+  width:100%;
+}
+.cal .day{
+  min-width:0;
+  min-height:92px;
+  overflow:hidden;
+}
+.cal .evt{
+  min-width:0;
+  max-width:100%;
+}
+.cal .evt-label{
+  min-width:0;
+}
+
+/* Touch devices do not have hover. Keep the small actions visible. */
+@media (hover:none), (pointer:coarse){
+  .cal .evt .evt-actions{
+    opacity:1;
+    pointer-events:auto;
+  }
+}
+
+@media (max-width:1100px){
+  .calendar-card{border-radius:12px;}
+  .calendar-scroll .cal{min-width:700px;gap:6px;}
+  .cal .day{min-height:86px;padding:6px;}
+  .cal .evt{font-size:9px;padding:2px 3px;}
+  .cal .evt .evt-ic{width:15px;height:15px;font-size:9px;}
+}
+
+@media (max-width:768px){
+  #page-calendar .page-head{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+  }
+  #page-calendar .page-head > div:first-child{
+    min-width:0;
+  }
+  #page-calendar .page-head h1{
+    font-size:24px;
+    line-height:1.15;
+  }
+  #page-calendar .head-actions{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    width:100%;
+  }
+  #page-calendar .head-actions button{
+    width:100%;
+    min-height:38px;
+    white-space:nowrap;
+  }
+  #page-calendar .calendar-card{
+    padding:8px;
+  }
+  .calendar-scroll .cal{
+    min-width:680px;
+    gap:5px;
+  }
+  .cal .dow{
+    font-size:10px;
+    padding-bottom:3px;
+  }
+  .cal .day{
+    min-height:82px;
+    padding:5px;
+    border-radius:9px;
+  }
+  .cal .day .num{
+    font-size:11px;
+  }
+  .cal .evt{
+    margin-top:3px;
+    font-size:8.5px;
+    line-height:1.15;
+    padding:3px;
+    gap:2px;
+    border-radius:5px;
+  }
+  .cal .evt .evt-label{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .cal .evt .evt-actions{
+    gap:2px;
+  }
+  .cal .evt .evt-ic{
+    width:17px;
+    height:17px;
+    min-width:17px;
+    font-size:9px;
+    border-radius:4px;
+  }
+  .cal-quickadd{
+    min-width:170px;
+    max-width:calc(100vw - 24px);
+  }
+}
+
+@media (max-width:480px){
+  #page-calendar .page-head h1{
+    font-size:22px;
+  }
+  #page-calendar .head-actions{
+    grid-template-columns:1fr 1fr;
+  }
+  #page-calendar .head-actions button{
+    font-size:12px;
+    padding:8px 9px;
+  }
+  #page-calendar .calendar-card{
+    margin-left:0;
+    margin-right:0;
+    padding:6px;
+  }
+  .calendar-scroll .cal{
+    min-width:650px;
+    gap:4px;
+  }
+  .cal .day{
+    min-height:76px;
+    padding:4px;
+  }
+  .cal .evt{
+    font-size:8px;
+  }
+}
+
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,0,50,.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
@@ -330,6 +514,28 @@ tbody tr:hover{background:var(--blue-50);}
 .danger-zone{border:1.5px dashed var(--red-bg);background:var(--red-bg);border-radius:14px;padding:16px;margin-top:14px;}
 .danger-zone input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;margin:10px 0;outline:none;}
 
+
+/* Reports / Intelligence */
+.reports-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.reports-filters .filter{min-width:150px;}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.card-head h3{margin:0;}
+.card-head .sub{margin-top:4px;}
+#reportsKpis .kpi .val{font-size:24px;}
+#page-reports .chart-box{height:280px;position:relative;}
+#page-reports .table-wrap{max-height:390px;overflow:auto;}
+#page-reports table{min-width:720px;}
+#page-reports .kpi{min-height:118px;}
+@media(max-width:900px){
+  #page-reports .grid.g-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #page-reports .chart-box{height:250px;}
+}
+@media(max-width:600px){
+  #page-reports .grid.g-4,
+  #page-reports .grid.g-2{grid-template-columns:1fr;}
+  #page-reports .chart-box{height:240px;}
+  .reports-filters .filter,.reports-filters button{width:100%;min-width:0;}
+}
 </style>
 </head>
 <body>
@@ -714,6 +920,8 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="dash-tab-panel" id="dashTab-activity" style="display:none;">
           <div class="toolbar" style="margin-bottom:14px;">
             <select class="filter" id="activityDashEmpFilter" style="display:none;" onchange="renderActivityDashboard()"><option value="">All Employees</option></select>
+            <button class="btn-ghost" onclick="m456ExportActivityExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="m456ExportActivityPdf()">Export PDF</button>
           </div>
           <div class="card">
             <h3>Activity Feed</h3><p class="sub">Auto-logged across Leads, Calls, Meetings, Quotations, Proposals, Expenses, Daily Summary &amp; Weekly Planner — most recent first</p>
@@ -800,14 +1008,20 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-contacts">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Contacts</h1><p id="contactsCount">0 contacts</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('contacts')">+ New Contact</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="downloadContactsImportTemplate()">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('contactsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="contactsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importContactsFromExcel(this.files[0])">
+            <button class="btn-ghost" onclick="exportContactsExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportContactsPdf()">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('contacts')">+ New Contact</button>
+          </div>
         </div>
         <div class="card">
           <div class="toolbar">
-            <input class="search-input" placeholder="Search by name, company, email, phone…" oninput="renderTable('contacts', this.value)">
-            <select class="filter" id="contactsCompanyFilter" onchange="renderTable('contacts', document.querySelector('#page-contacts .search-input').value)">
-              <option value="">All Companies</option>
-            </select>
+            <input class="search-input" id="contactsSearchInput" placeholder="Search by name, company, email, phone…" oninput="renderTable('contacts', this.value)">
+            <select class="filter" id="contactsCompanyFilter" onchange="renderTable('contacts', document.getElementById('contactsSearchInput').value)"><option value="">All Companies</option></select>
+            <button class="btn-ghost" onclick="clearContactFilters()">Clear</button>
           </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-contacts"></tbody></table></div>
         </div>
@@ -817,10 +1031,23 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-calls">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Call Management</h1><p id="callsCount">0 calls logged</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('calls')">+ Log Call</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="m456DownloadTemplate('calls')">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('callsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="callsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="m456ImportExcel('calls',this.files[0])">
+            <button class="btn-ghost" onclick="m456ExportExcel('calls')">Export Excel</button>
+            <button class="btn-ghost" onclick="m456ExportPdf('calls')">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('calls')">+ Log Call</button>
+          </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search by company or outcome…" oninput="renderTable('calls', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" id="callsSearchInput" placeholder="Search by company or outcome…" oninput="renderTable('calls', this.value)">
+            <select class="filter" id="callsTypeFilter" onchange="renderTable('calls', document.getElementById('callsSearchInput').value)"><option value="">All Types</option><option>Incoming</option><option>Outgoing</option><option>Missed</option></select>
+            <input type="date" class="filter" id="callsFromFilter" title="From date" onchange="renderTable('calls', document.getElementById('callsSearchInput').value)">
+            <input type="date" class="filter" id="callsToFilter" title="To date" onchange="renderTable('calls', document.getElementById('callsSearchInput').value)">
+            <button class="btn-ghost" onclick="m456ClearFilters('calls')">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-calls"></tbody></table></div>
         </div>
       </section>
@@ -837,17 +1064,30 @@ tbody tr:hover{background:var(--blue-50);}
             <button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button>
           </div>
         </div>
-        <div class="card"><div class="cal" id="calGrid"></div></div>
+        <div class="card calendar-card"><div class="calendar-scroll"><div class="cal" id="calGrid"></div></div></div>
       </section>
 
       <!-- MEETINGS -->
       <section class="page" id="page-meetings">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Meetings</h1><p id="meetingsCount">0 meetings</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="m456DownloadTemplate('meetings')">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('meetingsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="meetingsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="m456ImportExcel('meetings',this.files[0])">
+            <button class="btn-ghost" onclick="m456ExportExcel('meetings')">Export Excel</button>
+            <button class="btn-ghost" onclick="m456ExportPdf('meetings')">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('meetings')">+ New Meeting</button>
+          </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search meetings…" oninput="renderTable('meetings', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" id="meetingsSearchInput" placeholder="Search meetings…" oninput="renderTable('meetings', this.value)">
+            <select class="filter" id="meetingsTypeFilter" onchange="renderTable('meetings', document.getElementById('meetingsSearchInput').value)"><option value="">All Types</option><option>Call</option><option>Meeting</option><option>Demo</option><option>Task</option></select>
+            <input type="date" class="filter" id="meetingsFromFilter" title="From date" onchange="renderTable('meetings', document.getElementById('meetingsSearchInput').value)">
+            <input type="date" class="filter" id="meetingsToFilter" title="To date" onchange="renderTable('meetings', document.getElementById('meetingsSearchInput').value)">
+            <button class="btn-ghost" onclick="m456ClearFilters('meetings')">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-meetings"></tbody></table></div>
         </div>
       </section>
@@ -856,10 +1096,23 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-quotations">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Quotations</h1><p id="quotesCount">0 quotations</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('quotations')">+ Create Quotation</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="m456DownloadTemplate('quotations')">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('quotationsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="quotationsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="m456ImportExcel('quotations',this.files[0])">
+            <button class="btn-ghost" onclick="m456ExportExcel('quotations')">Export Excel</button>
+            <button class="btn-ghost" onclick="m456ExportPdf('quotations')">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('quotations')">+ Create Quotation</button>
+          </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search by quote # or company…" oninput="renderTable('quotations', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" id="quotationsSearchInput" placeholder="Search by quote # or company…" oninput="renderTable('quotations', this.value)">
+            <select class="filter" id="quotationsStatusFilter" onchange="renderTable('quotations', document.getElementById('quotationsSearchInput').value)"><option value="">All Statuses</option><option>Draft</option><option>Sent</option><option>Awaiting Approval</option><option>Accepted</option><option>Expired</option></select>
+            <input type="date" class="filter" id="quotationsFromFilter" title="Quote date from" onchange="renderTable('quotations', document.getElementById('quotationsSearchInput').value)">
+            <input type="date" class="filter" id="quotationsToFilter" title="Quote date to" onchange="renderTable('quotations', document.getElementById('quotationsSearchInput').value)">
+            <button class="btn-ghost" onclick="m456ClearFilters('quotations')">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-quotations"></tbody></table></div>
         </div>
       </section>
@@ -868,10 +1121,23 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-proposals">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Proposals</h1><p id="proposalsCount">0 proposals</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('proposals')">+ New Proposal</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="m456DownloadTemplate('proposals')">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('proposalsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="proposalsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="m456ImportExcel('proposals',this.files[0])">
+            <button class="btn-ghost" onclick="m456ExportExcel('proposals')">Export Excel</button>
+            <button class="btn-ghost" onclick="m456ExportPdf('proposals')">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('proposals')">+ New Proposal</button>
+          </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search proposals…" oninput="renderTable('proposals', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" id="proposalsSearchInput" placeholder="Search proposals…" oninput="renderTable('proposals', this.value)">
+            <select class="filter" id="proposalsStatusFilter" onchange="renderTable('proposals', document.getElementById('proposalsSearchInput').value)"><option value="">All Statuses</option><option>Draft</option><option>In Review</option><option>Negotiation</option><option>Won</option><option>Lost</option></select>
+            <input type="date" class="filter" id="proposalsFromFilter" title="Sent date from" onchange="renderTable('proposals', document.getElementById('proposalsSearchInput').value)">
+            <input type="date" class="filter" id="proposalsToFilter" title="Sent date to" onchange="renderTable('proposals', document.getElementById('proposalsSearchInput').value)">
+            <button class="btn-ghost" onclick="m456ClearFilters('proposals')">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-proposals"></tbody></table></div>
         </div>
       </section>
@@ -930,10 +1196,21 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-customers">
         <div class="page-head">
           <div><div class="eyebrow">Operations</div><h1>Customers</h1><p id="custCount">0 customers</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('customers')">+ Add Customer</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="downloadCustomersImportTemplate()">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('customersExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="customersExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importCustomersFromExcel(this.files[0])">
+            <button class="btn-ghost" onclick="exportCustomersExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportCustomersPdf()">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('customers')">+ Add Customer</button>
+          </div>
         </div>
         <div class="card">
-          <div class="toolbar"><input class="search-input" placeholder="Search customers…" oninput="renderTable('customers', this.value)"></div>
+          <div class="toolbar">
+            <input class="search-input" id="customersSearchInput" placeholder="Search customers…" oninput="renderTable('customers', this.value)">
+            <select class="filter" id="customersIndustryFilter" onchange="renderTable('customers', document.getElementById('customersSearchInput').value)"><option value="">All Industries</option></select>
+            <button class="btn-ghost" onclick="clearCustomerFilters()">Clear</button>
+          </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-customers"></tbody></table></div>
         </div>
       </section>
@@ -965,6 +1242,9 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="page-head">
           <div><div class="eyebrow">Productivity</div><h1>Weekly Planner</h1><p id="weeklyPlannerCount">0 plans</p></div>
           <div class="head-actions">
+            <button class="btn-ghost" onclick="m456DownloadTemplate('weeklyplanners')">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('weeklyPlannerExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="weeklyPlannerExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="m456ImportExcel('weeklyplanners',this.files[0])">
             <button class="btn-ghost" onclick="exportWeeklyPlannerExcel()">Export Excel</button>
             <button class="btn-ghost" onclick="exportWeeklyPlannerPdf()">Export PDF</button>
             <button class="btn-primary" onclick="openWeeklyPlannerForm()">+ Submit Monday's Plan</button>
@@ -981,12 +1261,93 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
       </section>
 
-      <!-- REPORTS -->
+      <!-- REPORTS / INTELLIGENCE -->
       <section class="page" id="page-reports">
-        <div class="page-head"><div><div class="eyebrow">Intelligence</div><h1>Reports</h1><p>Live analytics computed from your data</p></div></div>
-        <div class="grid g-2">
-          <div class="card"><h3>Target vs Achieved (by Employee)</h3><div class="chart-box"><canvas id="chartTarget"></canvas></div></div>
-          <div class="card"><h3>Expense Split by Category</h3><div class="chart-box"><canvas id="chartExpense"></canvas></div></div>
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">Intelligence</div>
+            <h1>Reports &amp; Intelligence</h1>
+            <p id="reportsScopeText">Live analytics based on your CRM activity</p>
+          </div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="exportIntelligenceExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportIntelligencePdf()">Export PDF</button>
+            <button class="btn-ghost" onclick="renderReports()">Refresh</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:18px;">
+          <div class="toolbar reports-filters">
+            <input type="date" class="filter" id="reportsFrom" title="From date" onchange="renderReports()">
+            <input type="date" class="filter" id="reportsTo" title="To date" onchange="renderReports()">
+            <select class="filter" id="reportsEmployee" style="display:none;" onchange="renderReports()">
+              <option value="">All Employees</option>
+            </select>
+            <select class="filter" id="reportsStage" onchange="renderReports()">
+              <option value="">All Lead Stages</option>
+            </select>
+            <select class="filter" id="reportsSource" onchange="renderReports()">
+              <option value="">All Lead Sources</option>
+            </select>
+            <button class="btn-ghost" onclick="clearIntelligenceFilters()">Clear Filters</button>
+          </div>
+          <div class="sub" id="reportsFilterSummary" style="margin-top:10px;">—</div>
+        </div>
+
+        <div class="grid g-4" id="reportsKpis" style="margin-bottom:18px;"></div>
+
+        <div class="grid g-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="card-head"><div><h3>Sales Funnel</h3><p class="sub">Lead volume and value by stage</p></div></div>
+            <div class="chart-box"><canvas id="chartReportFunnel"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Lead Source Performance</h3><p class="sub">Which sources are generating opportunities</p></div></div>
+            <div class="chart-box"><canvas id="chartReportSources"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid g-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="card-head"><div><h3>Monthly Sales Activity</h3><p class="sub">Leads, calls, meetings, quotations and proposals</p></div></div>
+            <div class="chart-box"><canvas id="chartReportActivity"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Pipeline &amp; Conversion</h3><p class="sub">Open value, won value and conversion indicators</p></div></div>
+            <div class="chart-box"><canvas id="chartReportPipeline"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid g-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="card-head"><div><h3>Target vs Achieved</h3><p class="sub">Existing employee target report — now with clearer comparison</p></div></div>
+            <div class="chart-box"><canvas id="chartTarget"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Expense Split by Category</h3><p class="sub">Existing expense report — filtered to the selected scope</p></div></div>
+            <div class="chart-box"><canvas id="chartExpense"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid g-2" style="margin-bottom:18px;" id="reportEmployeeComparisonSection">
+          <div class="card">
+            <div class="card-head"><div><h3>Employee Comparison</h3><p class="sub">Admin view: activity and sales comparison by employee</p></div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Employee</th><th>Leads</th><th>Calls</th><th>Meetings</th><th>Quotes</th><th>Proposals</th><th>Won</th><th>Pipeline</th><th>Conversion</th></tr></thead>
+                <tbody id="tbody-reportEmployees"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3>Sales Summary</h3><p class="sub">Current filtered period</p></div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Metric</th><th style="text-align:right;">Value</th></tr></thead>
+                <tbody id="tbody-reportSummary"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1993,8 +2354,19 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
     contactsCompanyFilterEl.innerHTML = '<option value="">All Companies</option>' + optionsFor('contactCompanies').map(c=>`<option value="${c}" ${c===prevVal?'selected':''}>${c}</option>`).join('');
     if(contactsCompanyFilterEl.value) rows = rows.filter(r=>r.company===contactsCompanyFilterEl.value);
   }
+  const customersIndustryFilterEl = document.getElementById('customersIndustryFilter');
+  if(moduleKey==='customers' && customersIndustryFilterEl){
+    const prevVal = customersIndustryFilterEl.value;
+    const industries = Array.isArray(DB.masters.industries) ? DB.masters.industries : [];
+    customersIndustryFilterEl.innerHTML = '<option value="">All Industries</option>' + industries.map(c=>`<option value="${c}" ${c===prevVal?'selected':''}>${c}</option>`).join('');
+    if(customersIndustryFilterEl.value) rows = rows.filter(r=>r.industry===customersIndustryFilterEl.value);
+  }
   if(moduleKey==='dailysummaries') rows = dsApplyFilters(rows);
   if(moduleKey==='weeklyplanners') rows = wpApplyFilters(rows);
+  if(moduleKey==='calls') rows = m456ApplyModuleFilters('calls', rows);
+  if(moduleKey==='meetings') rows = m456ApplyModuleFilters('meetings', rows);
+  if(moduleKey==='quotations') rows = m456ApplyModuleFilters('quotations', rows);
+  if(moduleKey==='proposals') rows = m456ApplyModuleFilters('proposals', rows);
 
   if(rows.length===0){
     tbody.innerHTML = `<tr><td colspan="${cfg.columns.length+1}"><div class="empty-state">
@@ -3099,6 +3471,184 @@ function exportWeeklyPlannerPdf(){
 }
 
 /* =========================================================
+   MODULES 4–9 — IMPORT / EXPORT
+   Quotations, Proposals, Calls, Meetings, Activity & Planner
+
+   IMPORTANT: This block is additive. Existing Module 1–3 code,
+   existing Daily Summary exports/import, and existing Weekly Planner
+   exports are retained. Activity is a derived feed, so it supports
+   export only (there is no standalone Firestore Activity collection).
+========================================================= */
+const M456_CONFIG = {
+  calls:{
+    sheet:'Calls Import',
+    headers:['Related Company','Call Date','Call Type','Duration','Last Remarks','Next Follow-up Date','Next Follow-up Time'],
+    aliases:{lead:['related company','company','lead'],date:['call date','date'],type:['call type','type'],duration:['duration'],outcome:['last remarks','remarks','outcome'],nextFollowUp:['next follow-up date','next followup date','follow-up date'],nextFollowUpTime:['next follow-up time','followup time']},
+    required:['lead','date','type','duration','outcome'],
+    columns:[['Company','lead'],['Call Date','date'],['Type','type'],['Duration','duration'],['Last Remarks','outcome'],['Next Follow-up','nextFollowUp'],['Follow-up Time','nextFollowUpTime']]
+  },
+  meetings:{
+    sheet:'Meetings Import',
+    headers:['Title','Type','Date','Time','Notes'],
+    aliases:{title:['title','meeting title'],type:['type','meeting type'],date:['date','meeting date'],time:['time','meeting time'],notes:['notes','remarks']},
+    required:['title','type','date','time'],
+    columns:[['Title','title'],['Type','type'],['Date','date'],['Time','time'],['Notes','notes']]
+  },
+  quotations:{
+    sheet:'Quotations Import',
+    headers:['Quote Number','Company','Amount','Status','Quote Date','Valid Till','Shipment Volume','Shipment Type'],
+    aliases:{quoteNo:['quote number','quote no','quote #','quotation number'],company:['company','company name'],amount:['amount','amount ₹','quote amount'],status:['status'],quoteDate:['quote date','generated date'],validity:['valid till','validity','valid till date'],shipmentVolume:['shipment volume','volume'],shipmentType:['shipment type','shipment']},
+    required:['quoteNo','company','amount','status','quoteDate','validity'],
+    columns:[['Quote #','quoteNo'],['Company','company'],['Amount','amount'],['Status','status'],['Quote Date','quoteDate'],['Valid Till','validity'],['Shipment','shipmentType']]
+  },
+  proposals:{
+    sheet:'Proposals Import',
+    headers:['Proposal Title','Company','Status','Progress %','Final Amount','Payment Terms','Duration','Sent Date','Shipment Type'],
+    aliases:{title:['proposal title','title'],company:['company','company name'],status:['status'],progress:['progress','progress %'],finalAmount:['final amount','amount'],paymentTerms:['payment terms','terms'],duration:['duration'],sentDate:['sent date','date'],shipmentType:['shipment type','shipment']},
+    required:['title','company','status','progress'],
+    columns:[['Title','title'],['Company','company'],['Status','status'],['Progress %','progress'],['Final Amount','finalAmount'],['Payment Terms','paymentTerms'],['Duration','duration'],['Sent Date','sentDate'],['Shipment','shipmentType']]
+  },
+  weeklyplanners:{
+    sheet:'Weekly Planner Import',
+    headers:['Week Start','Task Name','Target Day','Priority','Notes'],
+    aliases:{weekStart:['week start','week starting','week start date'],taskName:['task name','task'],day:['target day','day'],priority:['priority'],notes:['notes','remarks']},
+    required:['weekStart','taskName','day','priority'],
+    columns:[['Week Start','weekStart'],['Task Name','taskName'],['Target Day','day'],['Priority','priority'],['Notes','notes']]
+  }
+};
+
+function m456Norm(v){return String(v??'').trim().toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ');}
+function m456Get(row, aliases){for(const k of Object.keys(row||{})){if(aliases.includes(m456Norm(k))) return row[k];}return '';}
+function m456Date(v){
+  if(v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  const x=String(v??'').trim(); if(!x) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(x)) return x;
+  let m=x.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/); if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return x;
+}
+function m456Num(v){if(v===''||v==null)return 0; if(typeof v==='number')return v; const n=Number(String(v).replace(/[₹,]/g,'').replace(/Rs\.?/gi,'')); return Number.isFinite(n)?n:0;}
+function m456Match(v,list){const x=String(v??'').trim(); if(!x)return ''; const arr=list||[]; return arr.find(a=>String(a).toLowerCase()===x.toLowerCase())||x;}
+function m456CompanyExists(v){return [...new Set([...myRecords('leads').map(x=>x.company),...myRecords('customers').map(x=>x.company),...myRecords('contacts').map(x=>x.company)])].some(x=>String(x).toLowerCase()===String(v).toLowerCase());}
+function m456Rows(moduleKey){
+  let rows=myRecords(moduleKey).slice();
+  if(moduleKey==='calls'||moduleKey==='meetings'||moduleKey==='quotations'||moduleKey==='proposals') rows=m456ApplyModuleFilters(moduleKey,rows);
+  return rows;
+}
+function m456ApplyModuleFilters(moduleKey, rows){
+  let r=rows.slice();
+  const searchEl=document.getElementById(moduleKey+'SearchInput');
+  const search=searchEl?searchEl.value.trim().toLowerCase():'';
+  if(search){const cfg=MODULES[moduleKey]; r=r.filter(x=>cfg.columns.some(c=>String(x[c.key]??'').toLowerCase().includes(search)));}
+  const status=document.getElementById(moduleKey+'StatusFilter'); if(status&&status.value) r=r.filter(x=>x.status===status.value);
+  const type=document.getElementById(moduleKey+'TypeFilter'); if(type&&type.value) r=r.filter(x=>x.type===type.value);
+  const from=document.getElementById(moduleKey+'FromFilter'); const to=document.getElementById(moduleKey+'ToFilter');
+  const dateKey=moduleKey==='quotations'?'quoteDate':moduleKey==='proposals'?'sentDate':'date';
+  if(from&&from.value) r=r.filter(x=>String(x[dateKey]||'')>=from.value);
+  if(to&&to.value) r=r.filter(x=>String(x[dateKey]||'')<=to.value);
+  return r;
+}
+function m456ClearFilters(moduleKey){
+  const ids=[moduleKey+'SearchInput',moduleKey+'StatusFilter',moduleKey+'TypeFilter',moduleKey+'FromFilter',moduleKey+'ToFilter'];
+  ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';}); renderTable(moduleKey,'');
+}
+function m456SheetRows(workbook, preferred){
+  const names=workbook.SheetNames||[];
+  const exact=names.find(n=>n.toLowerCase()===preferred.toLowerCase());
+  const candidates=exact?[exact]:names.filter(n=>!['instructions','categories'].includes(n.toLowerCase()));
+  for(const name of candidates){const rows=XLSX.utils.sheet_to_json(workbook.Sheets[name],{defval:'',raw:false}); if(rows.length) return {name,rows};}
+  return null;
+}
+function m456CategoriesSheet(wb,moduleKey){
+  const cfg=M456_CONFIG[moduleKey]; const rows=[
+    ['Category','Allowed Values']
+  ];
+  if(moduleKey==='calls') rows.push(['Call Type','Incoming | Outgoing | Missed']);
+  if(moduleKey==='meetings') rows.push(['Meeting Type','Call | Meeting | Demo | Task']);
+  if(moduleKey==='quotations') rows.push(['Status','Draft | Sent | Awaiting Approval | Accepted | Expired'],['Shipment Type','Domestic | Exim']);
+  if(moduleKey==='proposals') rows.push(['Status','Draft | In Review | Negotiation | Won | Lost'],['Shipment Type','Domestic | Exim']);
+  if(moduleKey==='weeklyplanners') rows.push(['Target Day','Monday | Tuesday | Wednesday | Thursday | Friday | Saturday'],['Priority','High | Medium | Low']);
+  if(moduleKey==='calls') rows.push(['Companies','Use existing Lead / Customer / Contact company names']);
+  if(moduleKey==='quotations'||moduleKey==='proposals') rows.push(['Companies','Use existing Lead / Customer / Contact company names']);
+  return XLSX.utils.aoa_to_sheet(rows);
+}
+function m456DownloadTemplate(moduleKey){
+  const cfg=M456_CONFIG[moduleKey]; const wb=XLSX.utils.book_new();
+  const sample={calls:{'Related Company':'Example Company','Call Date':todayISO(),'Call Type':'Outgoing','Duration':'5:30','Last Remarks':'Interested — follow up','Next Follow-up Date':inNdays(3),'Next Follow-up Time':'11:00'},meetings:{Title:'Example Demo',Type:'Demo',Date:inNdays(2),Time:'11:00',Notes:'Demo notes'},quotations:{'Quote Number':'QT-0001',Company:'Example Company',Amount:250000,Status:'Draft','Quote Date':todayISO(),'Valid Till':inNdays(15),'Shipment Volume':'1000 KG','Shipment Type':'Domestic'},proposals:{'Proposal Title':'Example Proposal',Company:'Example Company',Status:'Draft','Progress %':0,'Final Amount':250000,'Payment Terms':'Advance','Duration':'12 Months','Sent Date':todayISO(),'Shipment Type':'Domestic'},weeklyplanners:{'Week Start':mondayOfCurrentWeek(),'Task Name':'Prepare weekly report','Target Day':'Monday','Priority':'High',Notes:'Example note'}}[moduleKey];
+  const instructions=[['Haulog CRM — '+cfg.sheet],['Use the '+cfg.sheet+' sheet for import.'],['Do not rename the required headers.'],['Existing CRM category values should be used where categories are listed.'],['Blank/invalid rows are skipped and reported.'],['Imported records are stored in the existing Firestore collection: '+moduleKey+'.']];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(instructions),'Instructions');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([sample]),cfg.sheet);
+  XLSX.utils.book_append_sheet(wb,m456CategoriesSheet(wb,moduleKey),'Categories');
+  XLSX.writeFile(wb,`Haulog_${moduleKey}_Import_Template_${todayISO()}.xlsx`);
+}
+function m456MapRow(moduleKey,row){
+  const cfg=M456_CONFIG[moduleKey], d={};
+  for(const key of Object.keys(cfg.aliases)) d[key]=m456Get(row,cfg.aliases[key]);
+  if(moduleKey==='calls'){
+    d.date=m456Date(d.date); d.nextFollowUp=m456Date(d.nextFollowUp); d.duration=String(d.duration||'').trim();
+    if(!cfg.required.every(k=>String(d[k]??'').trim())) return {error:'Missing required field'};
+    if(!/^[0-9]{1,2}:[0-5][0-9]$/.test(d.duration)) return {error:'Duration must be mm:ss'};
+    if(!['Incoming','Outgoing','Missed'].includes(String(d.type))) return {error:'Invalid Call Type'};
+    return {data:{lead:String(d.lead).trim(),date:d.date,type:d.type,duration:d.duration,outcome:String(d.outcome).trim(),nextFollowUp:d.nextFollowUp,nextFollowUpTime:String(d.nextFollowUpTime||'').trim()}};
+  }
+  if(moduleKey==='meetings'){
+    d.date=m456Date(d.date); d.title=String(d.title||'').trim(); d.type=String(d.type||'').trim(); d.time=String(d.time||'').trim();
+    if(!cfg.required.every(k=>String(d[k]??'').trim())) return {error:'Missing required field'};
+    if(!['Call','Meeting','Demo','Task'].includes(d.type)) return {error:'Invalid Meeting Type'};
+    return {data:{title:d.title,type:d.type,date:d.date,time:d.time,notes:String(d.notes||'').trim()}};
+  }
+  if(moduleKey==='quotations'){
+    d.quoteNo=String(d.quoteNo||'').trim(); d.company=String(d.company||'').trim(); d.amount=m456Num(d.amount); d.quoteDate=m456Date(d.quoteDate); d.validity=m456Date(d.validity); d.status=String(d.status||'').trim(); d.shipmentVolume=String(d.shipmentVolume||'').trim(); d.shipmentType=String(d.shipmentType||'').split(/[,|]/).map(x=>x.trim()).filter(Boolean);
+    if(!cfg.required.every(k=>String(d[k]??'').trim())||d.amount<=0) return {error:'Missing required field or invalid amount'};
+    if(!['Draft','Sent','Awaiting Approval','Accepted','Expired'].includes(d.status)) return {error:'Invalid Quotation Status'};
+    d.shipmentType=d.shipmentType.filter(x=>['Domestic','Exim'].includes(x));
+    return {data:d};
+  }
+  if(moduleKey==='proposals'){
+    d.title=String(d.title||'').trim(); d.company=String(d.company||'').trim(); d.status=String(d.status||'').trim(); d.progress=m456Num(d.progress); d.finalAmount=m456Num(d.finalAmount); d.sentDate=m456Date(d.sentDate); d.paymentTerms=String(d.paymentTerms||'').trim(); d.duration=String(d.duration||'').trim(); d.shipmentType=String(d.shipmentType||'').split(/[,|]/).map(x=>x.trim()).filter(Boolean);
+    if(!cfg.required.every(k=>String(d[k]??'').trim())||d.progress<0||d.progress>100) return {error:'Missing required field or invalid progress'};
+    if(!['Draft','In Review','Negotiation','Won','Lost'].includes(d.status)) return {error:'Invalid Proposal Status'};
+    d.shipmentType=d.shipmentType.filter(x=>['Domestic','Exim'].includes(x));
+    return {data:d};
+  }
+  if(moduleKey==='weeklyplanners'){
+    d.weekStart=m456Date(d.weekStart); d.taskName=String(d.taskName||'').trim(); d.day=String(d.day||'').trim(); d.priority=String(d.priority||'').trim(); d.notes=String(d.notes||'').trim();
+    if(!cfg.required.every(k=>String(d[k]??'').trim())) return {error:'Missing required field'};
+    if(new Date(d.weekStart+'T00:00:00').getDay()!==1) return {error:'Week Start must be a Monday'};
+    if(!['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].includes(d.day)) return {error:'Invalid Target Day'};
+    if(!['High','Medium','Low'].includes(d.priority)) return {error:'Invalid Priority'};
+    return {data:d};
+  }
+  return {error:'Unsupported module'};
+}
+async function m456ImportExcel(moduleKey,file){
+  if(!file)return; if(!auth.currentUser){toast('You must be signed in to import','error');return;}
+  const reader=new FileReader(); reader.onload=async e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}); const cfg=M456_CONFIG[moduleKey]; const picked=m456SheetRows(wb,cfg.sheet);
+      if(!picked){toast(`Could not find ${cfg.sheet}. Use Sample Excel.`,'error');return;}
+      const valid=[], errors=[]; picked.rows.forEach((row,i)=>{if(!Object.values(row).some(v=>String(v??'').trim()))return; const r=m456MapRow(moduleKey,row); if(r.data)valid.push(r.data); else errors.push(`Row ${i+2}: ${r.error}`);});
+      if(!valid.length){toast(errors.slice(0,2).join(' · ')||'No valid rows found','error');return;}
+      if(moduleKey==='weeklyplanners'){
+        const grouped={}; valid.forEach(x=>(grouped[x.weekStart]??=[]).push({taskName:x.taskName,day:x.day,priority:x.priority,notes:x.notes}));
+        for(const [weekStart,tasks] of Object.entries(grouped)){const data={weekStart,tasks,createdBy:(DB.profile&&DB.profile.name)||(auth.currentUser.email)||'Unknown',createdByUid:auth.currentUser.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:(DB.profile&&DB.profile.name)||'Unknown',updatedAt:firebase.firestore.FieldValue.serverTimestamp()}; await db.collection(moduleKey).add(data);}
+      } else {
+        const chunk=450; for(let i=0;i<valid.length;i+=chunk){const batch=db.batch(); valid.slice(i,i+chunk).forEach(x=>{x.createdBy=(DB.profile&&DB.profile.name)||(auth.currentUser.email)||'Unknown';x.createdByUid=auth.currentUser.uid;x.createdAt=firebase.firestore.FieldValue.serverTimestamp();const ref=db.collection(moduleKey).doc();batch.set(ref,x);});await batch.commit();}
+      }
+      toast(`${valid.length} record(s) imported${errors.length?` · ${errors.length} skipped`:''}`,'success');
+    }catch(err){console.error(moduleKey+' import',err);toast('Import failed: '+err.message,'error');}
+    finally{const id=moduleKey==='weeklyplanners'?'weeklyPlannerExcelImportInput':moduleKey+'ExcelImportInput';const el=document.getElementById(id);if(el)el.value='';}
+  }; reader.readAsArrayBuffer(file);
+}
+function m456ExportRows(moduleKey){
+  const rows=m456Rows(moduleKey); const cfg=M456_CONFIG[moduleKey]; return rows.map(r=>{const o={};cfg.columns.forEach(([label,key])=>o[label]=Array.isArray(r[key])?r[key].join(', '):(r[key]??''));return o;});
+}
+function m456ExportExcel(moduleKey){const rows=m456ExportRows(moduleKey);if(!rows.length){toast('No records found for the current filters','error');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),M456_CONFIG[moduleKey].sheet.replace(' Import',''));XLSX.writeFile(wb,`Haulog_${moduleKey}_${todayISO()}.xlsx`);toast(`${rows.length} record(s) exported to Excel`,'success');}
+function m456ExportPdf(moduleKey){const rows=m456Rows(moduleKey);if(!rows.length){toast('No records found for the current filters','error');return;}const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});doc.setFontSize(15);doc.setFont(undefined,'bold');doc.text('Haulog CRM - '+MODULES[moduleKey].label+' Report',14,15);doc.setFont(undefined,'normal');doc.setFontSize(9);doc.text(`Generated: ${todayISO()} | Records: ${rows.length}`,14,22);const cfg=M456_CONFIG[moduleKey];const head=[cfg.columns.map(x=>x[0])];const body=rows.map(r=>cfg.columns.map(([_,k])=>Array.isArray(r[k])?r[k].join(', '):(r[k]??'')));doc.autoTable({startY:28,head,body,styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[0,0,254],textColor:255},didDrawPage:d=>{doc.setFontSize(8);doc.text(`Haulog CRM · ${MODULES[moduleKey].label} · Page ${d.pageNumber}`,14,doc.internal.pageSize.getHeight()-8);}});doc.save(`Haulog_${moduleKey}_${todayISO()}.pdf`);toast(`${rows.length} record(s) exported to PDF`,'success');}
+function m456ActivityRows(){return getActivityItems(document.getElementById('activityDashEmpFilter')?.value||'').map(x=>({Time:x.ts&&x.ts.toDate?x.ts.toDate().toLocaleString():'',Employee:x.by||'',Module:x.page||'',Activity:x.text||''}));}
+function m456ExportActivityExcel(){const rows=m456ActivityRows();if(!rows.length){toast('No activity found for the current filter','error');return;}const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Activity');XLSX.writeFile(wb,`Haulog_Activity_${todayISO()}.xlsx`);toast(`${rows.length} activity item(s) exported to Excel`,'success');}
+function m456ExportActivityPdf(){const rows=m456ActivityRows();if(!rows.length){toast('No activity found for the current filter','error');return;}const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});doc.setFontSize(15);doc.text('Haulog CRM - Activity Report',14,15);doc.setFontSize(9);doc.text(`Generated: ${todayISO()} | Records: ${rows.length}`,14,22);doc.autoTable({startY:28,head:[['Time','Employee','Module','Activity']],body:rows.map(x=>[x.Time,x.Employee,x.Module,x.Activity]),styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[0,0,254],textColor:255},didDrawPage:d=>{doc.setFontSize(8);doc.text(`Haulog CRM · Activity · Page ${d.pageNumber}`,14,doc.internal.pageSize.getHeight()-8);}});doc.save(`Haulog_Activity_${todayISO()}.pdf`);toast(`${rows.length} activity item(s) exported to PDF`,'success');}
+
+/* =========================================================
    LEADS KANBAN
 ========================================================= */
 function renderKanban(){
@@ -3113,6 +3663,31 @@ function renderKanban(){
   const sel = document.getElementById('leadsStageFilter');
   sel.innerHTML = '<option value="">All Stages</option>' + allStages.map(s=>`<option value="${s}">${s}</option>`).join('');
 }
+
+/* =========================================================
+   MODULE 2 — CONTACTS + MODULE 3 — CUSTOMERS
+   Import / Sample Excel / filtered Excel / filtered PDF
+========================================================= */
+function m23Header(v){return String(v||'').trim().toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ')}
+function m23Value(row,aliases){const a=aliases.map(m23Header);for(const k of Object.keys(row)){if(a.includes(m23Header(k)))return row[k]}return ''}
+function m23Date(v){if(v===null||v===undefined||v==='')return '';if(v instanceof Date&&!isNaN(v.getTime()))return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;const r=String(v).trim();if(/^\d{4}-\d{2}-\d{2}$/.test(r))return r;let m=r.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;m=r.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:r}
+function m23Phone(v){return String(v??'').replace(/\D/g,'').trim()}
+function m23Master(v,name){const raw=String(v||'').trim(), list=Array.isArray(DB.masters[name])?DB.masters[name]:[];if(!list.length)return raw;return list.find(x=>String(x).trim().toLowerCase()===raw.toLowerCase())||''}
+function m23FindSheet(wb,names,groups){for(const wanted of names){const sn=wb.SheetNames.find(n=>String(n).trim().toLowerCase()===wanted.toLowerCase());if(!sn)continue;const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:false});if(rows.length&&groups.every(g=>g.some(a=>Object.keys(rows[0]).some(k=>m23Header(k)===m23Header(a)))))return {sheet:sn,rows}}for(const sn of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:false});if(!rows.length)continue;const h=Object.keys(rows[0]).map(m23Header);if(groups.every(g=>g.some(a=>h.includes(m23Header(a)))))return {sheet:sn,rows}}return null}
+function clearContactFilters(){const a=document.getElementById('contactsSearchInput'),b=document.getElementById('contactsCompanyFilter');if(a)a.value='';if(b)b.value='';renderTable('contacts')}
+function clearCustomerFilters(){const a=document.getElementById('customersSearchInput'),b=document.getElementById('customersIndustryFilter');if(a)a.value='';if(b)b.value='';renderTable('customers')}
+function contactExportRows(){let r=myRecords('contacts').slice(),q=(document.getElementById('contactsSearchInput')?.value||'').trim().toLowerCase(),c=document.getElementById('contactsCompanyFilter')?.value||'';if(q)r=r.filter(x=>[x.name,x.company,x.designation,x.phone,x.email,x.address,x.city,x.pincode].map(v=>String(v??'').toLowerCase()).some(v=>v.includes(q)));if(c)r=r.filter(x=>x.company===c);return r}
+function customerExportRows(){let r=myRecords('customers').slice(),q=(document.getElementById('customersSearchInput')?.value||'').trim().toLowerCase(),i=document.getElementById('customersIndustryFilter')?.value||'';if(q)r=r.filter(x=>[x.company,x.industry,x.contact,x.phone,x.onboarded].map(v=>String(v??'').toLowerCase()).some(v=>v.includes(q)));if(i)r=r.filter(x=>x.industry===i);return r}
+function downloadContactsImportTemplate(){const ins=[['Haulog CRM — Contacts Import Template'],['Use Contacts Import sheet. Keep headers unchanged.'],['Required: Contact Name, Contact Number, Email. Phone = exactly 10 digits.'],['Pincode is optional; if supplied it must be 6 digits.'],['Data is stored in existing Firestore contacts collection.']];const rows=[['Contact Name','Company / Client','Designation','Contact Number','Email','Address','City','Pincode'],['Raj Patel','ABC Solar Pvt Ltd','Purchase Manager','9876543210','raj@abcsolar.com','Plot 12, GIDC','Rajkot','360001'],['Neha Shah','XYZ Industries','Director','9825012345','neha@xyz.com','Industrial Area','Ahmedabad','380015']];const cats=[['Existing CRM Company / Client values'],...optionsFor('contactCompanies').map(x=>[x]),[],['Columns'],['Contact Name'],['Company / Client'],['Designation'],['Contact Number'],['Email'],['Address'],['City'],['Pincode']];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ins),'Instructions');XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Contacts Import');XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cats),'Categories');XLSX.writeFile(wb,`Haulog_Contacts_Import_Template_${todayISO()}.xlsx`)}
+function downloadCustomersImportTemplate(){const ins=[['Haulog CRM — Customers Import Template'],['Use Customers Import sheet. Keep headers unchanged.'],['Required: Company Name, Industry, Contact Person, Phone, Onboarded Date.'],['Industry must match an existing CRM Industry category.'],['Phone = exactly 10 digits. Date format = YYYY-MM-DD.'],['Data is stored in existing Firestore customers collection.']];const rows=[['Company Name','Industry','Contact Person','Phone','Onboarded Date'],['Tirupati Plastics','Plastics','Devang Joshi','9898000004',todayISO()],['GreenVolt Energy','Solar EPC','Rakesh Mehta','9876501234',inNdays(-2)]];const cats=[['Existing CRM Industries'],...(DB.masters.industries||[]).map(x=>[x]),[],['Columns'],['Company Name'],['Industry'],['Contact Person'],['Phone'],['Onboarded Date']];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ins),'Instructions');XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Customers Import');XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(cats),'Categories');XLSX.writeFile(wb,`Haulog_Customers_Import_Template_${todayISO()}.xlsx`)}
+function exportContactsExcel(){const r=contactExportRows();if(!r.length)return toast('No Contacts found for the current filters','error');const d=r.map(x=>({'Contact Name':x.name||'','Company / Client':x.company||'','Designation':x.designation||'','Contact Number':x.phone||'','Email':x.email||'','Address':x.address||'','City':x.city||'','Pincode':x.pincode||''}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d),'Contacts');XLSX.writeFile(wb,`Haulog_Contacts_${todayISO()}.xlsx`);toast(`${r.length} Contact(s) exported to Excel`,'success')}
+function exportCustomersExcel(){const r=customerExportRows();if(!r.length)return toast('No Customers found for the current filters','error');const d=r.map(x=>({'Company Name':x.company||'','Industry':x.industry||'','Contact Person':x.contact||'','Phone':x.phone||'','Onboarded Date':x.onboarded||''}));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d),'Customers');XLSX.writeFile(wb,`Haulog_Customers_${todayISO()}.xlsx`);toast(`${r.length} Customer(s) exported to Excel`,'success')}
+function exportContactsPdf(){const r=contactExportRows();if(!r.length)return toast('No Contacts found for the current filters','error');const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});doc.setFontSize(16);doc.setFont(undefined,'bold');doc.text('Haulog CRM - Contacts Report',14,15);doc.setFont(undefined,'normal');doc.setFontSize(9);doc.text(`Company: ${document.getElementById('contactsCompanyFilter')?.value||'All Companies'}${document.getElementById('contactsSearchInput')?.value?` | Search: ${document.getElementById('contactsSearchInput').value}`:''}`,14,22);doc.text(`Generated: ${todayISO()} | Records: ${r.length}`,14,28);doc.autoTable({startY:34,head:[['Name','Company','Designation','Phone','Email','Address','City','Pincode']],body:r.map(x=>[x.name||'',x.company||'',x.designation||'',x.phone||'',x.email||'',x.address||'',x.city||'',x.pincode||'']),styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[0,0,254],textColor:255},didDrawPage:d=>{doc.setFontSize(8);doc.text(`Haulog CRM · Contacts · Page ${d.pageNumber}`,14,doc.internal.pageSize.getHeight()-8)}});doc.save(`Haulog_Contacts_${todayISO()}.pdf`);toast(`${r.length} Contact(s) exported to PDF`,'success')}
+function exportCustomersPdf(){const r=customerExportRows();if(!r.length)return toast('No Customers found for the current filters','error');const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});doc.setFontSize(16);doc.setFont(undefined,'bold');doc.text('Haulog CRM - Customers Report',14,15);doc.setFont(undefined,'normal');doc.setFontSize(9);doc.text(`Industry: ${document.getElementById('customersIndustryFilter')?.value||'All Industries'}${document.getElementById('customersSearchInput')?.value?` | Search: ${document.getElementById('customersSearchInput').value}`:''}`,14,22);doc.text(`Generated: ${todayISO()} | Records: ${r.length}`,14,28);doc.autoTable({startY:34,head:[['Company','Industry','Contact Person','Phone','Onboarded']],body:r.map(x=>[x.company||'',x.industry||'',x.contact||'',x.phone||'',x.onboarded||'']),styles:{fontSize:8,cellPadding:3},headStyles:{fillColor:[0,0,254],textColor:255},didDrawPage:d=>{doc.setFontSize(8);doc.text(`Haulog CRM · Customers · Page ${d.pageNumber}`,14,doc.internal.pageSize.getHeight()-8)}});doc.save(`Haulog_Customers_${todayISO()}.pdf`);toast(`${r.length} Customer(s) exported to PDF`,'success')}
+function mapContactRow(row){const name=String(m23Value(row,['contact name','name'])||'').trim(),company=String(m23Value(row,['company / client','company','client'])||'').trim(),designation=String(m23Value(row,['designation','job title','title'])||'').trim(),phone=m23Phone(m23Value(row,['contact number','phone','phone number','mobile','mobile number'])),email=String(m23Value(row,['email','email address'])||'').trim(),address=String(m23Value(row,['address','full address'])||'').trim(),city=String(m23Value(row,['city','location'])||'').trim(),pincode=m23Phone(m23Value(row,['pincode','pin code','postal code','zip code']));if(!name||!phone||!email)return {e:'Contact Name, Contact Number and Email are required'};if(!/^\d{10}$/.test(phone))return {e:'Phone must contain exactly 10 digits'};if(!/^\S+@\S+\.\S+$/.test(email))return {e:'Invalid email address'};if(pincode&&!/^\d{6}$/.test(pincode))return {e:'Pincode must contain exactly 6 digits'};return {d:{name,company,designation,phone,email,address,city,pincode}}}
+function mapCustomerRow(row){const company=String(m23Value(row,['company name','company','customer company'])||'').trim(),ir=String(m23Value(row,['industry','sector'])||'').trim(),contact=String(m23Value(row,['contact person','contact','contact name'])||'').trim(),phone=m23Phone(m23Value(row,['phone','phone number','mobile','mobile number'])),onboarded=m23Date(m23Value(row,['onboarded date','onboarded','customer since','date']));if(!company||!ir||!contact||!phone||!onboarded)return {e:'Company Name, Industry, Contact Person, Phone and Onboarded Date are required'};if(!/^\d{10}$/.test(phone))return {e:'Phone must contain exactly 10 digits'};const industry=m23Master(ir,'industries');if(!industry)return {e:`Industry "${ir}" is not in the current CRM Industries master`};return {d:{company,industry,contact,phone,onboarded}}}
+async function importContactsFromExcel(file){if(!file)return;if(!auth.currentUser)return toast('You must be signed in to import Contacts','error');const rd=new FileReader();rd.onload=async e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),f=m23FindSheet(wb,['Contacts Import','Contacts','Contact Import'],[['contact name','name'],['contact number','phone','phone number'],['email','email address']]);if(!f)return toast('Could not find the Contacts Import sheet. Use the Sample Excel format.','error');const good=[],bad=[];f.rows.forEach((row,i)=>{if(!Object.values(row).some(v=>String(v??'').trim()))return;const z=mapContactRow(row);z.d?good.push(z.d):bad.push({row:i+2,reason:z.e})});if(!good.length)return toast('No valid Contacts found. Check required columns, email and 10-digit phone numbers.','error');for(let i=0;i<good.length;i+=450){const b=db.batch();good.slice(i,i+450).forEach(x=>{const ref=db.collection('contacts').doc();b.set(ref,{...x,createdByUid:auth.currentUser.uid,createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||'Unknown',createdAt:firebase.firestore.FieldValue.serverTimestamp()})});await b.commit()}document.getElementById('contactsExcelImportInput').value='';toast(`${good.length} Contact(s) imported successfully${bad.length?` · ${bad.length} row(s) skipped`:''}`,'success')}catch(err){console.error(err);toast('Could not import Contacts: '+err.message,'error')}finally{const i=document.getElementById('contactsExcelImportInput');if(i)i.value=''}};rd.readAsArrayBuffer(file)}
+async function importCustomersFromExcel(file){if(!file)return;if(!auth.currentUser)return toast('You must be signed in to import Customers','error');const rd=new FileReader();rd.onload=async e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),f=m23FindSheet(wb,['Customers Import','Customers','Customer Import'],[['company name','company'],['industry'],['contact person','contact','contact name'],['phone','phone number'],['onboarded date','onboarded']]);if(!f)return toast('Could not find the Customers Import sheet. Use the Sample Excel format.','error');const good=[],bad=[];f.rows.forEach((row,i)=>{if(!Object.values(row).some(v=>String(v??'').trim()))return;const z=mapCustomerRow(row);z.d?good.push(z.d):bad.push({row:i+2,reason:z.e})});if(!good.length)return toast('No valid Customers found. Check required columns, Industry and 10-digit phone numbers.','error');for(let i=0;i<good.length;i+=450){const b=db.batch();good.slice(i,i+450).forEach(x=>{const ref=db.collection('customers').doc();b.set(ref,{...x,createdByUid:auth.currentUser.uid,createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||'Unknown',createdAt:firebase.firestore.FieldValue.serverTimestamp()})});await b.commit()}document.getElementById('customersExcelImportInput').value='';toast(`${good.length} Customer(s) imported successfully${bad.length?` · ${bad.length} row(s) skipped`:''}`,'success')}catch(err){console.error(err);toast('Could not import Customers: '+err.message,'error')}finally{const i=document.getElementById('customersExcelImportInput');if(i)i.value=''}};rd.readAsArrayBuffer(file)}
 
 /* =========================================================
    LEADS — IMPORT / EXPORT
@@ -3806,6 +4381,14 @@ async function importLeadsFromExcel(file){
 ========================================================= */
 let calCursor = new Date();
 function shiftMonth(n){ calCursor.setMonth(calCursor.getMonth()+n); renderCalendar(); }
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\"/g,'&quot;')
+    .replace(/\'/g,'&#39;');
+}
 function renderCalendar(){
   const y = calCursor.getFullYear(), m = calCursor.getMonth();
   document.getElementById('calMonthLabel').textContent = calCursor.toLocaleString('default',{month:'long', year:'numeric'});
@@ -3828,47 +4411,112 @@ function renderCalendar(){
     const callsByDate = c.iso? myRecords('calls').filter(cl=>cl.date===c.iso) : [];
     const callsByFollowUp = c.iso? myRecords('calls').filter(cl=>cl.nextFollowUp===c.iso && cl.nextFollowUp!==cl.date) : [];
 
-    const meetingHtml = meetingEvts.map(e=>
-      `<span class="evt" draggable="true" title="${e.title} — click to open"
+    const meetingHtml = meetingEvts.map(e=>{
+      const done = e.completed === true;
+      const eventClass = done ? 'evt done' : 'evt';
+      const statusTitle = done ? 'Mark meeting as pending' : 'Mark meeting as done';
+      const statusIcon = done ? '↶' : '✓';
+      return `<span class="${eventClass}" draggable="true" data-preview="${escapeHtml(`Meeting: ${e.title || 'Untitled'}\nStatus: ${done?'Completed':'Pending'}`)}" title="${e.title} — ${done?'Completed':'Pending'}"
         ondragstart="evtDragStart(event,'meeting','${e.id}','date')" ondragend="evtDragEnd(event)">
         <span class="evt-label" onclick="openCalendarEvent('${e.id}')">${e.title}</span>
         <span class="evt-actions">
+          <button type="button" class="evt-ic" title="${statusTitle}" onclick="event.stopPropagation();toggleCalendarEventDone('meeting','${e.id}')">${statusIcon}</button>
           <button type="button" class="evt-ic" title="Edit meeting" onclick="event.stopPropagation();openForm('meetings','${e.id}')">✎</button>
           <button type="button" class="evt-ic" title="Delete meeting" onclick="event.stopPropagation();deleteRecord('meetings','${e.id}')">✕</button>
         </span>
-      </span>`).join('');
+      </span>`;
+    }).join('');
 
-    const callDateHtml = callsByDate.map(e=>
-      `<span class="evt call" draggable="true" title="Call — ${e.lead} — call date — click to open"
+    const callDateHtml = callsByDate.map(e=>{
+      const done = e.completed === true;
+      const eventClass = done ? 'evt call done' : 'evt call';
+      const statusTitle = done ? 'Mark call as pending' : 'Mark call as done';
+      const statusIcon = done ? '↶' : '✓';
+      return `<span class="${eventClass}" draggable="true" data-preview="${escapeHtml(`Call: ${e.lead || 'Untitled'}\nDate: ${e.date || ''}\nStatus: ${done?'Completed':'Pending'}`)}" title="Call — ${e.lead} — call date — ${done?'Completed':'Pending'}"
         ondragstart="evtDragStart(event,'call','${e.id}','date')" ondragend="evtDragEnd(event)">
         <span class="evt-label" onclick="openCallDetail('${e.id}')">📞 ${e.lead}</span>
         <span class="evt-actions">
+          <button type="button" class="evt-ic" title="${statusTitle}" onclick="event.stopPropagation();toggleCalendarEventDone('call','${e.id}','date')">${statusIcon}</button>
           <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
           <button type="button" class="evt-ic" title="Delete call" onclick="event.stopPropagation();deleteRecord('calls','${e.id}')">✕</button>
         </span>
-      </span>`).join('');
+      </span>`;
+    }).join('');
 
-    const callFollowUpHtml = callsByFollowUp.map(e=>
-      `<span class="evt call followup" draggable="true" title="Call — ${e.lead} — next follow-up — click to open"
+    const callFollowUpHtml = callsByFollowUp.map(e=>{
+      const done = e.followUpCompleted === true;
+      const eventClass = done ? 'evt call done' : 'evt call followup';
+      const statusTitle = done ? 'Mark follow-up as pending' : 'Mark follow-up as done';
+      const statusIcon = done ? '↶' : '✓';
+      return `<span class="${eventClass}" draggable="true" data-preview="${escapeHtml(`Follow-up: ${e.lead || 'Untitled'}\nDate: ${e.nextFollowUp || ''}\nStatus: ${done?'Completed':'Pending'}`)}" title="Call — ${e.lead} — next follow-up — ${done?'Completed':'Pending'}"
         ondragstart="evtDragStart(event,'call','${e.id}','nextFollowUp')" ondragend="evtDragEnd(event)">
         <span class="evt-label" onclick="openCallDetail('${e.id}')">↻ ${e.lead}</span>
         <span class="evt-actions">
+          <button type="button" class="evt-ic" title="${statusTitle}" onclick="event.stopPropagation();toggleCalendarEventDone('call','${e.id}','nextFollowUp')">${statusIcon}</button>
           <button type="button" class="evt-ic" title="Edit call" onclick="event.stopPropagation();openForm('calls','${e.id}')">✎</button>
           <button type="button" class="evt-ic" title="Remove follow-up" onclick="event.stopPropagation();clearCallFollowUp('${e.id}')">✕</button>
         </span>
-      </span>`).join('');
+      </span>`;
+    }).join('');
 
     const dropAttrs = c.iso
       ? `ondragover="allowDrop(event)" ondrop="handleCalDrop(event,'${c.iso}')" ondragenter="this.classList.add('drop-hover')" ondragleave="this.classList.remove('drop-hover')" onclick="openCalQuickAdd(event,'${c.iso}')"`
       : '';
 
-    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}" ${dropAttrs}>
+    const previewItems = [
+      ...meetingEvts.map(e => `Meeting: ${e.title || 'Untitled'} — ${e.completed === true ? 'Done' : 'Pending'}`),
+      ...callsByDate.map(e => `Call: ${e.lead || 'Untitled'} — ${e.completed === true ? 'Done' : 'Pending'}`),
+      ...callsByFollowUp.map(e => `Follow-up: ${e.lead || 'Untitled'} — ${e.followUpCompleted === true ? 'Done' : 'Pending'}`)
+    ];
+    const dayPreview = c.iso && previewItems.length
+      ? `Date: ${c.iso}\n${previewItems.join('\n')}`
+      : (c.iso ? `Date: ${c.iso}\nNo events` : '');
+
+    return `<div class="day ${c.muted?'muted':''} ${isToday?'today':''}" ${dropAttrs} ${dayPreview ? `data-preview="${escapeHtml(dayPreview).replace(/&quot;/g,'&amp;quot;')}"` : ''}>
       <span class="num">${c.d}</span>
       ${meetingHtml}${callDateHtml}${callFollowUpHtml}
     </div>`;
   }).join('');
   document.getElementById('calGrid').innerHTML = html;
   renderTable('meetings');
+}
+
+/* Calendar event status — additive only.
+   Existing meeting/call records remain compatible: missing status means Pending.
+   Meeting completion is stored as meetings.completed.
+   Call date completion is stored as calls.completed.
+   Call follow-up completion is stored as calls.followUpCompleted. */
+async function toggleCalendarEventDone(type, id, dateField){
+  try{
+    const collection = type === 'meeting' ? 'meetings' : 'calls';
+    const records = type === 'meeting' ? DB.meetings : DB.calls;
+    const record = records.find(r=>r.id===id);
+
+    if(!record){
+      toast('Event not found','error');
+      return;
+    }
+
+    if(!ownsRecord(collection, record)){
+      toast(`You can only update ${type === 'meeting' ? 'meetings' : 'calls'} you added`,'error');
+      return;
+    }
+
+    let field = 'completed';
+    if(type === 'call' && dateField === 'nextFollowUp') field = 'followUpCompleted';
+
+    const nextDone = record[field] !== true;
+
+    await db.collection(collection).doc(id).update({
+      [field]: nextDone,
+      updatedBy:(DB.profile&&DB.profile.name)||'Unknown',
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    toast(nextDone ? 'Marked as done' : 'Marked as pending','success');
+  }catch(err){
+    toast('Could not update event: '+err.message,'error');
+  }
 }
 
 /* Drag & drop — reschedule a meeting or call by dropping it on another day */
@@ -3958,6 +4606,75 @@ function openCalendarEvent(meetingId){
   }
   openForm('meetings', meetingId);
 }
+
+/* Calendar hover preview — visual only; existing click handlers remain unchanged. */
+(function initCalendarHoverPreview(){
+  let tip = null;
+  let hideTimer = null;
+
+  function getTip(){
+    if(tip) return tip;
+    tip = document.createElement('div');
+    tip.className = 'cal-hover-preview';
+    document.body.appendChild(tip);
+    return tip;
+  }
+
+  function showPreview(target, clientX, clientY){
+    const text = target && target.getAttribute('data-preview');
+    if(!text) return;
+    clearTimeout(hideTimer);
+    const box = getTip();
+    const lines = text.split('\\n');
+    box.innerHTML = `<div class="preview-title">${escapeHtml(lines.shift() || '')}</div>` +
+      lines.map(line => `<div class="preview-line">${escapeHtml(line)}</div>`).join('');
+    box.classList.add('show');
+
+    const pad = 10;
+    const rect = box.getBoundingClientRect();
+    let left = clientX + 12;
+    let top = clientY + 14;
+    if(left + rect.width > window.innerWidth - pad) left = window.innerWidth - rect.width - pad;
+    if(top + rect.height > window.innerHeight - pad) top = clientY - rect.height - 12;
+    left = Math.max(pad, left);
+    top = Math.max(pad, top);
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+  }
+
+  function hidePreview(){
+    hideTimer = setTimeout(()=>{ if(tip) tip.classList.remove('show'); }, 80);
+  }
+
+  document.addEventListener('mouseover', function(e){
+    const target = e.target.closest('#calGrid [data-preview]');
+    if(!target) return;
+    showPreview(target, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('mousemove', function(e){
+    if(tip && tip.classList.contains('show')){
+      const target = e.target.closest('#calGrid [data-preview]');
+      if(target) showPreview(target, e.clientX, e.clientY);
+    }
+  });
+
+  document.addEventListener('mouseout', function(e){
+    const target = e.target.closest('#calGrid [data-preview]');
+    if(target && !target.contains(e.relatedTarget)) hidePreview();
+  });
+
+  /* On touch devices there is no mouse hover. A short touch shows the same
+     preview, while normal tapping still reaches the original click handler. */
+  document.addEventListener('touchstart', function(e){
+    const target = e.target.closest('#calGrid [data-preview]');
+    if(!target) return;
+    const touch = e.touches[0];
+    showPreview(target, touch.clientX, touch.clientY);
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hidePreview, 1800);
+  }, {passive:true});
+})();
 
 /* =========================================================
    SETTINGS
@@ -4575,26 +5292,360 @@ function themeColors(){
         palette:['#0000FE','#4245FF','#8A8DFF','#B9C0FF','#DDE1FF','#05007A'] };
 }
 
+function reportDateValue(v){
+  if(!v) return '';
+  if(v && typeof v.toDate==='function'){
+    try{return v.toDate().toISOString().slice(0,10);}catch(e){}
+  }
+  if(v instanceof Date) return v.toISOString().slice(0,10);
+  const s=String(v);
+  const m=s.match(/(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : s.slice(0,10);
+}
+
+function reportInRange(record, from, to, fields){
+  if(!from && !to) return true;
+  const candidates=(fields||[]).map(f=>reportDateValue(record[f])).filter(Boolean);
+  if(!candidates.length) return true;
+  return candidates.some(d=>(!from||d>=from)&&(!to||d<=to));
+}
+
+function reportEmployeeName(){
+  return (DB.profile&&DB.profile.name)||'';
+}
+
+function reportOwnFilter(collection){
+  const uid=auth.currentUser ? auth.currentUser.uid : '';
+  const name=reportEmployeeName();
+  return (DB[collection]||[]).filter(r=>{
+    if(r.createdByUid && uid) return r.createdByUid===uid;
+    if(collection==='leads') return r.owner===name;
+    if(collection==='expenses') return r.employee===name;
+    if(collection==='calls' || collection==='meetings'){
+      const lead=DB.leads.find(l=>l.company===r.lead);
+      return !!lead && lead.owner===name;
+    }
+    if(collection==='quotations' || collection==='proposals'){
+      const company=r.company||r.customer||'';
+      return DB.leads.some(l=>l.company===company && l.owner===name);
+    }
+    if(collection==='customers' || collection==='contacts') return r.owner===name || r.createdBy===name;
+    if(collection==='dailysummaries' || collection==='weeklyplanners') return r.employee===name || r.createdBy===name || r.createdByUid===uid;
+    return false;
+  });
+}
+
+function reportData(){
+  const admin=isAdmin();
+  const from=document.getElementById('reportsFrom')?.value||'';
+  const to=document.getElementById('reportsTo')?.value||'';
+  const employee=document.getElementById('reportsEmployee')?.value||'';
+  const stage=document.getElementById('reportsStage')?.value||'';
+  const source=document.getElementById('reportsSource')?.value||'';
+
+  const collections=['leads','calls','meetings','quotations','proposals','expenses','customers','contacts','dailysummaries','weeklyplanners'];
+  const data={};
+  collections.forEach(c=>{
+    let rows;
+    if(admin){
+      rows=(DB[c]||[]).slice();
+      if(employee){
+        rows=rows.filter(r=>{
+          if(c==='leads') return r.owner===employee || r.createdBy===employee;
+          if(c==='expenses') return r.employee===employee;
+          if(c==='calls'||c==='meetings'){
+            const lead=DB.leads.find(l=>l.company===r.lead);
+            return lead && lead.owner===employee;
+          }
+          if(c==='quotations'||c==='proposals'){
+            const company=r.company||r.customer||'';
+            return DB.leads.some(l=>l.company===company && l.owner===employee);
+          }
+          return r.employee===employee || r.owner===employee || r.createdBy===employee || r.assignedTo===employee;
+        });
+      }
+    }else{
+      rows=reportOwnFilter(c);
+    }
+
+    const dateFields = c==='leads' ? ['createdAt','expectedClosing'] :
+      c==='calls' ? ['date','followUpDate'] :
+      c==='meetings' ? ['date'] :
+      c==='quotations' ? ['date','quoteDate'] :
+      c==='proposals' ? ['sentDate','date'] :
+      c==='expenses' ? ['date'] :
+      c==='customers' ? ['onboardedDate','createdAt'] :
+      c==='contacts' ? ['createdAt'] :
+      c==='dailysummaries' ? ['date'] :
+      c==='weeklyplanners' ? ['weekStart'] : [];
+
+    rows=rows.filter(r=>reportInRange(r,from,to,dateFields));
+    if(c==='leads'){
+      if(stage) rows=rows.filter(r=>r.stage===stage);
+      if(source) rows=rows.filter(r=>r.source===source);
+    }
+    data[c]=rows;
+  });
+
+  return {admin,from,to,employee,stage,source,data};
+}
+
+function reportMoney(n){ return fmtMoney(Number(n||0)); }
+
 function renderReports(){
-  const tc = themeColors();
-  destroyChart('target');
-  charts.target = new Chart(document.getElementById('chartTarget'), {
+  const tc=themeColors();
+  const ctx=reportData();
+  const d=ctx.data;
+  const admin=ctx.admin;
+  const employeeComparisonSection=document.getElementById('reportEmployeeComparisonSection');
+  if(employeeComparisonSection){
+    employeeComparisonSection.style.display=admin ? '' : 'none';
+  }
+
+  // Admin employee filter
+  const empSel=document.getElementById('reportsEmployee');
+  if(empSel){
+    empSel.style.display=admin?'inline-block':'none';
+    if(admin){
+      const prev=empSel.value;
+      empSel.innerHTML='<option value="">All Employees</option>'+DB.employees.map(e=>`<option value="${escapeHtml(e.name)}">${escapeHtml(e.name)}</option>`).join('');
+      if(prev && DB.employees.some(e=>e.name===prev)) empSel.value=prev;
+      else if(ctx.employee) empSel.value=ctx.employee;
+    }
+  }
+
+  // Master filters
+  const stageSel=document.getElementById('reportsStage');
+  const sourceSel=document.getElementById('reportsSource');
+  if(stageSel){
+    const prev=stageSel.value;
+    const stages=(DB.masters.stages&&DB.masters.stages.length)?DB.masters.stages:STAGES;
+    stageSel.innerHTML='<option value="">All Lead Stages</option>'+stages.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+    if(ctx.stage) stageSel.value=ctx.stage; else stageSel.value=prev||'';
+  }
+  if(sourceSel){
+    const prev=sourceSel.value;
+    const sources=(DB.masters.sources&&DB.masters.sources.length)?DB.masters.sources:[];
+    sourceSel.innerHTML='<option value="">All Lead Sources</option>'+sources.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+    if(ctx.source) sourceSel.value=ctx.source; else sourceSel.value=prev||'';
+  }
+
+  // If selectors were rebuilt, recalculate using current values.
+  const current=ctx;
+  const leads=d.leads||[];
+  const calls=d.calls||[];
+  const meetings=d.meetings||[];
+  const quotes=d.quotations||[];
+  const proposals=d.proposals||[];
+  const expenses=d.expenses||[];
+  const customers=d.customers||[];
+
+  const openLeads=leads.filter(l=>!['Won','Lost'].includes(l.stage));
+  const wonLeads=leads.filter(l=>l.stage==='Won');
+  const lostLeads=leads.filter(l=>l.stage==='Lost');
+  const pipeline=openLeads.reduce((a,l)=>a+Number(l.value||0),0);
+  const wonValue=wonLeads.reduce((a,l)=>a+Number(l.value||0),0);
+  const quoteValue=quotes.reduce((a,q)=>a+Number(q.amount||q.value||0),0);
+  const proposalValue=proposals.reduce((a,q)=>a+Number(q.amount||q.value||0),0);
+  const acceptedQuotes=quotes.filter(q=>['Accepted','Approved','Won'].includes(q.status)).length;
+  const wonRate=leads.length ? (wonLeads.length/leads.length*100) : 0;
+  const activityTotal=leads.length+calls.length+meetings.length+quotes.length+proposals.length;
+
+  document.getElementById('reportsScopeText').textContent = admin
+    ? (current.employee ? `Management intelligence for ${current.employee}` : 'Management intelligence — all employees')
+    : `Personal intelligence for ${reportEmployeeName()||'your account'}`;
+
+  const filterBits=[];
+  if(current.from) filterBits.push('From '+current.from);
+  if(current.to) filterBits.push('To '+current.to);
+  if(current.employee) filterBits.push(current.employee);
+  if(current.stage) filterBits.push(current.stage);
+  if(current.source) filterBits.push(current.source);
+  document.getElementById('reportsFilterSummary').textContent = filterBits.length ? 'Filters: '+filterBits.join(' · ') : 'Filters: All available records in your permitted scope';
+
+  document.getElementById('reportsKpis').innerHTML=`
+    <div class="card kpi"><div class="val">${leads.length}</div><div class="lbl">Leads</div></div>
+    <div class="card kpi"><div class="val">${reportMoney(pipeline)}</div><div class="lbl">Open Pipeline</div></div>
+    <div class="card kpi"><div class="val">${reportMoney(wonValue)}</div><div class="lbl">Won Value</div></div>
+    <div class="card kpi"><div class="val">${wonRate.toFixed(1)}%</div><div class="lbl">Lead Win Rate</div></div>
+    <div class="card kpi"><div class="val">${customers.length}</div><div class="lbl">Customers</div></div>
+    <div class="card kpi"><div class="val">${quotes.length}</div><div class="lbl">Quotations</div></div>
+    <div class="card kpi"><div class="val">${proposals.length}</div><div class="lbl">Proposals</div></div>
+    <div class="card kpi"><div class="val">${calls.length+meetings.length}</div><div class="lbl">Calls + Meetings</div></div>
+  `;
+
+  const stages=(DB.masters.stages&&DB.masters.stages.length)?DB.masters.stages:STAGES;
+  const stageCounts=stages.map(s=>leads.filter(l=>l.stage===s).length);
+  const stageValues=stages.map(s=>leads.filter(l=>l.stage===s).reduce((a,l)=>a+Number(l.value||0),0));
+  destroyChart('reportFunnel');
+  charts.reportFunnel=new Chart(document.getElementById('chartReportFunnel'),{
     type:'bar',
-    data:{labels:DB.employees.map(e=>e.name.split(' ')[0]),
-      datasets:[
-        {label:'Target', data:DB.employees.map(e=>e.target/100000), backgroundColor:tc.palette[2], borderRadius:8},
-        {label:'Achieved', data:DB.employees.map(e=>e.achieved/100000), backgroundColor:tc.accent, borderRadius:8}
-      ]},
-    options:{plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>'₹'+v+'L'}, grid:{color:tc.grid}}, x:{grid:{display:false}}}, responsive:true, maintainAspectRatio:false}
+    data:{labels:stages,datasets:[{label:'Leads',data:stageCounts,backgroundColor:tc.accent,borderRadius:7,maxBarThickness:34}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:tc.grid},ticks:{stepSize:1}},x:{grid:{display:false},ticks:{font:{size:10}}}},responsive:true,maintainAspectRatio:false}
   });
+
+  const srcMap={};
+  leads.forEach(l=>{const k=l.source||'Unknown';srcMap[k]=(srcMap[k]||0)+1;});
+  const srcLabels=Object.keys(srcMap).sort((a,b)=>srcMap[b]-srcMap[a]).slice(0,8);
+  destroyChart('reportSources');
+  charts.reportSources=new Chart(document.getElementById('chartReportSources'),{
+    type:'doughnut',
+    data:{labels:srcLabels,datasets:[{data:srcLabels.map(k=>srcMap[k]),backgroundColor:tc.palette,borderWidth:0}]},
+    options:{cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,usePointStyle:true,font:{size:10}}}},responsive:true,maintainAspectRatio:false}
+  });
+
+  const months=[];
+  const now=new Date();
+  for(let i=5;i>=0;i--){const x=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(x.toISOString().slice(0,7));}
+  const monthLabel=m=>new Date(m+'-01T00:00:00').toLocaleDateString('en-IN',{month:'short',year:'2-digit'});
+  const countByMonth=(rows,fields)=>months.map(m=>rows.filter(r=>{
+    const ds=fields.map(f=>reportDateValue(r[f])).filter(Boolean);
+    return ds.some(x=>x.slice(0,7)===m);
+  }).length);
+  destroyChart('reportActivity');
+  charts.reportActivity=new Chart(document.getElementById('chartReportActivity'),{
+    type:'line',
+    data:{labels:months.map(monthLabel),datasets:[
+      {label:'Leads',data:countByMonth(leads,['createdAt','expectedClosing']),borderColor:tc.accent,backgroundColor:tc.accentSoft,tension:.35,fill:true},
+      {label:'Calls',data:countByMonth(calls,['date']),borderColor:tc.palette[1],tension:.35},
+      {label:'Meetings',data:countByMonth(meetings,['date']),borderColor:tc.palette[2],tension:.35},
+      {label:'Quotes',data:countByMonth(quotes,['date','quoteDate']),borderColor:tc.palette[3],tension:.35},
+      {label:'Proposals',data:countByMonth(proposals,['date','sentDate']),borderColor:tc.palette[4],tension:.35}
+    ]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,grid:{color:tc.grid},ticks:{stepSize:1}},x:{grid:{display:false}}},responsive:true,maintainAspectRatio:false}
+  });
+
+  const pipelineSeries=[pipeline,wonValue,leads.filter(l=>l.stage==='Lost').reduce((a,l)=>a+Number(l.value||0),0),quoteValue,proposalValue];
+  destroyChart('reportPipeline');
+  charts.reportPipeline=new Chart(document.getElementById('chartReportPipeline'),{
+    type:'bar',
+    data:{labels:['Open Pipeline','Won','Lost','Quotation Value','Proposal Value'],datasets:[{label:'Value',data:pipelineSeries,backgroundColor:[tc.accent,tc.palette[1],tc.palette[5],tc.palette[2],tc.palette[3]],borderRadius:8}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:tc.grid},ticks:{callback:v=>fmtMoney(v)}},x:{grid:{display:false},ticks:{font:{size:10}}}},responsive:true,maintainAspectRatio:false}
+  });
+
+  // Existing report 1: Target vs Achieved, now scoped correctly.
+  const targetRows=admin
+    ? (current.employee ? DB.employees.filter(e=>e.name===current.employee) : DB.employees)
+    : DB.employees.filter(e=>e.name===reportEmployeeName());
+  destroyChart('target');
+  charts.target=new Chart(document.getElementById('chartTarget'),{
+    type:'bar',
+    data:{labels:targetRows.map(e=>e.name.split(' ')[0]),datasets:[
+      {label:'Target',data:targetRows.map(e=>Number(e.target||0)/100000),backgroundColor:tc.palette[2],borderRadius:8},
+      {label:'Achieved',data:targetRows.map(e=>Number(e.achieved||0)/100000),backgroundColor:tc.accent,borderRadius:8}
+    ]},
+    options:{plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'₹'+v+'L'},grid:{color:tc.grid}},x:{grid:{display:false}}},responsive:true,maintainAspectRatio:false}
+  });
+
+  // Existing report 2: Expense Split, scoped to current user/admin employee.
   const catMap={};
-  DB.expenses.forEach(e=>catMap[e.category]=(catMap[e.category]||0)+Number(e.amount||0));
+  expenses.forEach(e=>{const k=e.category||'Other';catMap[k]=(catMap[k]||0)+Number(e.amount||0);});
+  const catLabels=Object.keys(catMap);
   destroyChart('exp');
-  charts.exp = new Chart(document.getElementById('chartExpense'), {
-    type:'pie',
-    data:{labels:Object.keys(catMap), datasets:[{data:Object.values(catMap), backgroundColor:tc.palette, borderWidth:0}]},
-    options:{plugins:{legend:{position:'bottom', labels:{boxWidth:10, usePointStyle:true, font:{size:11}}}}, responsive:true, maintainAspectRatio:false}
+  charts.exp=new Chart(document.getElementById('chartExpense'),{
+    type:'doughnut',
+    data:{labels:catLabels,datasets:[{data:catLabels.map(k=>catMap[k]),backgroundColor:tc.palette,borderWidth:0}]},
+    options:{cutout:'62%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,usePointStyle:true,font:{size:10}}}},responsive:true,maintainAspectRatio:false}
   });
+
+  // Employee comparison
+  const employeeNames=admin
+    ? (current.employee ? [current.employee] : DB.employees.map(e=>e.name))
+    : [reportEmployeeName()];
+  const empRows=employeeNames.map(name=>{
+    const el=leads.filter(l=>l.owner===name||l.createdBy===name);
+    const ec=calls.filter(c=>{const l=DB.leads.find(x=>x.company===c.lead);return l&&l.owner===name;});
+    const em=meetings.filter(c=>{const l=DB.leads.find(x=>x.company===c.lead);return l&&l.owner===name;});
+    const eq=quotes.filter(q=>DB.leads.some(l=>l.company===(q.company||q.customer||'')&&l.owner===name));
+    const ep=proposals.filter(q=>DB.leads.some(l=>l.company===(q.company||q.customer||'')&&l.owner===name));
+    const won=el.filter(l=>l.stage==='Won').length;
+    const pipe=el.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0);
+    return {name,leads:el.length,calls:ec.length,meetings:em.length,quotes:eq.length,proposals:ep.length,won,pipeline:pipe,conversion:el.length?won/el.length*100:0};
+  });
+  const employeeTable=document.getElementById('tbody-reportEmployees');
+  if(employeeTable){
+    employeeTable.innerHTML=admin
+      ? (empRows.length
+        ? empRows.map(r=>`<tr><td><b>${escapeHtml(r.name||'—')}</b></td><td>${r.leads}</td><td>${r.calls}</td><td>${r.meetings}</td><td>${r.quotes}</td><td>${r.proposals}</td><td>${r.won}</td><td>${reportMoney(r.pipeline)}</td><td>${r.conversion.toFixed(1)}%</td></tr>`).join('')
+        : `<tr><td colspan="9"><div class="empty-state">No employee data available.</div></td></tr>`)
+      : '';
+  }
+
+  document.getElementById('tbody-reportSummary').innerHTML=[
+    ['Total Leads',leads.length],
+    ['Qualified / Open Leads',openLeads.length],
+    ['Won Leads',wonLeads.length],
+    ['Lost Leads',lostLeads.length],
+    ['Open Pipeline',reportMoney(pipeline)],
+    ['Won Value',reportMoney(wonValue)],
+    ['Quotation Value',reportMoney(quoteValue)],
+    ['Accepted Quotations',acceptedQuotes],
+    ['Proposal Value',reportMoney(proposalValue)],
+    ['Total Sales Activity',activityTotal],
+    ['Total Expenses',reportMoney(expenses.reduce((a,e)=>a+Number(e.amount||0),0))]
+  ].map(r=>`<tr><td>${escapeHtml(String(r[0]))}</td><td style="text-align:right;"><b>${escapeHtml(String(r[1]))}</b></td></tr>`).join('');
+}
+
+function clearIntelligenceFilters(){
+  ['reportsFrom','reportsTo','reportsStage','reportsSource'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const emp=document.getElementById('reportsEmployee'); if(emp) emp.value='';
+  renderReports();
+}
+
+function intelligenceExportRows(){
+  const ctx=reportData(), d=ctx.data;
+  return {
+    summary:[
+      ['Report Scope',ctx.admin?(ctx.employee||'All Employees'):(reportEmployeeName()||'Current User')],
+      ['From',ctx.from||'All'],['To',ctx.to||'All'],
+      ['Lead Stage',ctx.stage||'All'],['Lead Source',ctx.source||'All'],
+      ['Leads',d.leads.length],
+      ['Open Pipeline',d.leads.filter(l=>!['Won','Lost'].includes(l.stage)).reduce((a,l)=>a+Number(l.value||0),0)],
+      ['Won Value',d.leads.filter(l=>l.stage==='Won').reduce((a,l)=>a+Number(l.value||0),0)],
+      ['Customers',d.customers.length],
+      ['Calls',d.calls.length],['Meetings',d.meetings.length],
+      ['Quotations',d.quotations.length],['Proposals',d.proposals.length],
+      ['Expenses',d.expenses.reduce((a,e)=>a+Number(e.amount||0),0)]
+    ],
+    leads:d.leads.map(l=>({Company:l.company||'',Contact:l.contact||'',Stage:l.stage||'',Source:l.source||'',Owner:l.owner||'',Value:Number(l.value||0),ExpectedClosing:l.expectedClosing||''})),
+    calls:d.calls.map(c=>({Lead:c.lead||'',Date:c.date||'',Type:c.type||'',Outcome:c.outcome||'',Duration:c.duration||''})),
+    meetings:d.meetings.map(m=>({Title:m.title||'',Date:m.date||'',Type:m.type||'',Owner:m.owner||'',Status:m.completed?'Completed':'Pending'})),
+    quotations:d.quotations.map(q=>({QuoteNo:q.quoteNo||'',Company:q.company||'',Date:q.date||q.quoteDate||'',Status:q.status||'',Amount:Number(q.amount||q.value||0)})),
+    proposals:d.proposals.map(q=>({Company:q.company||q.customer||'',Date:q.date||q.sentDate||'',Status:q.status||'',Amount:Number(q.amount||q.value||0)})),
+    expenses:d.expenses.map(e=>({Date:e.date||'',Employee:e.employee||'',Category:e.category||'',Merchant:e.merchant||'',Amount:Number(e.amount||0),Status:e.status||''}))
+  };
+}
+
+function exportIntelligenceExcel(){
+  const r=intelligenceExportRows();
+  const wb=XLSX.utils.book_new();
+  Object.entries(r).forEach(([name,rows])=>{
+    const data=rows.length && Array.isArray(rows[0]) ? rows : rows;
+    const ws=XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
+  });
+  XLSX.writeFile(wb,`Haulog_Intelligence_Report_${todayISO()}.xlsx`);
+  toast('Intelligence Excel report exported','success');
+}
+
+function exportIntelligencePdf(){
+  const r=intelligenceExportRows();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const scope=document.getElementById('reportsScopeText')?.textContent||'';
+  const filter=document.getElementById('reportsFilterSummary')?.textContent||'';
+  doc.setFontSize(17); doc.setFont(undefined,'bold'); doc.text('Haulog CRM - Intelligence Report',14,14);
+  doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.text(scope,14,20); doc.text(filter,14,26);
+  const summaryBody=r.summary.slice(5).map(x=>[x[0],String(x[1])]);
+  doc.autoTable({startY:32,head:[['Metric','Value']],body:summaryBody,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[0,0,254],textColor:255}});
+  let y=(doc.lastAutoTable?.finalY||70)+8;
+  const leadRows=r.leads.slice(0,80).map(x=>[x.Company,x.Contact,x.Stage,x.Source,x.Owner,x.Value.toLocaleString('en-IN'),x.ExpectedClosing]);
+  doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.text('Lead Report',14,y); y+=4;
+  doc.autoTable({startY:y,head:[['Company','Contact','Stage','Source','Owner','Value','Expected']],body:leadRows,styles:{fontSize:7,cellPadding:1.6},headStyles:{fillColor:[0,0,254],textColor:255}});
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setFont(undefined,'normal');doc.text(`Haulog CRM · Intelligence · Page ${i}`,14,doc.internal.pageSize.getHeight()-7);}
+  doc.save(`Haulog_Intelligence_Report_${todayISO()}.pdf`);
+  toast('Intelligence PDF report exported','success');
 }
 
 /* =========================================================
