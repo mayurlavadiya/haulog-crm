@@ -536,6 +536,88 @@ tbody tr:hover{background:var(--blue-50);}
   #page-reports .chart-box{height:240px;}
   .reports-filters .filter,.reports-filters button{width:100%;min-width:0;}
 }
+
+/* =========================================================
+   GLOBAL GRAPHICAL DATE PICKER
+   Replaces the browser-native date field appearance while
+   preserving the original input value/change behaviour.
+========================================================= */
+.hl-date-picker{position:relative;display:block;width:100%;min-width:0}
+.hl-date-picker > input[type="date"]{position:absolute!important;inset:0!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;padding:0!important;border:0!important}
+.hl-date-trigger{width:100%;min-height:44px;border:1px solid var(--line,#D9DCF0);border-radius:12px;background:var(--surface,#fff);color:var(--ink,#14152B);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease;box-sizing:border-box;text-align:left}
+.hl-date-trigger:hover{border-color:var(--blue,#0000FE);box-shadow:0 0 0 3px rgba(0,0,254,.06)}
+.hl-date-trigger:focus-visible{outline:none;border-color:var(--blue,#0000FE);box-shadow:0 0 0 3px rgba(0,0,254,.12)}
+.hl-date-trigger.is-empty{color:var(--ink-soft,#777A9A);font-weight:500}
+.hl-date-trigger .hl-date-icon{width:18px;height:18px;flex:0 0 18px;color:var(--blue,#0000FE)}
+.hl-date-trigger .hl-date-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hl-date-trigger .hl-date-text.placeholder{color:var(--ink-soft,#777A9A);font-weight:500}
+.hl-date-trigger.is-filter{min-height:44px;border-radius:12px;font-size:13px}
+.hl-date-picker.hl-filter-date{display:inline-block;width:190px;vertical-align:middle}
+.hl-date-picker.hl-filter-date .hl-date-trigger{min-height:44px}
+.hl-date-popup{position:fixed;z-index:99999;width:318px;background:var(--surface,#fff);border:1px solid var(--line,#D9DCF0);border-radius:18px;box-shadow:0 18px 55px rgba(20,21,43,.18);padding:12px;display:none;color:var(--ink,#14152B)}
+.hl-date-popup.open{display:block;animation:hlDatePop .14s ease-out}
+@keyframes hlDatePop{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+.hl-date-head{display:flex;align-items:center;justify-content:space-between;padding:3px 2px 10px}
+.hl-date-month{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.hl-date-nav{display:flex;gap:5px}
+.hl-date-nav button,.hl-date-footer button{border:0;background:var(--blue-50,#F0F2FF);color:var(--ink,#14152B);width:34px;height:34px;border-radius:10px;cursor:pointer;font-weight:800}
+.hl-date-nav button:hover,.hl-date-footer button:hover{background:var(--blue,#0000FE);color:#fff}
+.hl-date-weekdays,.hl-date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.hl-date-weekdays{padding:4px 0 6px}
+.hl-date-weekdays span{text-align:center;font-size:10px;font-weight:800;color:var(--ink-soft,#777A9A);text-transform:uppercase}
+.hl-date-day{height:34px;border:0;border-radius:9px;background:transparent;color:var(--ink,#14152B);font-size:12px;font-weight:600;cursor:pointer}
+.hl-date-day:hover{background:var(--blue-50,#F0F2FF);color:var(--blue,#0000FE)}
+.hl-date-day.muted{color:#B8BAD0;font-weight:500}
+.hl-date-day.today{box-shadow:inset 0 0 0 1px var(--blue,#0000FE);color:var(--blue,#0000FE)}
+.hl-date-day.selected{background:var(--blue,#0000FE);color:#fff;box-shadow:none}
+.hl-date-day.selected.today{box-shadow:inset 0 0 0 2px rgba(255,255,255,.55)}
+.hl-date-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--line,#E7E8F2)}
+.hl-date-footer .hl-date-today{width:auto;padding:0 11px;font-size:12px}
+.hl-date-footer .hl-date-clear{background:transparent;color:var(--ink-soft,#777A9A);font-size:12px;width:auto;padding:0 8px}
+.hl-date-footer .hl-date-clear:hover{background:transparent;color:var(--danger,#D92D3F)}
+@media(max-width:600px){
+  .hl-date-picker.hl-filter-date{width:100%;max-width:none}
+  .hl-date-popup{width:min(318px,calc(100vw - 20px));max-height:calc(100vh - 24px);overflow:auto}
+}
+
+/* =========================================================
+   GLOBAL GRAPHICAL MONTH PICKER
+   Used for Dashboard Expenses and Operations > Expenses.
+   Preserves native input value/change behaviour.
+========================================================= */
+.hl-month-picker{position:relative;display:block;width:100%;min-width:0}
+.hl-month-picker > input[type="month"]{position:absolute!important;inset:0!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;padding:0!important;border:0!important}
+.hl-month-trigger{width:100%;min-height:44px;border:1px solid var(--line,#D9DCF0);border-radius:12px;background:var(--surface,#fff);color:var(--ink,#14152B);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.18s ease;box-sizing:border-box;text-align:left}
+.hl-month-trigger:hover{border-color:var(--blue,#0000FE);box-shadow:0 0 0 3px rgba(0,0,254,.06)}
+.hl-month-trigger:focus-visible{outline:none;border-color:var(--blue,#0000FE);box-shadow:0 0 0 3px rgba(0,0,254,.12)}
+.hl-month-trigger.is-empty{color:var(--ink-soft,#777A9A);font-weight:500}
+.hl-month-trigger .hl-month-icon{width:18px;height:18px;flex:0 0 18px;color:var(--blue,#0000FE)}
+.hl-month-trigger .hl-month-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hl-month-trigger .hl-month-text.placeholder{color:var(--ink-soft,#777A9A);font-weight:500}
+.hl-month-picker.hl-filter-month{display:inline-block;width:190px;vertical-align:middle}
+.hl-month-picker.hl-filter-month .hl-month-trigger{min-height:44px}
+.hl-month-popup{position:fixed;z-index:99999;width:318px;background:var(--surface,#fff);border:1px solid var(--line,#D9DCF0);border-radius:18px;box-shadow:0 18px 55px rgba(20,21,43,.18);padding:12px;display:none;color:var(--ink,#14152B)}
+.hl-month-popup.open{display:block;animation:hlDatePop .14s ease-out}
+.hl-month-head{display:flex;align-items:center;justify-content:space-between;padding:3px 2px 12px}
+.hl-month-year{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.hl-month-nav{display:flex;gap:5px}
+.hl-month-nav button,.hl-month-footer button{border:0;background:var(--blue-50,#F0F2FF);color:var(--ink,#14152B);width:34px;height:34px;border-radius:10px;cursor:pointer;font-weight:800}
+.hl-month-nav button:hover,.hl-month-footer button:hover{background:var(--blue,#0000FE);color:#fff}
+.hl-month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.hl-month-cell{height:42px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink,#14152B);font-size:12px;font-weight:700;cursor:pointer}
+.hl-month-cell:hover{background:var(--blue-50,#F0F2FF);color:var(--blue,#0000FE)}
+.hl-month-cell.today{box-shadow:inset 0 0 0 1px var(--blue,#0000FE);color:var(--blue,#0000FE)}
+.hl-month-cell.selected{background:var(--blue,#0000FE);color:#fff;box-shadow:none}
+.hl-month-cell.selected.today{box-shadow:inset 0 0 0 2px rgba(255,255,255,.55)}
+.hl-month-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--line,#E7E8F2)}
+.hl-month-footer .hl-month-today{width:auto;padding:0 11px;font-size:12px}
+.hl-month-footer .hl-month-clear{background:transparent;color:var(--ink-soft,#777A9A);font-size:12px;width:auto;padding:0 8px}
+.hl-month-footer .hl-month-clear:hover{background:transparent;color:var(--danger,#D92D3F)}
+@media(max-width:600px){
+  .hl-month-picker.hl-filter-month{width:100%;max-width:none}
+  .hl-month-popup{width:min(318px,calc(100vw - 20px));max-height:calc(100vh - 24px);overflow:auto}
+}
+
 </style>
 </head>
 <body>
@@ -6502,6 +6584,290 @@ function checkSelfSignupVisibility(){
     }
   }).catch(()=>{ /* unreadable pre-auth — default to showing signup option */ });
 }
+
+
+/* =========================================================
+   GLOBAL GRAPHICAL DATE PICKER ENGINE
+========================================================= */
+let hlDatePickerInput=null;
+let hlDatePickerView=new Date();
+let hlDatePickerPopup=null;
+
+function hlDateIsoParts(v){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));
+  return m ? {y:+m[1],m:+m[2]-1,d:+m[3]} : null;
+}
+function hlDatePad(n){return String(n).padStart(2,'0')}
+function hlDateIso(y,m,d){return `${y}-${hlDatePad(m+1)}-${hlDatePad(d)}`}
+function hlDateDisplay(v){
+  const p=hlDateIsoParts(v); if(!p) return '';
+  return `${hlDatePad(p.d)}-${hlDatePad(p.m+1)}-${p.y}`;
+}
+function hlDateSvg(){return '<svg class="hl-date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"></rect><path d="M16 2v4M8 2v4M3 9h18"></path></svg>'}
+function hlDateEnsurePopup(){
+  if(hlDatePickerPopup) return hlDatePickerPopup;
+  hlDatePickerPopup=document.createElement('div');
+  hlDatePickerPopup.className='hl-date-popup';
+  document.body.appendChild(hlDatePickerPopup);
+  document.addEventListener('mousedown',e=>{
+    if(!hlDatePickerPopup || !hlDatePickerPopup.classList.contains('open')) return;
+    if(hlDatePickerPopup.contains(e.target)) return;
+    if(hlDatePickerInput && hlDatePickerInput.closest('.hl-date-picker')?.contains(e.target)) return;
+    hlDateClose();
+  });
+  window.addEventListener('resize',hlDatePosition);
+  window.addEventListener('scroll',hlDatePosition,true);
+  return hlDatePickerPopup;
+}
+function hlDateOpen(input){
+  hlDatePickerInput=input;
+  const parsed=hlDateIsoParts(input.value);
+  const base=parsed ? new Date(parsed.y,parsed.m,parsed.d) : new Date();
+  hlDatePickerView=new Date(base.getFullYear(),base.getMonth(),1);
+  hlDateRender();
+  hlDateEnsurePopup().classList.add('open');
+  hlDatePosition();
+}
+function hlDateClose(){
+  if(hlDatePickerPopup) hlDatePickerPopup.classList.remove('open');
+  hlDatePickerInput=null;
+}
+function hlDatePosition(){
+  if(!hlDatePickerPopup || !hlDatePickerPopup.classList.contains('open') || !hlDatePickerInput) return;
+  const trigger=hlDatePickerInput.closest('.hl-date-picker')?.querySelector('.hl-date-trigger');
+  if(!trigger) return;
+  const r=trigger.getBoundingClientRect();
+  const popup=hlDatePickerPopup;
+  const w=Math.min(318,window.innerWidth-20);
+  popup.style.width=w+'px';
+  const pw=w;
+  let left=r.left;
+  if(left+pw>window.innerWidth-10) left=window.innerWidth-pw-10;
+  if(left<10) left=10;
+  const ph=popup.offsetHeight||390;
+  let top=r.bottom+8;
+  if(top+ph>window.innerHeight-10 && r.top-ph-8>10) top=r.top-ph-8;
+  if(top<10) top=10;
+  popup.style.left=left+'px'; popup.style.top=top+'px';
+}
+function hlDateRender(){
+  const p=hlDatePickerPopup||hlDateEnsurePopup();
+  const y=hlDatePickerView.getFullYear(),m=hlDatePickerView.getMonth();
+  const monthName=hlDatePickerView.toLocaleString(undefined,{month:'long',year:'numeric'});
+  const selected=hlDatePickerInput?.value||'';
+  const today=typeof todayISO==='function'?todayISO():hlDateIso(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  const first=new Date(y,m,1), start=first.getDay(), days=new Date(y,m+1,0).getDate(), prevDays=new Date(y,m,0).getDate();
+  let cells=[];
+  for(let i=start-1;i>=0;i--) cells.push({d:prevDays-i,muted:true,iso:hlDateIso(y,m-1,prevDays-i)});
+  for(let d=1;d<=days;d++) cells.push({d,muted:false,iso:hlDateIso(y,m,d)});
+  const nextDays=42-cells.length;
+  for(let d=1;d<=nextDays;d++) cells.push({d,muted:true,iso:hlDateIso(y,m+1,d)});
+  const weekdays=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  p.innerHTML=`<div class="hl-date-head"><div class="hl-date-month">${monthName}</div><div class="hl-date-nav"><button type="button" aria-label="Previous month" onclick="hlDateShift(-1)">‹</button><button type="button" aria-label="Next month" onclick="hlDateShift(1)">›</button></div></div><div class="hl-date-weekdays">${weekdays.map(x=>`<span>${x}</span>`).join('')}</div><div class="hl-date-grid">${cells.map(c=>`<button type="button" class="hl-date-day ${c.muted?'muted ':''}${c.iso===today?'today ':''}${c.iso===selected?'selected':''}" onclick="hlDatePick('${c.iso}')">${c.d}</button>`).join('')}</div><div class="hl-date-footer"><button type="button" class="hl-date-today" onclick="hlDatePick('${today}')">Today</button><button type="button" class="hl-date-clear" onclick="hlDateClear()">Clear</button></div>`;
+}
+function hlDateShift(n){hlDatePickerView.setMonth(hlDatePickerView.getMonth()+n);hlDateRender();hlDatePosition();}
+function hlDatePick(iso){
+  if(!hlDatePickerInput) return;
+  hlDatePickerInput.value=iso;
+  hlDatePickerInput.dispatchEvent(new Event('input',{bubbles:true}));
+  hlDatePickerInput.dispatchEvent(new Event('change',{bubbles:true}));
+  hlDateSyncTrigger(hlDatePickerInput);
+  hlDateClose();
+}
+function hlDateClear(){
+  if(!hlDatePickerInput) return;
+  hlDatePickerInput.value='';
+  hlDatePickerInput.dispatchEvent(new Event('input',{bubbles:true}));
+  hlDatePickerInput.dispatchEvent(new Event('change',{bubbles:true}));
+  hlDateSyncTrigger(hlDatePickerInput);
+  hlDateClose();
+}
+function hlDateSyncTrigger(input){
+  const shell=input?.closest('.hl-date-picker'); if(!shell) return;
+  const text=shell.querySelector('.hl-date-text'); const trigger=shell.querySelector('.hl-date-trigger');
+  if(!text||!trigger) return;
+  const display=hlDateDisplay(input.value);
+  text.textContent=display||input.dataset.placeholder||'Select date';
+  text.classList.toggle('placeholder',!display); trigger.classList.toggle('is-empty',!display);
+}
+function hlDateEnhance(input){
+  if(!input || input.type!=='date' || input.dataset.hlDateEnhanced==='1') return;
+  input.dataset.hlDateEnhanced='1';
+  const shell=document.createElement('div');
+  shell.className='hl-date-picker';
+  if(input.classList.contains('filter')) shell.classList.add('hl-filter-date');
+  const placeholder=input.getAttribute('placeholder') || (input.title && /date/i.test(input.title) ? input.title.replace(/date/ig,'').trim() : '') || 'Select date';
+  input.dataset.placeholder=placeholder || 'Select date';
+  input.parentNode.insertBefore(shell,input); shell.appendChild(input);
+  const trigger=document.createElement('button');
+  trigger.type='button'; trigger.className='hl-date-trigger'+(input.classList.contains('filter')?' is-filter':'');
+  trigger.innerHTML=`<span style="display:flex;align-items:center;gap:9px;min-width:0">${hlDateSvg()}<span class="hl-date-text"></span></span><span style="font-size:16px;color:var(--ink-soft,#777A9A)"></span>`;
+  trigger.addEventListener('click',()=>hlDateOpen(input));
+  shell.appendChild(trigger);
+  hlDateSyncTrigger(input);
+}
+function hlDateEnhanceAll(root=document){root.querySelectorAll('input[type="date"]:not([data-hl-date-enhanced="1"])').forEach(hlDateEnhance);}
+
+
+/* =========================================================
+   GLOBAL GRAPHICAL MONTH PICKER
+========================================================= */
+let hlMonthPickerPopup=null;
+let hlMonthPickerInput=null;
+let hlMonthPickerView=null;
+
+function hlMonthSvg(){
+  return '<svg class="hl-month-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"></rect><path d="M16 2v4M8 2v4M3 9h18"></path><path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"></path></svg>';
+}
+function hlMonthIso(y,m){return `${y}-${String(m+1).padStart(2,'0')}`;}
+function hlMonthParts(value){
+  const m=String(value||'').match(/^(\d{4})-(\d{2})$/);
+  return m ? {y:Number(m[1]),m:Number(m[2])-1} : null;
+}
+function hlMonthDisplay(value){
+  const p=hlMonthParts(value);
+  if(!p) return '';
+  return new Date(p.y,p.m,1).toLocaleString(undefined,{month:'long',year:'numeric'});
+}
+function hlMonthEnsurePopup(){
+  if(hlMonthPickerPopup) return hlMonthPickerPopup;
+  hlMonthPickerPopup=document.createElement('div');
+  hlMonthPickerPopup.className='hl-month-popup';
+  document.body.appendChild(hlMonthPickerPopup);
+  document.addEventListener('mousedown',e=>{
+    if(!hlMonthPickerPopup || !hlMonthPickerPopup.classList.contains('open')) return;
+    if(hlMonthPickerPopup.contains(e.target)) return;
+    if(hlMonthPickerInput && hlMonthPickerInput.closest('.hl-month-picker')?.contains(e.target)) return;
+    hlMonthClose();
+  });
+  window.addEventListener('resize',hlMonthPosition);
+  window.addEventListener('scroll',hlMonthPosition,true);
+  return hlMonthPickerPopup;
+}
+function hlMonthOpen(input){
+  hlMonthPickerInput=input;
+  const parsed=hlMonthParts(input.value);
+  const base=parsed ? new Date(parsed.y,parsed.m,1) : new Date();
+  hlMonthPickerView=new Date(base.getFullYear(),base.getMonth(),1);
+  hlMonthRender();
+  hlMonthEnsurePopup().classList.add('open');
+  hlMonthPosition();
+}
+function hlMonthClose(){
+  if(hlMonthPickerPopup) hlMonthPickerPopup.classList.remove('open');
+  hlMonthPickerInput=null;
+}
+function hlMonthPosition(){
+  if(!hlMonthPickerPopup || !hlMonthPickerPopup.classList.contains('open') || !hlMonthPickerInput) return;
+  const trigger=hlMonthPickerInput.closest('.hl-month-picker')?.querySelector('.hl-month-trigger');
+  if(!trigger) return;
+  const r=trigger.getBoundingClientRect();
+  const w=Math.min(318,window.innerWidth-20);
+  hlMonthPickerPopup.style.width=w+'px';
+  let left=r.left;
+  if(left+w>window.innerWidth-10) left=window.innerWidth-w-10;
+  if(left<10) left=10;
+  const ph=hlMonthPickerPopup.offsetHeight||300;
+  let top=r.bottom+8;
+  if(top+ph>window.innerHeight-10 && r.top-ph-8>10) top=r.top-ph-8;
+  if(top<10) top=10;
+  hlMonthPickerPopup.style.left=left+'px';
+  hlMonthPickerPopup.style.top=top+'px';
+}
+function hlMonthRender(){
+  const p=hlMonthPickerPopup||hlMonthEnsurePopup();
+  const y=hlMonthPickerView.getFullYear();
+  const selected=hlMonthPickerInput?.value||'';
+  const now=new Date();
+  const today=hlMonthIso(now.getFullYear(),now.getMonth());
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  p.innerHTML=
+    `<div class="hl-month-head">
+      <div class="hl-month-year">${y}</div>
+      <div class="hl-month-nav">
+        <button type="button" aria-label="Previous year" onclick="hlMonthShift(-1)">‹</button>
+        <button type="button" aria-label="Next year" onclick="hlMonthShift(1)">›</button>
+      </div>
+    </div>
+    <div class="hl-month-grid">
+      ${months.map((name,i)=>{
+        const iso=hlMonthIso(y,i);
+        return `<button type="button" class="hl-month-cell ${iso===today?'today ':''}${iso===selected?'selected':''}" onclick="hlMonthPick('${iso}')">${name}</button>`;
+      }).join('')}
+    </div>
+    <div class="hl-month-footer">
+      <button type="button" class="hl-month-today" onclick="hlMonthPick('${today}')">This Month</button>
+      <button type="button" class="hl-month-clear" onclick="hlMonthClear()">Clear</button>
+    </div>`;
+}
+function hlMonthShift(n){
+  hlMonthPickerView.setFullYear(hlMonthPickerView.getFullYear()+n);
+  hlMonthRender();
+  hlMonthPosition();
+}
+function hlMonthPick(iso){
+  if(!hlMonthPickerInput) return;
+  hlMonthPickerInput.value=iso;
+  hlMonthPickerInput.dispatchEvent(new Event('input',{bubbles:true}));
+  hlMonthPickerInput.dispatchEvent(new Event('change',{bubbles:true}));
+  hlMonthSyncTrigger(hlMonthPickerInput);
+  hlMonthClose();
+}
+function hlMonthClear(){
+  if(!hlMonthPickerInput) return;
+  hlMonthPickerInput.value='';
+  hlMonthPickerInput.dispatchEvent(new Event('input',{bubbles:true}));
+  hlMonthPickerInput.dispatchEvent(new Event('change',{bubbles:true}));
+  hlMonthSyncTrigger(hlMonthPickerInput);
+  hlMonthClose();
+}
+function hlMonthSyncTrigger(input){
+  const shell=input?.closest('.hl-month-picker');
+  if(!shell) return;
+  const text=shell.querySelector('.hl-month-text');
+  const trigger=shell.querySelector('.hl-month-trigger');
+  if(!text||!trigger) return;
+  const display=hlMonthDisplay(input.value);
+  text.textContent=display||input.dataset.placeholder||'Select month';
+  text.classList.toggle('placeholder',!display);
+  trigger.classList.toggle('is-empty',!display);
+}
+function hlMonthEnhance(input){
+  if(!input || input.type!=='month' || input.dataset.hlMonthEnhanced==='1') return;
+  input.dataset.hlMonthEnhanced='1';
+  const shell=document.createElement('div');
+  shell.className='hl-month-picker';
+  if(input.classList.contains('filter')) shell.classList.add('hl-filter-month');
+  const placeholder=input.getAttribute('placeholder') || 'Select month';
+  input.dataset.placeholder=placeholder;
+  input.parentNode.insertBefore(shell,input);
+  shell.appendChild(input);
+  const trigger=document.createElement('button');
+  trigger.type='button';
+  trigger.className='hl-month-trigger'+(input.classList.contains('filter')?' is-filter':'');
+  trigger.innerHTML=`<span style="display:flex;align-items:center;gap:9px;min-width:0">${hlMonthSvg()}<span class="hl-month-text"></span></span><span style="font-size:16px;color:var(--ink-soft,#777A9A)"></span>`;
+  trigger.addEventListener('click',()=>hlMonthOpen(input));
+  shell.appendChild(trigger);
+  hlMonthSyncTrigger(input);
+}
+function hlMonthEnhanceAll(root=document){
+  root.querySelectorAll('input[type="month"]:not([data-hl-month-enhanced="1"])').forEach(hlMonthEnhance);
+}
+
+/* Enhance static fields immediately and dynamically-created form fields/filters. */
+function initGlobalDatePicker(){
+  hlDateEnhanceAll(document);
+  hlMonthEnhanceAll(document);
+  if(!window.__hlDateObserver){
+    window.__hlDateObserver=new MutationObserver(mutations=>{
+      let should=false;
+      mutations.forEach(m=>{if(m.addedNodes&&m.addedNodes.length) should=true;});
+      if(should) requestAnimationFrame(()=>{hlDateEnhanceAll(document);hlMonthEnhanceAll(document);});
+    });
+    window.__hlDateObserver.observe(document.body,{childList:true,subtree:true});
+  }
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initGlobalDatePicker); else initGlobalDatePicker();
 
 </script>
 </body>
