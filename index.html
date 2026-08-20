@@ -19,6 +19,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.8/jspdf.plugin.autotable.min.js"></script>
@@ -515,6 +516,42 @@ tbody tr:hover{background:var(--blue-50);}
 .danger-zone input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;margin:10px 0;outline:none;}
 
 
+
+
+.tech-update-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.tech-update-filters .filter{min-width:150px;}
+.tech-checks{display:flex;gap:18px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--field-bg);}
+.tech-check{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;}
+.tech-check input{width:17px;height:17px;accent-color:var(--blue);}
+.tech-update-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;}
+.tech-update-status.developed{background:#eaf2ff;color:#3158a8;}
+.tech-update-status.live{background:#e8f8ef;color:#147a46;}
+.tech-update-status.pending{background:#fff4d8;color:#9a6500;}
+.tech-update-meta{font-size:11px;color:var(--ink-soft);line-height:1.5;}
+.tech-attachment-input{border:1px dashed var(--line);padding:12px;border-radius:12px;background:var(--field-bg);}
+.tech-modal .btn-primary,.tech-modal .btn-ghost{min-height:38px;padding:9px 14px;font-size:13px;border-radius:10px;}
+.tech-modal .btn-ghost{border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+
+/* =========================================================
+   TECH MANAGEMENT — Tech Team only
+========================================================= */
+#page-techmanagement .tech-kpi{min-height:116px;}
+.tech-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.tech-tab{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:12px;padding:9px 14px;font-weight:700;cursor:pointer;}
+.tech-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.tech-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+.tech-two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;}
+.tech-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;}
+.tech-status.new{background:#eef2ff;color:#3b4cca}.tech-status.progress{background:#fff4d8;color:#9a6500}.tech-status.blocked{background:#ffe6e8;color:#b42318}.tech-status.resolved{background:#e8f8ef;color:#147a46}.tech-status.closed{background:#edf0f4;color:#596173}
+.tech-priority.critical{color:#b42318;font-weight:800}.tech-priority.high{color:#c2410c;font-weight:800}.tech-priority.medium{color:#9a6500;font-weight:700}.tech-priority.low{color:#4b5563;font-weight:700}
+.tech-mini{font-size:11px;color:var(--ink-soft);}
+.tech-progress{height:8px;border-radius:99px;background:var(--blue-50);overflow:hidden}.tech-progress span{display:block;height:100%;background:var(--blue);border-radius:99px;}
+.tech-modal-backdrop{position:fixed;inset:0;background:rgba(12,14,36,.48);z-index:100000;display:none;align-items:center;justify-content:center;padding:18px;}
+.tech-modal-backdrop.open{display:flex}.tech-modal{width:min(760px,100%);max-height:90vh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,.25);padding:22px;}
+.tech-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.tech-modal-head h3{margin:0}.tech-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tech-form-grid .full{grid-column:1/-1}.tech-form-grid label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.tech-form-grid input,.tech-form-grid select,.tech-form-grid textarea{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--field-bg);color:var(--ink);padding:10px 11px;font:inherit;outline:none}.tech-form-grid textarea{min-height:100px;resize:vertical}.tech-modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+@media(max-width:1050px){.tech-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.tech-two{grid-template-columns:1fr;}}
+@media(max-width:600px){.tech-grid{grid-template-columns:1fr}.tech-form-grid{grid-template-columns:1fr}.tech-form-grid .full{grid-column:auto}.tech-modal{padding:16px;border-radius:16px}.tech-tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:4px}.tech-tab{white-space:nowrap}}
+
 /* Reports / Intelligence */
 .reports-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .reports-filters .filter{min-width:150px;}
@@ -618,6 +655,96 @@ tbody tr:hover{background:var(--blue-50);}
   .hl-month-popup{width:min(318px,calc(100vw - 20px));max-height:calc(100vh - 24px);overflow:auto}
 }
 
+
+<style>
+.tech-section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.tech-section-title h3{margin:0;}
+@media (max-width:600px){
+  .tech-section-title{flex-wrap:wrap;}
+  .tech-section-title .btn{width:auto;}
+}
+</style>
+</style>
+
+<style>
+.tech-attachments{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tech-attachments a{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border,#e5e7eb);border-radius:8px;text-decoration:none;background:var(--surface,#fff);font-size:12px}
+.tech-attachments a:hover{background:var(--surface-2,#f8fafc)}
+</style>
+
+<style id="tech-date-picker-style">
+.tech-date-wrap{position:relative;width:100%}
+.tech-date-wrap input[type="date"]{
+  width:100%; box-sizing:border-box; appearance:none; -webkit-appearance:none;
+  padding:10px 38px 10px 12px; border:1px solid #d7dce3; border-radius:8px;
+  background:#fff; color:#20252b; font:inherit; cursor:pointer;
+}
+.tech-date-wrap .tech-date-icon{
+  position:absolute; right:11px; top:50%; transform:translateY(-50%);
+  pointer-events:none; font-size:16px; opacity:.7;
+}
+.tech-date-wrap input[type="date"]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;right:0;width:100%;height:100%;cursor:pointer}
+</style>
+<style id="tech-update-month-filter-style">
+#techTabUpdates .tech-update-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#techTabUpdates #techUpdateMonth{min-width:190px}
+@media(max-width:700px){
+  #techTabUpdates .tech-update-filters{display:grid;grid-template-columns:1fr}
+  #techTabUpdates #techUpdateMonth{width:100%;min-width:0}
+  #techTabUpdates #techUpdateMonthClear{width:max-content}
+}
+</style>
+<style id="tech-management-filter-style">
+#page-techmanagement .tech-update-filters,
+#page-techmanagement .toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#page-techmanagement .tech-update-filters > .search-input,
+#page-techmanagement .tech-update-filters > .filter,
+#page-techmanagement .toolbar > .search-input,
+#page-techmanagement .toolbar > .filter{
+  min-height:44px;
+  box-sizing:border-box;
+  border:1px solid var(--line,#D9DCF0);
+  border-radius:12px;
+  background:var(--surface,#fff);
+  color:var(--ink,#14152B);
+  padding:0 13px;
+  font:inherit;
+  font-size:13px;
+}
+#page-techmanagement .tech-update-filters > .search-input{
+  flex:1 1 190px;
+  min-width:170px;
+}
+#page-techmanagement .tech-update-filters > .filter,
+#page-techmanagement .toolbar > .filter{
+  min-width:155px;
+}
+#page-techmanagement .tech-update-filters > button,
+#page-techmanagement .toolbar > button{
+  min-height:44px;
+}
+@media(max-width:700px){
+  #page-techmanagement .tech-update-filters > .search-input,
+  #page-techmanagement .tech-update-filters > .filter,
+  #page-techmanagement .toolbar > .search-input,
+  #page-techmanagement .toolbar > .filter,
+  #page-techmanagement .tech-update-filters > button{
+    width:100%;
+    min-width:0;
+    flex:1 1 100%;
+  }
+}
 </style>
 </head>
 <body>
@@ -824,6 +951,11 @@ tbody tr:hover{background:var(--blue-50);}
       <button class="nav-item" data-page="sitemap" onclick="go('sitemap')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v6M12 13l-6 4M12 13l6 4"/></svg>
         All Modules
+      </button>
+      <div class="nav-section-title" id="navSectionTech" style="display:none;">Technology</div>
+      <button class="nav-item" data-page="techmanagement" id="navTechManagement" style="display:none;" onclick="go('techmanagement')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h8M8 12h5M8 16h3"/><path d="M16 15l2 2 3-4"/></svg>
+        Tech Management
       </button>
       <div class="nav-section-title">Sales Pipeline</div>
       <button class="nav-item" data-page="leads" onclick="go('leads')">
@@ -1433,6 +1565,19 @@ tbody tr:hover{background:var(--blue-50);}
         </div>
       </section>
 
+
+      <!-- TECH MANAGEMENT -->
+      <section class="page" id="page-techmanagement">
+        <div class="page-head"><div><div class="eyebrow">Technology</div><h1>Tech Management</h1><p>Tickets, bugs, queries, projects, modules and team coordination</p></div><div class="head-actions"><button class="btn-primary" onclick="openTechModal('ticket')">+ New Ticket</button></div></div>
+        <div class="tech-tabs"><button class="tech-tab active" data-tech-tab="overview" onclick="setTechTab('overview')">Overview</button><button class="tech-tab" data-tech-tab="tickets" onclick="setTechTab('tickets')">Tickets</button><button class="tech-tab" data-tech-tab="projects" onclick="setTechTab('projects')">Projects</button><button class="tech-tab" data-tech-tab="modules" onclick="setTechTab('modules')">Modules</button><button class="tech-tab" data-tech-tab="team" onclick="setTechTab('team')">Team</button><button class="tech-tab" data-tech-tab="updates" onclick="setTechTab('updates')">System Updates</button></div>
+        <div id="techTabOverview" class="tech-tab-panel"><div class="tech-grid" id="techKpis"></div><div class="tech-two" style="margin-top:16px;"><div class="card"><div class="card-head"><div><h3>Ticket Status</h3><p class="sub">Live technical workload</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techTicketStatusChart"></canvas></div></div><div class="card"><div class="card-head"><div><h3>Priority Load</h3><p class="sub">Open work by priority</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techPriorityChart"></canvas></div></div></div><div class="card" style="margin-top:16px;"><div class="card-head"><div><h3>Due &amp; Overdue</h3><p class="sub">Items that need attention</p></div></div><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Type</th><th>Project</th><th>Assignee</th><th>Due</th><th>Priority</th><th>Status</th></tr></thead><tbody id="tbody-techDue"></tbody></table></div></div></div>
+        <div id="techTabTickets" class="tech-tab-panel" style="display:none;"><div class="card"><div class="toolbar"><input class="search-input" id="techTicketSearch" placeholder="Search ticket, bug, query, project…" oninput="renderTechTickets()"><select class="filter" id="techTicketType" onchange="renderTechTickets()"><option value="">All Types</option><option>Bug</option><option>Query</option><option>Ticket</option><option>Task</option></select><select class="filter" id="techTicketStatus" onchange="renderTechTickets()"><option value="">All Statuses</option><option>New</option><option>In Progress</option><option>Blocked</option><option>Resolved</option><option>Closed</option></select><select class="filter" id="techTicketPriority" onchange="renderTechTickets()"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Project</th><th>Module</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTickets"></tbody></table></div></div></div>
+        <div id="techTabProjects" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Project Management</h3><p class="sub">Manage technical projects and client work</p></div><button class="btn-primary" onclick="openTechModal('project')">+ Project</button></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Client</th><th>Owner</th><th>Status</th><th>Progress</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techProjects"></tbody></table></div></div></div>
+        <div id="techTabModules" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Module Management</h3><p class="sub">Manage application modules and ownership</p></div><button class="btn-primary" onclick="openTechModal('module')">+ Module</button></div><div class="table-wrap"><table><thead><tr><th>Module</th><th>Project</th><th>Owner</th><th>Status</th><th>Open Tickets</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techModules"></tbody></table></div></div></div>
+        <div id="techTabTeam" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Team Management</h3><p class="sub">Add and coordinate technical team members</p></div><button class="btn-primary" onclick="openTechModal('team')">+ Team Member</button></div><div class="table-wrap"><table><thead><tr><th>Team Member</th><th>Email</th><th>Role</th><th>Open Tickets</th><th>Resolved</th><th>Current Load</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTeam"></tbody></table></div></div></div><div id="techTabUpdates" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>System Updates</h3><p class="sub">Track functionalities, requirements, development and live releases.</p></div><button class="btn-primary" onclick="openTechModal('update')">+ System Update</button></div><div class="tech-update-filters" style="margin-bottom:14px;"><input class="search-input" id="techUpdateModuleSearch" placeholder="Search module…" oninput="renderTechUpdates()"><input class="search-input" id="techUpdateFeatureSearch" placeholder="Search feature…" oninput="renderTechUpdates()"><input type="month" class="filter" id="techUpdateMonth" onchange="renderTechUpdates()" placeholder="Select month"><button class="btn-ghost" id="techUpdateMonthClear" type="button" onclick="clearTechUpdateMonth()">Clear Month</button><select class="filter" id="techUpdateModule" onchange="renderTechUpdates()"><option value="">All Modules</option></select><select class="filter" id="techUpdateStatus" onchange="renderTechUpdates()"><option value="">All Status</option><option value="development">Developed</option><option value="ready">Developed · Live Pending</option><option value="live">Live</option></select></div><div class="table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Module</th><th>Functionality</th><th>Requirement</th><th>Development</th><th>Live</th><th>Updated By</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techUpdates"></tbody></table></div></div></div>
+      </section>
+      <div class="tech-modal-backdrop" id="techModalBackdrop" onclick="if(event.target===this)closeTechModal()"><div class="tech-modal"><div class="tech-modal-head"><h3 id="techModalTitle">Tech Management</h3><button class="btn-ghost" onclick="closeTechModal()">✕</button></div><div id="techModalBody"></div></div></div>
+
       <!-- SETTINGS -->
       <section class="page" id="page-settings">
         <div class="page-head"><div><div class="eyebrow">Intelligence</div><h1>Masters &amp; Settings</h1><p>Configuration that powers every dropdown above</p></div></div>
@@ -1707,7 +1852,7 @@ let DB = {
   },
   employees:[], leads:[], calls:[], meetings:[], quotations:[], proposals:[], expenses:[], customers:[],
   profile:{ name:'', email:'', role:'', phone:'', status:'Active' }, users:[],
-  roles:[], appConfig:{ selfSignupEnabled:true, idleTimeoutMinutes:45, defaultNewUserRole:'Sales Executive' }, reportLogs:[]
+  roles:[], techProjects:[], techModules:[], techTickets:[], techTeamMembers:[], appConfig:{ selfSignupEnabled:true, idleTimeoutMinutes:45, defaultNewUserRole:'Sales Executive' }, reportLogs:[]
 };
 
 /* Ready-made Task + Sub-task suggestions per role. Admin checks/unchecks which
@@ -1835,6 +1980,11 @@ function subscribeDataCollections(){
   });
 }
 
+let techDataUnsubscribers=[];
+function isTechUser(){ return !!(DB.profile && ['Tech','Tech Team','Admin','Super Admin'].includes(DB.profile.role)); }
+function detachTechData(){ techDataUnsubscribers.forEach(u=>u()); techDataUnsubscribers=[]; }
+function subscribeTechData(){ detachTechData(); DB.techProjects=[];DB.techModules=[];DB.techTickets=[];DB.techTeamMembers=[];DB.techUpdates=[]; if(!isTechUser()) return; ['techProjects','techModules','techTickets','techTeamMembers','techUpdates'].forEach(col=>{ const unsub=db.collection(col).onSnapshot(snap=>{ DB[col]=snap.docs.map(d=>({id:d.id,...d.data()})); onDataChange(); setSyncStatus('on'); },err=>{ console.error(col,err); setSyncStatus('off'); toast('Tech sync error: '+err.message,'error'); }); techDataUnsubscribers.push(unsub); }); }
+
 function attachListeners(){
   detachListeners();
   detachDataListeners();
@@ -1843,6 +1993,7 @@ function attachListeners(){
   subscribeEmployees();
 
   subscribeDataCollections(); // initial pass — filtered by uid until profile/role loads below
+  subscribeTechData();
   const unsubMasters = db.collection('meta').doc('masters').onSnapshot(doc=>{
     if(doc.exists) DB.masters = {sources:[], industries:[], branches:[], stages:[...STAGES], taskTemplates:{}, ...doc.data()};
     else db.collection('meta').doc('masters').set(DB.masters);
@@ -1902,6 +2053,8 @@ function attachListeners(){
     renderProfilePage();
     applyRoleGating();
     if(isAdmin() !== lastSubscribedAsAdmin){ subscribeDataCollections(); subscribeEmployees(); }
+    subscribeTechData();
+    applyRoleGating();
     renderTable('expenses');
     populateReportEmpFilter();
     renderReportHistory();
@@ -1920,7 +2073,7 @@ function attachListeners(){
   }, err=>console.error(err));
   unsubscribers.push(unsubReportLogs);
 }
-function detachListeners(){ unsubscribers.forEach(u=>u()); unsubscribers=[]; detachDataListeners(); }
+function detachListeners(){ unsubscribers.forEach(u=>u()); unsubscribers=[]; detachDataListeners(); detachTechData(); }
 
 let unsubEmployeesFn = null;
 function subscribeEmployees(){
@@ -2300,7 +2453,7 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 /* =========================================================
    NAV / ROUTING
 ========================================================= */
-const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','notes','reports','settings','profile','myreports','adminpanel'];
+const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','techmanagement','notes','reports','settings','profile','myreports','adminpanel'];
 
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
@@ -2313,7 +2466,8 @@ function allowedPagesForRole(){
   // Calendar is just a view of Meetings data — always available alongside it,
   // even for roles saved before Calendar existed as a separate page.
   const derived = base.includes('meetings') ? ['calendar'] : [];
-  return [...new Set([...base, ...derived, ...forced])];
+  const tech = ['Tech','Tech Team','Admin','Super Admin'].includes(roleName) ? ['techmanagement'] : [];
+  return [...new Set([...base, ...derived, ...forced, ...tech])];
 }
 
 function go(id){
@@ -2338,11 +2492,57 @@ function go(id){
   if(id==='dailysummary'){ renderTable('dailysummaries'); refreshDsWpFilterVisibility(); }
   if(id==='weeklyplanner'){ renderTable('weeklyplanners'); populateWpFilterWeekOptions(); refreshDsWpFilterVisibility(); }
   if(id==='notes') renderTable('notes');
+  if(id==='techmanagement') renderTechManagement();
 }
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
   document.getElementById('overlaySb').classList.toggle('show', open);
 }
+
+/* =========================================================
+   TECH MANAGEMENT
+========================================================= */
+let techActiveTab='overview';
+const TECH_STATUSES=['New','In Progress','Blocked','Resolved','Closed'];
+const TECH_PRIORITIES=['Critical','High','Medium','Low'];
+const TECH_TYPES=['Bug','Query','Ticket','Task'];
+function techEsc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');}
+function techUserList(){return (DB.users||[]).filter(u=>['Tech','Tech Team'].includes(u.role)&&u.status!=='Inactive');}
+function techName(uid){const u=(DB.users||[]).find(x=>x.id===uid);return u?(u.name||u.email||uid):'Unassigned';}
+function techProjectName(id){const p=(DB.techProjects||[]).find(x=>x.id===id);return p?p.name:'—';}
+function techModuleName(id){const m=(DB.techModules||[]).find(x=>x.id===id);return m?m.name:'—';}
+function techStatusClass(s){return ({New:'new','In Progress':'progress',Blocked:'blocked',Resolved:'resolved',Closed:'closed'}[s]||'new');}
+function techOpenTickets(){return (DB.techTickets||[]).filter(t=>!['Resolved','Closed'].includes(t.status));}
+function setTechTab(tab){techActiveTab=tab;document.querySelectorAll('[data-tech-tab]').forEach(b=>b.classList.toggle('active',b.dataset.techTab===tab));['overview','tickets','projects','modules','team','updates'].forEach(x=>{const el=document.getElementById('techTab'+x.charAt(0).toUpperCase()+x.slice(1));if(el)el.style.display=x===tab?'block':'none';});if(tab==='overview')renderTechOverview();if(tab==='tickets')renderTechTickets();if(tab==='projects')renderTechProjects();if(tab==='modules')renderTechModules();if(tab==='team')renderTechTeam();if(tab==='updates')renderTechUpdates();}
+function renderTechManagement(){if(!isTechUser()){go('dashboard');return;}setTechTab(techActiveTab||'overview');}
+function renderTechOverview(){const tickets=DB.techTickets||[],open=techOpenTickets(),projects=DB.techProjects||[],modules=DB.techModules||[];const overdue=open.filter(t=>t.dueDate&&t.dueDate<todayISO()).length;const resolved=tickets.filter(t=>['Resolved','Closed'].includes(t.status)).length;const k=document.getElementById('techKpis');if(!k)return;k.innerHTML=`<div class="card kpi tech-kpi"><div class="val">${tickets.length}</div><div class="lbl">Total Tickets</div></div><div class="card kpi tech-kpi"><div class="val">${open.length}</div><div class="lbl">Open Work</div></div><div class="card kpi tech-kpi"><div class="val">${overdue}</div><div class="lbl">Overdue</div></div><div class="card kpi tech-kpi"><div class="val">${resolved}</div><div class="lbl">Resolved / Closed</div></div><div class="card kpi tech-kpi"><div class="val">${projects.filter(p=>p.status!=='Completed').length}</div><div class="lbl">Active Projects</div></div><div class="card kpi tech-kpi"><div class="val">${modules.length}</div><div class="lbl">Modules</div></div>`;destroyChart('techTicketStatus');destroyChart('techPriority');const statusCounts=TECH_STATUSES.map(s=>tickets.filter(t=>t.status===s).length);charts.techTicketStatus=new Chart(document.getElementById('techTicketStatusChart'),{type:'doughnut',data:{labels:TECH_STATUSES,datasets:[{data:statusCounts}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});const pr=TECH_PRIORITIES.map(s=>open.filter(t=>t.priority===s).length);charts.techPriority=new Chart(document.getElementById('techPriorityChart'),{type:'bar',data:{labels:TECH_PRIORITIES,datasets:[{label:'Open tickets',data:pr}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});const due=document.getElementById('tbody-techDue');const rows=open.filter(t=>t.dueDate).sort((a,b)=>String(a.dueDate).localeCompare(String(b.dueDate))).slice(0,20);due.innerHTML=rows.length?rows.map(t=>`<tr><td><strong>${techEsc(t.title)}</strong><div class="tech-mini">${techEsc(t.key||'')}</div></td><td>${techEsc(t.type)}</td><td>${techEsc(techProjectName(t.projectId))}</td><td>${techEsc(techName(t.assignedToUid))}</td><td>${techEsc(t.dueDate)}${t.dueDate<todayISO()?' <span class="pill red">Overdue</span>':''}</td><td><span class="tech-priority ${String(t.priority||'').toLowerCase()}">${techEsc(t.priority||'—')}</span></td><td><span class="tech-status ${techStatusClass(t.status)}">${techEsc(t.status)}</span></td></tr>`).join(''):'<tr><td colspan="7"><div class="empty-state">No due or overdue technical items.</div></td></tr>';}
+function renderTechTickets(){const search=(document.getElementById('techTicketSearch')?.value||'').toLowerCase(),type=document.getElementById('techTicketType')?.value||'',status=document.getElementById('techTicketStatus')?.value||'',priority=document.getElementById('techTicketPriority')?.value||'';let rows=(DB.techTickets||[]).slice();if(search)rows=rows.filter(t=>[t.title,t.description,t.key,t.type,t.status,t.priority,techProjectName(t.projectId),techModuleName(t.moduleId),techName(t.assignedToUid)].some(v=>String(v||'').toLowerCase().includes(search)));if(type)rows=rows.filter(t=>t.type===type);if(status)rows=rows.filter(t=>t.status===status);if(priority)rows=rows.filter(t=>t.priority===priority);const tb=document.getElementById('tbody-techTickets');if(!tb)return;tb.innerHTML=rows.length?rows.map(t=>`<tr><td><strong>${techEsc(t.title)}</strong><div class="tech-mini">${techEsc(t.key||'')}</div></td><td>${techEsc(t.type)}</td><td>${techEsc(techProjectName(t.projectId))}</td><td>${techEsc(techModuleName(t.moduleId))}</td><td>${techEsc(techName(t.assignedToUid))}</td><td><span class="tech-priority ${String(t.priority||'').toLowerCase()}">${techEsc(t.priority)}</span></td><td><span class="tech-status ${techStatusClass(t.status)}">${techEsc(t.status)}</span></td><td>${techEsc(t.dueDate||'—')}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('ticket','${t.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techTickets','${t.id}')">Delete</button></div></td></tr>`).join(''):'<tr><td colspan="9"><div class="empty-state">No technical tickets found.</div></td></tr>';}
+function renderTechProjects(){const tb=document.getElementById('tbody-techProjects');if(!tb)return;const rows=DB.techProjects||[];tb.innerHTML=rows.length?rows.map(p=>{const pct=Math.max(0,Math.min(100,Number(p.progress)||0));return `<tr><td><strong>${techEsc(p.name)}</strong><div class="tech-mini">${techEsc(p.key||'')}</div></td><td>${techEsc(p.client||'—')}</td><td>${techEsc(techName(p.ownerUid))}</td><td><span class="tech-status ${p.status==='Completed'?'resolved':p.status==='On Hold'?'blocked':'progress'}">${techEsc(p.status)}</span></td><td><div style="min-width:120px"><div class="tech-mini">${pct}%</div><div class="tech-progress"><span style="width:${pct}%"></span></div></div></td><td>${techEsc(p.dueDate||'—')}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('project','${p.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techProjects','${p.id}')">Delete</button></div></td></tr>`}).join(''):'<tr><td colspan="7"><div class="empty-state">No projects yet.</div></td></tr>';}
+function renderTechModules(){const tb=document.getElementById('tbody-techModules');if(!tb)return;const rows=DB.techModules||[];tb.innerHTML=rows.length?rows.map(m=>{const count=(DB.techTickets||[]).filter(t=>t.moduleId===m.id&&!['Resolved','Closed'].includes(t.status)).length;return `<tr><td><strong>${techEsc(m.name)}</strong><div class="tech-mini">${techEsc(m.key||'')}</div></td><td>${techEsc(techProjectName(m.projectId))}</td><td>${techEsc(techName(m.ownerUid))}</td><td>${techEsc(m.status||'Active')}</td><td>${count}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('module','${m.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techModules','${m.id}')">Delete</button></div></td></tr>`}).join(''):'<tr><td colspan="6"><div class="empty-state">No modules yet.</div></td></tr>';}
+function renderTechTeam(){const tb=document.getElementById('tbody-techTeam');if(!tb)return;const users=techUserList(),manual=(DB.techTeamMembers||[]).filter(x=>x.status!=='Inactive'),tickets=DB.techTickets||[];const combined=[...users.map(u=>({...u,_manual:false})),...manual.map(m=>({...m,id:m.id,_manual:true,role:m.role||'Tech Team'}))];tb.innerHTML=combined.length?combined.map(u=>{const mine=tickets.filter(t=>t.assignedToUid===u.id),open=mine.filter(t=>!['Resolved','Closed'].includes(t.status)).length,resolved=mine.filter(t=>['Resolved','Closed'].includes(t.status)).length,load=open>=8?'High':open>=4?'Medium':'Low';return `<tr><td><strong>${techEsc(u.name||u.email)}</strong>${u._manual?'<div class="tech-mini">Manual team member</div>':''}</td><td>${techEsc(u.email||'')}</td><td>${techEsc(u.role||'Tech')}</td><td>${open}</td><td>${resolved}</td><td><span class="pill ${load==='High'?'red':load==='Medium'?'amber':'green'}">${load}</span></td><td><div class="row-actions" style="justify-content:flex-end">${u._manual?`<button class="btn-sm" onclick="openTechModal('team','${u.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techTeamMembers','${u.id}')">Delete</button>`:'<span class="tech-mini">CRM User</span>'}</div></td></tr>`}).join(''):'<tr><td colspan="7"><div class="empty-state">No Tech Team members found.</div></td></tr>';}
+
+function openTechModal(kind,id){if(!isTechUser())return toast('Tech Management access required','error');const rec=id?({ticket:(DB.techTickets||[]).find(x=>x.id===id),project:(DB.techProjects||[]).find(x=>x.id===id),module:(DB.techModules||[]).find(x=>x.id===id),team:(DB.techTeamMembers||[]).find(x=>x.id===id),update:(DB.techUpdates||[]).find(x=>x.id===id)}[kind]):null;const title=kind==='ticket'?(id?'Edit Ticket':'New Ticket'):kind==='project'?(id?'Edit Project':'New Project'):kind==='module'?(id?'Edit Module':'New Module'):kind==='update'?(id?'Edit System Update':'Add System Update'):(id?'Edit Team Member':'Add Team Member');document.getElementById('techModalTitle').textContent=title;const users=techUserList(),projects=DB.techProjects||[],customers=DB.customers||[];let html='';
+if(kind==='ticket')html=`<form onsubmit="saveTechTicket(event,'${id||''}')"><div class="tech-form-grid"><div><label>Type</label><select name="type" required>${TECH_TYPES.map(x=>`<option ${x===(rec?.type||'Ticket')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Priority</label><select name="priority" required>${TECH_PRIORITIES.map(x=>`<option ${x===(rec?.priority||'Medium')?'selected':''}>${x}</option>`).join('')}</select></div><div class="full"><label>Title</label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="Bug / query / task title"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Module</label><select name="moduleId">${techSelectOptions(DB.techModules||[],rec?.moduleId||'','No Module')}</select></div><div><label>Assignee</label><select name="assignedToUid">${techSelectOptions(users,rec?.assignedToUid||'','Unassigned')}</select></div><div><label>Status</label><select name="status">${TECH_STATUSES.map(x=>`<option ${x===(rec?.status||'New')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Due Date</label><input type="date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div class="full"><label>Client / Requesting Company</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div class="full"><label>Description / Query</label><textarea name="description" placeholder="Details, steps, expected result, requirement…">${techEsc(rec?.description||'')}</textarea></div><div class="full"><label>Acceptance / Resolution Notes</label><textarea name="resolution" placeholder="Resolution, testing notes, deployment notes…">${techEsc(rec?.resolution||'')}</textarea></div><div class="full"><label>Attachments</label><input type="file" name="attachments" id="techTicketAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini">Attach multiple screenshots, images, PDFs or documents. Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Ticket</button></div></form>`;
+if(kind==='project')html=`<form onsubmit="saveTechProject(event,'${id||''}')"><div class="tech-form-grid"><div><label>Project Key</label><input name="key" value="${techEsc(rec?.key||'')}" placeholder="CRM-001"></div><div><label>Status</label><select name="status"><option ${rec?.status==='Planning'||!rec?'selected':''}>Planning</option><option ${rec?.status==='Active'?'selected':''}>Active</option><option ${rec?.status==='On Hold'?'selected':''}>On Hold</option><option ${rec?.status==='Completed'?'selected':''}>Completed</option></select></div><div class="full"><label>Project Name</label><input name="name" required value="${techEsc(rec?.name||'')}"></div><div class="full"><label>Client / Stakeholder</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div><label>Owner</label><select name="ownerUid">${techSelectOptions(users,rec?.ownerUid||auth.currentUser.uid,'Select Owner')}</select></div><div><label>Start Date</label><input type="date" name="startDate" value="${techEsc(rec?.startDate||'')}"></div><div><label>Due Date</label><input type="date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div><label>Progress %</label><input type="number" name="progress" min="0" max="100" value="${Number(rec?.progress)||0}"></div><div class="full"><label>Description</label><textarea name="description">${techEsc(rec?.description||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Project</button></div></form>`;
+if(kind==='module')html=`<form onsubmit="saveTechModule(event,'${id||''}')"><div class="tech-form-grid"><div><label>Module Key</label><input name="key" value="${techEsc(rec?.key||'')}" placeholder="LEADS"></div><div><label>Status</label><select name="status"><option ${rec?.status==='Active'||!rec?'selected':''}>Active</option><option ${rec?.status==='Maintenance'?'selected':''}>Maintenance</option><option ${rec?.status==='Planned'?'selected':''}>Planned</option><option ${rec?.status==='Deprecated'?'selected':''}>Deprecated</option></select></div><div class="full"><label>Module Name</label><input name="name" required value="${techEsc(rec?.name||'')}"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Owner</label><select name="ownerUid">${techSelectOptions(users,rec?.ownerUid||auth.currentUser.uid,'Select Owner')}</select></div><div class="full"><label>Description</label><textarea name="description">${techEsc(rec?.description||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Module</button></div></form>`;
+if(kind==='update')html=`<form onsubmit="saveTechUpdate(event,'${id||''}')"><div class="tech-form-grid"><div><label>Date &amp; Time <span class="req">*</span></label><input type="datetime-local" name="updateDateTime" required value="${techEsc(rec?.updateDateTime||'')}"></div><div><label>Module / Area</label><input name="module" required value="${techEsc(rec?.module||'')}" placeholder="e.g. Leads, Calendar, Tech Management"></div><div class="full"><label>Functionality / Feature <span class="req">*</span></label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="What functionality was added?"></div><div class="full"><label>Requirement / Business Need</label><textarea name="requirement" placeholder="What was required and expected behavior…">${techEsc(rec?.requirement||'')}</textarea></div><div class="full"><label>Details / What Was Developed</label><textarea name="details" placeholder="Describe functionality, fields, workflow, validations, integrations…">${techEsc(rec?.details||'')}</textarea></div><div><label>Version / Release</label><input name="version" value="${techEsc(rec?.version||'')}" placeholder="e.g. v1.2.0"></div><div><label>Live Date &amp; Time</label><input type="datetime-local" name="liveDateTime" value="${techEsc(rec?.liveDateTime||'')}"></div><div class="full"><div class="tech-checks"><label class="tech-check"><input type="checkbox" name="developed" ${rec?.developed?'checked':''}> ✓ Developed / Completed</label><label class="tech-check"><input type="checkbox" name="live" ${rec?.live?'checked':''}> 🚀 Live in Production</label></div><div class="tech-mini" style="margin-top:6px;">Tick Developed after completion/testing. Tick Live only after production release.</div></div><div class="full"><label>Attachments</label><div class="tech-attachment-input"><input type="file" name="attachments" id="techUpdateAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini" style="margin-top:6px;">Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">📎 ${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save System Update</button></div></form>`;
+if(kind==='team')html=`<form onsubmit="saveTechTeamMember(event,'${id||''}')"><div class="tech-form-grid"><div class="full"><label>Name</label><input name="name" required value="${techEsc(rec?.name||'')}" placeholder="Team member name"></div><div><label>Email</label><input type="email" name="email" value="${techEsc(rec?.email||'')}" placeholder="name@company.com"></div><div><label>Role</label><select name="role"><option ${rec?.role==='Tech Lead'?'selected':''}>Tech Lead</option><option ${rec?.role==='Developer'?'selected':''}>Developer</option><option ${rec?.role==='QA / Tester'?'selected':''}>QA / Tester</option><option ${rec?.role==='UI / UX'?'selected':''}>UI / UX</option><option ${rec?.role==='DevOps'?'selected':''}>DevOps</option><option ${rec?.role==='Support'?'selected':''}>Support</option><option ${rec?.role==='Tech Team'||!rec?'selected':''}>Tech Team</option></select></div><div><label>Phone</label><input name="phone" value="${techEsc(rec?.phone||'')}"></div><div><label>Status</label><select name="status"><option ${rec?.status!=='Inactive'?'selected':''}>Active</option><option ${rec?.status==='Inactive'?'selected':''}>Inactive</option></select></div><div class="full"><label>Notes</label><textarea name="notes" placeholder="Skills, responsibility, availability…">${techEsc(rec?.notes||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Team Member</button></div></form>`;
+document.getElementById('techModalBody').innerHTML=html;document.getElementById('techModalBackdrop').classList.add('open');}
+
+function closeTechModal(){document.getElementById('techModalBackdrop')?.classList.remove('open');}
+async function uploadTechAttachments(files,ticketId){const list=Array.from(files||[]);if(!list.length)return[];if(list.length>10)throw new Error('Maximum 10 attachments allowed');const out=[];for(const file of list){if(file.size>8*1024*1024)throw new Error(file.name+' is larger than 8 MB');const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path='techAttachments/'+auth.currentUser.uid+'/'+ticketId+'/'+Date.now()+'_'+safe;const ref=firebase.storage().ref().child(path);const snap=await ref.put(file);const url=await snap.ref.getDownloadURL();out.push({name:file.name,url,path,type:file.type||'application/octet-stream',size:file.size,uploadedByUid:auth.currentUser.uid,uploadedAt:new Date().toISOString()});}return out;}
+async function saveTechTicket(e,id){e.preventDefault();const f=new FormData(e.target);try{const data={type:f.get('type'),priority:f.get('priority'),title:f.get('title').trim(),projectId:f.get('projectId')||'',moduleId:f.get('moduleId')||'',assignedToUid:f.get('assignedToUid')||'',status:f.get('status'),dueDate:f.get('dueDate')||'',clientId:f.get('clientId')||'',client:(f.get('clientManual')||'').trim(),description:f.get('description')||'',resolution:f.get('resolution')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};const files=document.getElementById('techTicketAttachments')?.files;if(id){const newAttachments=await uploadTechAttachments(files,id);if(newAttachments.length)data.attachments=firebase.firestore.FieldValue.arrayUnion(...newAttachments);await saveTechRecord('techTickets',id,data,'Ticket');}else{const ref=db.collection('techTickets').doc();data.createdByUid=auth.currentUser.uid;data.createdBy=DB.profile.name||auth.currentUser.email||'';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();data.attachments=[];await ref.set(data);const newAttachments=await uploadTechAttachments(files,ref.id);if(newAttachments.length)await ref.update({attachments:newAttachments});closeTechModal();toast('Ticket saved','success');}}catch(err){console.error(err);toast('Could not save Ticket: '+err.message,'error');}}
+async function saveTechProject(e,id){e.preventDefault();const f=new FormData(e.target);const selected=(DB.customers||[]).find(c=>c.id===f.get('clientId'));const client=(f.get('clientManual')||'').trim()||selected?.company||selected?.name||'';const data={key:f.get('key').trim(),name:f.get('name').trim(),clientId:f.get('clientId')||'',client,ownerUid:f.get('ownerUid')||auth.currentUser.uid,status:f.get('status'),startDate:f.get('startDate')||'',dueDate:f.get('dueDate')||'',progress:Number(f.get('progress')||0),description:f.get('description')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await saveTechRecord('techProjects',id,data,'Project');}
+async function saveTechModule(e,id){e.preventDefault();const f=new FormData(e.target);const data={key:f.get('key').trim(),name:f.get('name').trim(),projectId:f.get('projectId')||'',ownerUid:f.get('ownerUid')||auth.currentUser.uid,status:f.get('status'),description:f.get('description')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await saveTechRecord('techModules',id,data,'Module');}
+async function uploadTechUpdateAttachments(files,updateId){const list=Array.from(files||[]);if(!list.length)return[];if(list.length>10)throw new Error('Maximum 10 attachments allowed');const out=[];for(const file of list){if(file.size>8*1024*1024)throw new Error(file.name+' is larger than 8 MB');const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path='techAttachments/'+auth.currentUser.uid+'/updates/'+updateId+'/'+Date.now()+'_'+safe;const ref=firebase.storage().ref().child(path);const snap=await ref.put(file);const url=await snap.ref.getDownloadURL();out.push({name:file.name,url,path,type:file.type||'application/octet-stream',size:file.size,uploadedByUid:auth.currentUser.uid,uploadedAt:new Date().toISOString()});}return out;}
+async function saveTechUpdate(e,id){e.preventDefault();const f=new FormData(e.target);try{const data={updateDateTime:f.get('updateDateTime')||'',module:(f.get('module')||'').trim(),title:(f.get('title')||'').trim(),requirement:f.get('requirement')||'',details:f.get('details')||'',version:(f.get('version')||'').trim(),liveDateTime:f.get('liveDateTime')||'',developed:f.get('developed')==='on',live:f.get('live')==='on',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};if(data.live&&!data.developed)throw new Error('Mark Developed / Completed before marking Live.');if(data.live&&!data.liveDateTime)data.liveDateTime=new Date().toISOString().slice(0,16);if(id){const files=await uploadTechUpdateAttachments(document.getElementById('techUpdateAttachments')?.files,id);if(files.length)data.attachments=firebase.firestore.FieldValue.arrayUnion(...files);await saveTechRecord('techUpdates',id,data,'System Update');}else{const ref=db.collection('techUpdates').doc();data.createdByUid=auth.currentUser.uid;data.createdBy=DB.profile.name||auth.currentUser.email||'';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();data.attachments=[];await ref.set(data);const files=await uploadTechUpdateAttachments(document.getElementById('techUpdateAttachments')?.files,ref.id);if(files.length)await ref.update({attachments:files});closeTechModal();toast('System Update saved','success');}}catch(err){console.error(err);toast('Could not save System Update: '+err.message,'error');}}
+function formatTechDateTime(v){if(!v)return '—';const d=new Date(v);return isNaN(d)?v:d.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function clearTechUpdateMonth(){const el=document.getElementById('techUpdateMonth');if(el){el.value='';if(typeof hlMonthSyncTrigger==='function')hlMonthSyncTrigger(el);}renderTechUpdates();}
+function renderTechUpdates(){const body=document.getElementById('tbody-techUpdates');if(!body)return;const list=DB.techUpdates||[];const moduleSearch=(document.getElementById('techUpdateModuleSearch')?.value||'').toLowerCase();const featureSearch=(document.getElementById('techUpdateFeatureSearch')?.value||'').toLowerCase();const month=document.getElementById('techUpdateMonth');const mod=document.getElementById('techUpdateModule');const status=document.getElementById('techUpdateStatus');const prevM=month?.value||'';if(month)month.value=prevM;const mods=[...new Set(list.map(x=>x.module).filter(Boolean))].sort();const prevMod=mod?.value||'';if(mod)mod.innerHTML='<option value="">All Modules</option>'+mods.map(m=>`<option value="${techEsc(m)}" ${m===prevMod?'selected':''}>${techEsc(m)}</option>`).join('');let rows=list.filter(x=>{const hay=[x.module,x.title,x.requirement,x.details,x.version].join(' ').toLowerCase();if(moduleSearch&&!String(x.module||'').toLowerCase().includes(moduleSearch))return false;if(featureSearch&&!String(x.title||'').toLowerCase().includes(featureSearch))return false;if(month?.value&&(x.updateDateTime||'').slice(0,7)!==month.value)return false;if(mod?.value&&x.module!==mod.value)return false;if(status?.value==='development'&&!x.developed)return false;if(status?.value==='ready'&&!(x.developed&&!x.live))return false;if(status?.value==='live'&&!x.live)return false;return true;}).sort((a,b)=>String(b.updateDateTime||'').localeCompare(String(a.updateDateTime||'')));body.innerHTML=rows.length?rows.map(x=>{const dev=x.developed?'✓ Developed':'Pending';const live=x.live?'✓ Live':'Not Live';return `<tr><td><div>${techEsc(formatTechDateTime(x.updateDateTime))}</div><div class="tech-update-meta">${techEsc(x.version||'')}</div></td><td>${techEsc(x.module||'—')}</td><td><strong>${techEsc(x.title||'—')}</strong><div class="tech-update-meta">${techEsc((x.details||'').slice(0,110))}${(x.details||'').length>110?'…':''}</div></td><td><div class="tech-update-meta">${techEsc((x.requirement||'—').slice(0,120))}${(x.requirement||'').length>120?'…':''}</div></td><td><span class="tech-update-status ${x.developed?'developed':'pending'}">${dev}</span></td><td><span class="tech-update-status ${x.live?'live':'pending'}">${live}</span></td><td>${techEsc(x.createdBy||'—')}</td><td style="text-align:right;white-space:nowrap"><button class="btn-sm" onclick="openTechModal('update','${x.id}')">Edit</button> <button class="btn-sm danger" onclick="deleteTechRecord('techUpdates','${x.id}')">Delete</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="empty">No system updates found.</td></tr>';}
+async function saveTechTeamMember(e,id){e.preventDefault();const f=new FormData(e.target);const data={name:f.get('name').trim(),email:(f.get('email')||'').trim(),role:f.get('role'),phone:(f.get('phone')||'').trim(),status:f.get('status'),notes:f.get('notes')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await saveTechRecord('techTeamMembers',id,data,'Team Member');}
+
+async function saveTechRecord(col,id,data,label){try{if(!auth.currentUser||!isTechUser())throw new Error('Tech Team access required');if(id)await db.collection(col).doc(id).set(data,{merge:true});else{data.createdByUid=auth.currentUser.uid;data.createdBy=DB.profile.name||auth.currentUser.email||'';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(col).add(data);}closeTechModal();toast(label+' saved','success');}catch(err){console.error(err);toast('Could not save '+label+': '+err.message,'error');}}
+async function deleteTechRecord(col,id){if(!isTechUser())return;const rec=(DB[col]||[]).find(x=>x.id===id);if(!rec)return;if(!confirm('Delete this technical record?'))return;try{await db.collection(col).doc(id).delete();toast('Deleted','success');}catch(err){console.error(err);toast('Delete failed: '+err.message,'error');}}
 
 /* =========================================================
    TOAST
@@ -5803,6 +6003,11 @@ function applyRoleGating(){
   const navAdminBtn = document.getElementById('navAdminPanel');
   if(navAdminSection) navAdminSection.style.display = isAdmin ? 'block' : 'none';
   if(navAdminBtn) navAdminBtn.style.display = isAdmin ? 'flex' : 'none';
+  const isTech = !!(DB.profile && ['Tech','Tech Team','Admin','Super Admin'].includes(DB.profile.role));
+  const navTechSection = document.getElementById('navSectionTech');
+  const navTechBtn = document.getElementById('navTechManagement');
+  if(navTechSection) navTechSection.style.display = isTech ? 'block' : 'none';
+  if(navTechBtn) navTechBtn.style.display = isTech ? 'flex' : 'none';
 
   const allowed = allowedPagesForRole();
   document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
@@ -6870,5 +7075,7 @@ function initGlobalDatePicker(){
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initGlobalDatePicker); else initGlobalDatePicker();
 
 </script>
+
+
 </body>
 </html>
