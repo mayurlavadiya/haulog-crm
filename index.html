@@ -774,15 +774,23 @@ tbody tr:hover{background:var(--blue-50);}
       <section class="page" id="page-leads">
         <div class="page-head">
           <div><div class="eyebrow">Sales Pipeline</div><h1>Leads &amp; Prospects</h1><p id="leadsCount">0 leads</p></div>
-          <div class="head-actions"><button class="btn-primary" onclick="openForm('leads')">+ New Lead</button></div>
+          <div class="head-actions">
+            <button class="btn-ghost" onclick="downloadLeadsImportTemplate()">Sample Excel</button>
+            <button class="btn-ghost" onclick="document.getElementById('leadsExcelImportInput').click()">Import Excel</button>
+            <input type="file" id="leadsExcelImportInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importLeadsFromExcel(this.files[0])">
+            <button class="btn-ghost" onclick="exportLeadsExcel()">Export Excel</button>
+            <button class="btn-ghost" onclick="exportLeadsPdf()">Export PDF</button>
+            <button class="btn-primary" onclick="openForm('leads')">+ New Lead</button>
+          </div>
         </div>
         <div class="kanban" id="leadsKanban"></div>
         <div class="card">
           <div class="toolbar">
-            <input class="search-input" placeholder="Search leads by company, contact, email…" oninput="renderTable('leads', this.value)">
-            <select class="filter" id="leadsStageFilter" onchange="renderTable('leads', document.querySelector('#page-leads .search-input').value)">
+            <input class="search-input" id="leadsSearchInput" placeholder="Search leads by company, contact, email…" oninput="renderTable('leads', this.value)">
+            <select class="filter" id="leadsStageFilter" onchange="renderTable('leads', document.getElementById('leadsSearchInput').value)">
               <option value="">All Stages</option>
             </select>
+            <button class="btn-ghost" onclick="clearLeadFilters()">Clear</button>
           </div>
           <div class="table-wrap"><table><thead></thead><tbody id="tbody-leads"></tbody></table></div>
         </div>
@@ -3104,6 +3112,300 @@ function renderKanban(){
   }).join('');
   const sel = document.getElementById('leadsStageFilter');
   sel.innerHTML = '<option value="">All Stages</option>' + allStages.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+/* =========================================================
+   LEADS — IMPORT / EXPORT
+   Module 1: Excel import + filtered Excel/PDF export.
+   Existing Leads rendering, forms, ownership and Firebase logic
+   remain unchanged.
+========================================================= */
+function getFilteredLeadsForExport(){
+  let rows = myRecords('leads').slice();
+  const searchEl = document.getElementById('leadsSearchInput');
+  const stageEl = document.getElementById('leadsStageFilter');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const stage = stageEl ? stageEl.value : '';
+
+  if(search){
+    rows = rows.filter(r => [
+      r.company,r.contact,r.email,r.phone,r.industry,r.source,r.stage,
+      r.owner,r.expectedClosing,r.value,r.notes
+    ].map(v=>String(v ?? '').toLowerCase()).some(v=>v.includes(search)));
+  }
+  if(stage) rows = rows.filter(r=>r.stage===stage);
+  return rows;
+}
+
+function getLeadExportRows(){
+  return getFilteredLeadsForExport().map(l=>({
+    'Company': l.company || '',
+    'Contact Person': l.contact || '',
+    'Email': l.email || '',
+    'Phone': l.phone || '',
+    'Industry': l.industry || '',
+    'Lead Source': l.source || '',
+    'Stage': l.stage || '',
+    'Owner': l.owner || '',
+    'Expected Closing': l.expectedClosing || '',
+    'Deal Value': Number(l.value || 0),
+    'Notes': l.notes || ''
+  }));
+}
+
+function downloadLeadsImportTemplate(){
+  const stages = (DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages.slice() : STAGES.slice();
+  const industries = (DB.masters.industries && DB.masters.industries.length) ? DB.masters.industries.slice() : [];
+  const sources = (DB.masters.sources && DB.masters.sources.length) ? DB.masters.sources.slice() : [];
+  const owners = (DB.employees || []).map(e=>e.name).filter(Boolean);
+
+  const templateRows = [{
+    'Company':'ABC Logistics Pvt Ltd',
+    'Contact Person':'Raj Patel',
+    'Email':'raj@example.com',
+    'Phone':'9876543210',
+    'Industry':industries[0] || 'Select from Categories sheet',
+    'Lead Source':sources[0] || 'Select from Categories sheet',
+    'Stage':stages[0] || 'Select from Categories sheet',
+    'Owner':owners[0] || (DB.profile && DB.profile.name) || '',
+    'Expected Closing':todayISO(),
+    'Deal Value':250000,
+    'Notes':'Sample row — replace this data with your Leads.'
+  }];
+
+  const instructions = [
+    {'Item':'Purpose','Details':'Use this workbook to import new Leads into the existing Haulog CRM Leads collection.'},
+    {'Item':'Required fields','Details':'Company, Contact Person, Email, Phone, Industry, Lead Source and Stage.'},
+    {'Item':'Phone','Details':'Use exactly 10 digits.'},
+    {'Item':'Industry / Lead Source / Stage','Details':'Use values from the Categories sheet so they match the existing CRM masters.'},
+    {'Item':'Owner','Details':'Use an existing employee name when available. If blank, the signed-in user will be used.'},
+    {'Item':'Expected Closing','Details':'Use YYYY-MM-DD, for example 2026-09-30.'},
+    {'Item':'Deal Value','Details':'Enter a number without commas or currency symbols.'},
+    {'Item':'Import','Details':'Delete or replace the sample row, add your Leads, save as .xlsx and use Import Excel.'}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const wsInstructions = XLSX.utils.json_to_sheet(instructions);
+  const wsLeads = XLSX.utils.json_to_sheet(templateRows);
+  const wsCategories = XLSX.utils.aoa_to_sheet([
+    ['Industry','Lead Source','Stage','Owner'],
+    ...Array.from({length:Math.max(industries.length,sources.length,stages.length,owners.length)},(_,i)=>[
+      industries[i] || '', sources[i] || '', stages[i] || '', owners[i] || ''
+    ])
+  ]);
+
+  wsInstructions['!cols']=[{wch:24},{wch:95}];
+  wsLeads['!cols']=[
+    {wch:28},{wch:24},{wch:32},{wch:14},{wch:22},{wch:22},
+    {wch:20},{wch:24},{wch:18},{wch:16},{wch:48}
+  ];
+  wsCategories['!cols']=[{wch:28},{wch:25},{wch:22},{wch:28}];
+
+  XLSX.utils.book_append_sheet(wb,wsInstructions,'Instructions');
+  XLSX.utils.book_append_sheet(wb,wsLeads,'Leads Import');
+  XLSX.utils.book_append_sheet(wb,wsCategories,'Categories');
+
+  XLSX.writeFile(wb,`Haulog_Leads_Import_Template_${todayISO()}.xlsx`);
+  toast('Leads import template downloaded','success');
+}
+
+function exportLeadsExcel(){
+  const rows = getLeadExportRows();
+  if(!rows.length){ toast('No Leads found for the current filters','error'); return; }
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:28},{wch:22},{wch:30},{wch:14},{wch:20},{wch:18},
+    {wch:20},{wch:24},{wch:18},{wch:16},{wch:45}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+
+  const stage = document.getElementById('leadsStageFilter')?.value || 'All';
+  const safeStage = stage.replace(/[^a-z0-9-_]/gi,'_');
+  XLSX.writeFile(wb, `Haulog_Leads_${safeStage}_${todayISO()}.xlsx`);
+  toast(`${rows.length} Lead(s) exported to Excel`,'success');
+}
+
+function exportLeadsPdf(){
+  const rows = getFilteredLeadsForExport();
+  if(!rows.length){ toast('No Leads found for the current filters','error'); return; }
+
+  const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  if(!jsPDFCtor){ toast('PDF library is not available','error'); return; }
+
+  const doc = new jsPDFCtor({orientation:'landscape',unit:'mm',format:'a4'});
+  const search = document.getElementById('leadsSearchInput')?.value.trim() || '';
+  const stage = document.getElementById('leadsStageFilter')?.value || 'All Stages';
+
+  doc.setFontSize(16);
+  doc.setFont(undefined,'bold');
+  doc.text('Haulog CRM - Leads Report',14,15);
+  doc.setFont(undefined,'normal');
+  doc.setFontSize(9);
+  let filterText = `Stage: ${stage}`;
+  if(search) filterText += `   |   Search: ${search}`;
+  doc.text(filterText,14,22);
+  doc.text(`Generated: ${todayISO()}   |   Records: ${rows.length}`,14,28);
+
+  const body = rows.map(l=>[
+    l.company || '',l.contact || '',l.email || '',l.phone || '',
+    l.industry || '',l.source || '',l.stage || '',l.owner || '',
+    l.expectedClosing || '',Number(l.value || 0).toLocaleString('en-IN')
+  ]);
+
+  if(typeof doc.autoTable !== 'function'){
+    toast('PDF table library is not available','error');
+    return;
+  }
+
+  doc.autoTable({
+    startY:34,
+    head:[['Company','Contact','Email','Phone','Industry','Source','Stage','Owner','Expected','Value']],
+    body,
+    styles:{fontSize:7,cellPadding:2,overflow:'linebreak'},
+    headStyles:{fillColor:[0,0,254],textColor:255,fontStyle:'bold'},
+    columnStyles:{
+      0:{cellWidth:34},1:{cellWidth:27},2:{cellWidth:42},3:{cellWidth:20},
+      4:{cellWidth:25},5:{cellWidth:23},6:{cellWidth:27},7:{cellWidth:30},
+      8:{cellWidth:22},9:{cellWidth:25}
+    },
+    didDrawPage:function(data){
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setFontSize(8);
+      doc.setFont(undefined,'normal');
+      doc.text(`Haulog CRM · Leads · Page ${data.pageNumber}`,14,pageHeight-8);
+    }
+  });
+
+  const safeStage = stage.replace(/[^a-z0-9-_]/gi,'_');
+  doc.save(`Haulog_Leads_${safeStage}_${todayISO()}.pdf`);
+  toast(`${rows.length} Lead(s) exported to PDF`,'success');
+}
+
+function clearLeadFilters(){
+  const searchEl = document.getElementById('leadsSearchInput');
+  const stageEl = document.getElementById('leadsStageFilter');
+  if(searchEl) searchEl.value='';
+  if(stageEl) stageEl.value='';
+  renderTable('leads');
+}
+
+function normalizeLeadImportHeader(value){
+  return String(value || '').trim().toLowerCase().replace(/[_-]+/g,' ').replace(/\s+/g,' ');
+}
+
+function getLeadImportValue(row, aliases){
+  for(const key of Object.keys(row)){
+    if(aliases.includes(normalizeLeadImportHeader(key))) return row[key];
+  }
+  return '';
+}
+
+function normalizeLeadImportDate(value){
+  if(!value && value!==0) return '';
+  if(value instanceof Date){
+    return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;
+  }
+  const raw=String(value).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  let m=raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m=raw.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  return raw;
+}
+
+function normalizeLeadImportStage(value){
+  const raw=String(value || '').trim();
+  if(!raw) return '';
+  const stages=(DB.masters.stages && DB.masters.stages.length) ? DB.masters.stages : STAGES;
+  return stages.find(s=>String(s).toLowerCase()===raw.toLowerCase()) || raw;
+}
+
+function normalizeLeadImportNumber(value){
+  if(value===null || value===undefined || value==='') return 0;
+  if(typeof value==='number') return value;
+  const num=Number(String(value).replace(/₹/g,'').replace(/Rs\.?/gi,'').replace(/,/g,'').trim());
+  return Number.isFinite(num) ? num : 0;
+}
+
+function mapExcelRowToLead(row){
+  const company=String(getLeadImportValue(row,['company','company name','lead company','organization','organisation']) || '').trim();
+  const contact=String(getLeadImportValue(row,['contact','contact person','contact name','person']) || '').trim();
+  const email=String(getLeadImportValue(row,['email','email address']) || '').trim();
+  const phone=String(getLeadImportValue(row,['phone','phone number','mobile','mobile number','contact number']) || '').replace(/\D/g,'').trim();
+  const industry=String(getLeadImportValue(row,['industry','sector']) || '').trim();
+  const source=String(getLeadImportValue(row,['source','lead source','leadsource']) || '').trim();
+  const stage=normalizeLeadImportStage(getLeadImportValue(row,['stage','lead stage','status']));
+  const owner=String(getLeadImportValue(row,['owner','lead owner','employee','sales owner']) || '').trim();
+  const expectedClosing=normalizeLeadImportDate(getLeadImportValue(row,['expected closing','expected closing date','closing date','expected close','expected']));
+  const value=normalizeLeadImportNumber(getLeadImportValue(row,['value','deal value','deal value ₹','amount','deal amount']));
+  const notes=String(getLeadImportValue(row,['notes','note','remarks','remark','comments','comment']) || '').trim();
+
+  if(!company || !contact || !email || !phone || !industry || !source || !stage) return null;
+  if(!/^[0-9]{10}$/.test(phone)) return null;
+
+  return {
+    company,contact,email,phone,industry,source,stage,
+    owner:owner || ((DB.profile && DB.profile.name) || ''),
+    expectedClosing,value,notes
+  };
+}
+
+async function importLeadsFromExcel(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      if(!wb.SheetNames.length){ toast('No worksheet found in the Excel file','error'); return; }
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
+      if(!rows.length){ toast('No rows found in the Excel file','error'); return; }
+
+      const leads=[]; let skipped=0;
+      rows.forEach(row=>{
+        const lead=mapExcelRowToLead(row);
+        if(!lead){skipped++; return;}
+        leads.push(lead);
+      });
+
+      if(!leads.length){
+        toast('No valid Leads found. Check required columns and 10-digit phone numbers.','error');
+        return;
+      }
+
+      if(!auth.currentUser){ toast('You must be signed in to import Leads','error'); return; }
+
+      const chunkSize=450; let imported=0;
+      for(let i=0;i<leads.length;i+=chunkSize){
+        const chunk=leads.slice(i,i+chunkSize);
+        const batch=db.batch();
+        chunk.forEach(lead=>{
+          const ref=db.collection('leads').doc();
+          lead.createdByUid=auth.currentUser.uid;
+          lead.createdBy=(DB.profile && DB.profile.name) || auth.currentUser.email || 'Unknown';
+          lead.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+          batch.set(ref,lead);
+        });
+        await batch.commit();
+        imported+=chunk.length;
+      }
+
+      const input=document.getElementById('leadsExcelImportInput');
+      if(input) input.value='';
+      let message=`${imported} Lead(s) imported successfully`;
+      if(skipped) message+=` · ${skipped} row(s) skipped`;
+      toast(message,'success');
+    }catch(err){
+      console.error('Lead Excel import error:',err);
+      toast('Could not import Leads: '+err.message,'error');
+    }finally{
+      const input=document.getElementById('leadsExcelImportInput');
+      if(input) input.value='';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 /* =========================================================
