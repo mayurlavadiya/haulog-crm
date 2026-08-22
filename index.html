@@ -552,144 +552,6 @@ tbody tr:hover{background:var(--blue-50);}
 @media(max-width:1050px){.tech-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.tech-two{grid-template-columns:1fr;}}
 @media(max-width:600px){.tech-grid{grid-template-columns:1fr}.tech-form-grid{grid-template-columns:1fr}.tech-form-grid .full{grid-column:auto}.tech-modal{padding:16px;border-radius:16px}.tech-tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:4px}.tech-tab{white-space:nowrap}}
 
-/* =========================================================
-   STANDARD CRM FORM DESIGN — Tech Management
-   Matches the existing generic CRM modal used by Contacts
-   and other modules. Functional behavior is unchanged.
-========================================================= */
-.tech-modal-backdrop{
-  padding:20px;
-}
-.tech-modal{
-  width:100%;
-  max-width:560px;
-  max-height:88vh;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:0;
-  background:var(--paper);
-  border:0;
-  border-radius:18px;
-  box-shadow:0 30px 70px rgba(0,0,50,.3);
-}
-.tech-modal-head{
-  padding:20px 24px;
-  margin:0;
-  border-bottom:1px solid var(--line);
-  background:var(--paper);
-  position:sticky;
-  top:0;
-  z-index:2;
-}
-.tech-modal-head h3{
-  margin:0;
-  font-size:16px;
-  font-weight:700;
-}
-.tech-modal-head .btn-ghost{
-  width:32px;
-  height:32px;
-  min-height:32px;
-  padding:0;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 32px;
-  font-size:16px;
-  font-weight:500;
-}
-.tech-modal form{
-  padding:22px 24px 0;
-}
-.tech-form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  column-gap:14px;
-  row-gap:0;
-}
-.tech-form-grid > div{
-  margin-bottom:16px;
-  min-width:0;
-}
-.tech-form-grid .full{
-  grid-column:1/-1;
-}
-.tech-form-grid label{
-  display:block;
-  font-size:12.5px;
-  font-weight:600;
-  margin-bottom:6px;
-  color:var(--ink);
-}
-.tech-form-grid label .req{
-  color:var(--red);
-}
-.tech-form-grid input,
-.tech-form-grid select,
-.tech-form-grid textarea{
-  width:100%;
-  box-sizing:border-box;
-  border:1.5px solid var(--line);
-  border-radius:10px;
-  padding:10px 12px;
-  font-size:13.5px;
-  font-family:inherit;
-  font-weight:400;
-  line-height:1.35;
-  outline:none;
-  background:var(--field-bg);
-  color:var(--ink);
-}
-.tech-form-grid input,
-.tech-form-grid select{
-  min-height:40px;
-}
-.tech-form-grid textarea{
-  min-height:70px;
-  resize:vertical;
-}
-.tech-form-grid input:focus,
-.tech-form-grid select:focus,
-.tech-form-grid textarea:focus{
-  border-color:var(--blue);
-  background:var(--paper);
-}
-.tech-modal-foot{
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  margin:0 -24px;
-  padding:16px 24px;
-  border-top:1px solid var(--line);
-  position:sticky;
-  bottom:0;
-  background:var(--paper);
-  z-index:2;
-}
-.tech-modal .btn-primary,
-.tech-modal .btn-ghost{
-  min-height:0;
-  padding:10px 18px;
-  border-radius:11px;
-  font-size:13.5px;
-  font-weight:600;
-}
-.tech-modal .btn-ghost{
-  border:1px solid var(--line);
-  background:var(--paper);
-  color:var(--ink);
-}
-@media(max-width:600px){
-  .tech-modal-backdrop{padding:20px;}
-  .tech-modal{max-width:560px;border-radius:18px;}
-  .tech-modal-head{padding:20px 24px;}
-  .tech-modal form{padding:22px 24px 0;}
-  .tech-form-grid{grid-template-columns:1fr;}
-  .tech-form-grid .full{grid-column:auto;}
-  .tech-modal-foot{margin:0 -24px;padding:16px 24px;}
-}
-
 /* Reports / Intelligence */
 .reports-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .reports-filters .filter{min-width:150px;}
@@ -816,40 +678,6 @@ tbody tr:hover{background:var(--blue-50);}
 .tech-attachments a:hover{background:var(--surface-2,#f8fafc)}
 </style>
 
-<style id="tech-native-date-style">
-/* Tech Management uses the browser-native date picker.
-   Do not hide/replace this input: it must remain directly clickable. */
-#page-techmanagement .tech-native-date,
-#techModal .tech-native-date{
-  width:100%;
-  min-height:44px;
-  box-sizing:border-box;
-  padding:10px 12px;
-  border:1px solid var(--line,#D9DCF0);
-  border-radius:12px;
-  background:var(--surface,#fff);
-  color:var(--ink,#14152B);
-  font:inherit;
-  font-size:13.5px;
-  font-weight:500;
-  cursor:pointer;
-  appearance:auto;
-  -webkit-appearance:auto;
-}
-#page-techmanagement .tech-native-date:focus,
-#techModal .tech-native-date:focus{
-  outline:none;
-  border-color:var(--blue,#0000FE);
-  box-shadow:0 0 0 3px rgba(0,0,254,.08);
-}
-#page-techmanagement .tech-native-date::-webkit-calendar-picker-indicator,
-#techModal .tech-native-date::-webkit-calendar-picker-indicator{
-  opacity:1;
-  cursor:pointer;
-  width:18px;
-  height:18px;
-}
-</style>
 <style id="tech-date-picker-style">
 .tech-date-wrap{position:relative;width:100%}
 .tech-date-wrap input[type="date"]{
@@ -916,54 +744,6 @@ tbody tr:hover{background:var(--blue-50);}
     min-width:0;
     flex:1 1 100%;
   }
-}
-</style>
-
-<style id="admin-create-user-style">
-.admin-invite-info{background:var(--blue-50,#EEF0FF);border:1px solid var(--blue-100,#DDE1FF);border-radius:12px;padding:12px 14px;color:var(--ink,#0A0B1F);font-size:12px;line-height:1.55}
-.admin-invite-status{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}
-.admin-invite-status.sent{background:#FFF4D8;color:#9A6500}
-.admin-invite-status.active{background:#E8F8EF;color:#147A46}
-.admin-invite-status.inactive{background:#FEEEEC;color:#B42318}
-@media(max-width:700px){
-  #adminTab-users .toolbar{align-items:stretch}
-  #adminTab-users .toolbar .search-input,#adminTab-users .toolbar .btn-primary{width:100%;min-width:0}
-}
-</style>
-
-
-<style id="tech-add-functionalities-style">
-#techTabProjects .card-head,
-#techTabModules .card-head,
-#techTabTeam .card-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-#techTabProjects .card-head .btn-primary,
-#techTabModules .card-head .btn-primary,
-#techTabTeam .card-head .btn-primary{
-  flex:0 0 auto;
-  white-space:nowrap;
-}
-@media(max-width:640px){
-  #techTabProjects .card-head .btn-primary,
-  #techTabModules .card-head .btn-primary,
-  #techTabTeam .card-head .btn-primary{
-    width:100%;
-  }
-}
-</style>
-
-
-<style id="tech-action-button-fix">
-#techManagement .tech-action-btn{
-  position:relative;
-  z-index:2;
-  cursor:pointer;
-  pointer-events:auto;
 }
 </style>
 </head>
@@ -1788,13 +1568,13 @@ tbody tr:hover{background:var(--blue-50);}
 
       <!-- TECH MANAGEMENT -->
       <section class="page" id="page-techmanagement">
-        <div class="page-head"><div><div class="eyebrow">Technology</div><h1>Tech Management</h1><p>Tickets, bugs, queries, projects, modules and team coordination</p></div><div class="head-actions"><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('ticket'); return false;">+ New Ticket</button></div></div>
+        <div class="page-head"><div><div class="eyebrow">Technology</div><h1>Tech Management</h1><p>Tickets, bugs, queries, projects, modules and team coordination</p></div><div class="head-actions"><button class="btn-primary" onclick="openTechModal('ticket')">+ New Ticket</button></div></div>
         <div class="tech-tabs"><button class="tech-tab active" data-tech-tab="overview" onclick="setTechTab('overview')">Overview</button><button class="tech-tab" data-tech-tab="tickets" onclick="setTechTab('tickets')">Tickets</button><button class="tech-tab" data-tech-tab="projects" onclick="setTechTab('projects')">Projects</button><button class="tech-tab" data-tech-tab="modules" onclick="setTechTab('modules')">Modules</button><button class="tech-tab" data-tech-tab="team" onclick="setTechTab('team')">Team</button><button class="tech-tab" data-tech-tab="updates" onclick="setTechTab('updates')">System Updates</button></div>
         <div id="techTabOverview" class="tech-tab-panel"><div class="tech-grid" id="techKpis"></div><div class="tech-two" style="margin-top:16px;"><div class="card"><div class="card-head"><div><h3>Ticket Status</h3><p class="sub">Live technical workload</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techTicketStatusChart"></canvas></div></div><div class="card"><div class="card-head"><div><h3>Priority Load</h3><p class="sub">Open work by priority</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techPriorityChart"></canvas></div></div></div><div class="card" style="margin-top:16px;"><div class="card-head"><div><h3>Due &amp; Overdue</h3><p class="sub">Items that need attention</p></div></div><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Type</th><th>Project</th><th>Assignee</th><th>Due</th><th>Priority</th><th>Status</th></tr></thead><tbody id="tbody-techDue"></tbody></table></div></div></div>
         <div id="techTabTickets" class="tech-tab-panel" style="display:none;"><div class="card"><div class="toolbar"><input class="search-input" id="techTicketSearch" placeholder="Search ticket, bug, query, project…" oninput="renderTechTickets()"><select class="filter" id="techTicketType" onchange="renderTechTickets()"><option value="">All Types</option><option>Bug</option><option>Query</option><option>Ticket</option><option>Task</option></select><select class="filter" id="techTicketStatus" onchange="renderTechTickets()"><option value="">All Statuses</option><option>New</option><option>In Progress</option><option>Blocked</option><option>Resolved</option><option>Closed</option></select><select class="filter" id="techTicketPriority" onchange="renderTechTickets()"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Project</th><th>Module</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTickets"></tbody></table></div></div></div>
-        <div id="techTabProjects" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Project Management</h3><p class="sub">Manage technical projects and client work</p></div><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('project'); return false;">+ Project</button></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Client</th><th>Owner</th><th>Status</th><th>Progress</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techProjects"></tbody></table></div></div></div>
-        <div id="techTabModules" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Module Management</h3><p class="sub">Manage application modules and ownership</p></div><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('module'); return false;">+ Module</button></div><div class="table-wrap"><table><thead><tr><th>Module</th><th>Project</th><th>Owner</th><th>Status</th><th>Open Tickets</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techModules"></tbody></table></div></div></div>
-        <div id="techTabTeam" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Team Management</h3><p class="sub">Add and coordinate technical team members</p></div><button class="btn-primary" type="button" onclick="openTechModal('team')">+ Team Member</button></div><div class="table-wrap"><table><thead><tr><th>Team Member</th><th>Email</th><th>Role</th><th>Open Tickets</th><th>Resolved</th><th>Current Load</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTeam"></tbody></table></div></div></div><div id="techTabUpdates" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>System Updates</h3><p class="sub">Track functionalities, requirements, development and live releases.</p></div><button class="btn-primary" onclick="openTechModal('update')">+ System Update</button></div><div class="tech-update-filters" style="margin-bottom:14px;"><input class="search-input" id="techUpdateModuleSearch" placeholder="Search module…" oninput="renderTechUpdates()"><input class="search-input" id="techUpdateFeatureSearch" placeholder="Search feature…" oninput="renderTechUpdates()"><input type="month" class="filter" id="techUpdateMonth" onchange="renderTechUpdates()" placeholder="Select month"><button class="btn-ghost" id="techUpdateMonthClear" type="button" onclick="clearTechUpdateMonth()">Clear Month</button><select class="filter" id="techUpdateModule" onchange="renderTechUpdates()"><option value="">All Modules</option></select><select class="filter" id="techUpdateStatus" onchange="renderTechUpdates()"><option value="">All Status</option><option value="development">Developed</option><option value="ready">Developed · Live Pending</option><option value="live">Live</option></select></div><div class="table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Module</th><th>Functionality</th><th>Requirement</th><th>Development</th><th>Live</th><th>Updated By</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techUpdates"></tbody></table></div></div></div>
+        <div id="techTabProjects" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Project Management</h3><p class="sub">Manage technical projects and client work</p></div><button class="btn-primary" onclick="openTechModal('project')">+ Project</button></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Client</th><th>Owner</th><th>Status</th><th>Progress</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techProjects"></tbody></table></div></div></div>
+        <div id="techTabModules" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Module Management</h3><p class="sub">Manage application modules and ownership</p></div><button class="btn-primary" onclick="openTechModal('module')">+ Module</button></div><div class="table-wrap"><table><thead><tr><th>Module</th><th>Project</th><th>Owner</th><th>Status</th><th>Open Tickets</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techModules"></tbody></table></div></div></div>
+        <div id="techTabTeam" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Team Management</h3><p class="sub">Add and coordinate technical team members</p></div><button class="btn-primary" onclick="openTechModal('team')">+ Team Member</button></div><div class="table-wrap"><table><thead><tr><th>Team Member</th><th>Email</th><th>Role</th><th>Open Tickets</th><th>Resolved</th><th>Current Load</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTeam"></tbody></table></div></div></div><div id="techTabUpdates" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>System Updates</h3><p class="sub">Track functionalities, requirements, development and live releases.</p></div><button class="btn-primary" onclick="openTechModal('update')">+ System Update</button></div><div class="tech-update-filters" style="margin-bottom:14px;"><input class="search-input" id="techUpdateModuleSearch" placeholder="Search module…" oninput="renderTechUpdates()"><input class="search-input" id="techUpdateFeatureSearch" placeholder="Search feature…" oninput="renderTechUpdates()"><input type="month" class="filter" id="techUpdateMonth" onchange="renderTechUpdates()" placeholder="Select month"><button class="btn-ghost" id="techUpdateMonthClear" type="button" onclick="clearTechUpdateMonth()">Clear Month</button><select class="filter" id="techUpdateModule" onchange="renderTechUpdates()"><option value="">All Modules</option></select><select class="filter" id="techUpdateStatus" onchange="renderTechUpdates()"><option value="">All Status</option><option value="development">Developed</option><option value="ready">Developed · Live Pending</option><option value="live">Live</option></select></div><div class="table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Module</th><th>Functionality</th><th>Requirement</th><th>Development</th><th>Live</th><th>Updated By</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techUpdates"></tbody></table></div></div></div>
       </section>
       <div class="tech-modal-backdrop" id="techModalBackdrop" onclick="if(event.target===this)closeTechModal()"><div class="tech-modal"><div class="tech-modal-head"><h3 id="techModalTitle">Tech Management</h3><button class="btn-ghost" onclick="closeTechModal()">✕</button></div><div id="techModalBody"></div></div></div>
 
@@ -1973,63 +1753,10 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="admin-tab-panel" id="adminTab-users" style="display:none;">
           <div class="card">
             <h3>Users</h3><p class="sub">Everyone with a login. Edit name/phone/role/status, or deactivate access. You can't edit your own row here — use My Profile.</p>
-            <div class="toolbar" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;">
-              <input class="search-input" id="adminUserSearch" placeholder="Search by name or email…" oninput="renderTable('users', this.value, 'tbody-users', document.querySelector('#adminUsersTable thead'))" style="flex:1;min-width:220px;">
-              <button class="btn-primary" type="button" onclick="openAdminNewUserModal()">+ New User</button>
+            <div class="toolbar" style="margin-top:14px;">
+              <input class="search-input" id="adminUserSearch" placeholder="Search by name or email…" oninput="renderTable('users', this.value, 'tbody-users', document.querySelector('#adminUsersTable thead'))">
             </div>
             <div class="table-wrap"><table id="adminUsersTable"><thead></thead><tbody id="tbody-users"></tbody></table></div>
-          </div>
-        </div>
-
-        <!-- ADMIN — CREATE USER / PASSWORD INVITATION MODAL -->
-        <div class="modal-bg" id="adminNewUserModal" onclick="if(event.target===this)closeAdminNewUserModal()">
-          <div class="modal">
-            <div class="modal-head">
-              <h3>Create New User</h3>
-              <button class="modal-close" type="button" onclick="closeAdminNewUserModal()">✕</button>
-            </div>
-            <form id="adminNewUserForm" onsubmit="createAdminNewUser(event)">
-              <div class="modal-body">
-                <div class="field">
-                  <label>Full Name <span class="req">*</span></label>
-                  <input id="newUserName" type="text" required placeholder="Enter full name">
-                </div>
-                <div class="two-col">
-                  <div class="field">
-                    <label>Work Email <span class="req">*</span></label>
-                    <input id="newUserEmail" type="email" required autocomplete="email" spellcheck="false" placeholder="name@company.com">
-                  </div>
-                  <div class="field">
-                    <label>Phone</label>
-                    <input id="newUserPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile">
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Role <span class="req">*</span></label>
-                  <select id="newUserRole" required><option value="">Select Role</option></select>
-                </div>
-                <div class="field">
-                  <label>Responsibilities</label>
-                  <textarea id="newUserResponsibilities" rows="3" placeholder="Responsibilities for this user"></textarea>
-                </div>
-                <div class="field">
-                  <label>Status</label>
-                  <select id="newUserStatus">
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-                <div class="admin-invite-info">
-                  <strong>Password setup</strong>
-                  <div style="margin-top:4px;">Firebase will send a secure password setup email. The temporary password is generated only in memory and is never stored in Firestore.</div>
-                </div>
-                <div id="newUserCreateError" class="form-error" style="display:none;"></div>
-              </div>
-              <div class="modal-foot">
-                <button type="button" class="btn-ghost" onclick="closeAdminNewUserModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="newUserCreateBtn">Create User &amp; Send Invitation</button>
-              </div>
-            </form>
           </div>
         </div>
 
@@ -2108,25 +1835,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-
-/*
- * Admin-only user provisioning.
- * A secondary Firebase Auth app creates users without signing
- * the currently logged-in Admin out.
- * No Cloud Functions / Cloud Build / billing required.
- */
-let adminProvisionApp = null;
-let adminProvisionAuth = null;
-
-function getAdminProvisionAuth(){
-  if(adminProvisionAuth) return adminProvisionAuth;
-  adminProvisionApp = firebase.apps.find(app => app.name === 'AdminUserProvisioning');
-  if(!adminProvisionApp){
-    adminProvisionApp = firebase.initializeApp(firebaseConfig, 'AdminUserProvisioning');
-  }
-  adminProvisionAuth = adminProvisionApp.auth();
-  return adminProvisionAuth;
-}
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
 const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts','dailysummaries','weeklyplanners','notes'];
@@ -2214,7 +1922,8 @@ const DEFAULT_ROLES = [
   {name:'Sales Manager', responsibilities:'Oversees the sales pipeline, approves expenses, and monitors team performance.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
   {name:'Sales Executive', responsibilities:'Owns leads end-to-end — calls, meetings, quotations, proposals, and customer handover.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
   {name:'Operations', responsibilities:'Handles day-to-day operational tasks, shipment/process coordination, and daily reporting.', permissions:['dashboard','contacts','expenses','customers','dailysummary','weeklyplanner','profile','myreports']},
-  {name:'Tech', responsibilities:'Handles technical/support tasks, tickets, and daily engineering reporting.', permissions:['dashboard','expenses','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Tech', responsibilities:'Handles technical/support tasks, tickets, projects, modules and daily engineering reporting.', permissions:['dashboard','techmanagement','dailysummary','weeklyplanner','profile','myreports']},
+  {name:'Tech Team', responsibilities:'Technical team workspace for tickets, projects, modules, team coordination and engineering reporting.', permissions:['dashboard','techmanagement','dailysummary','weeklyplanner','profile','myreports']},
   {name:'Team Leader', responsibilities:'Leads a team, tracks own pipeline and daily/weekly reporting like the rest of the team.', permissions:['dashboard','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','customers','dailysummary','weeklyplanner','reports','profile','myreports']},
   {name:'Accounts', responsibilities:'Reviews and approves expense claims, tracks quotations, and runs financial reports.', permissions:['dashboard','contacts','expenses','quotations','dailysummary','weeklyplanner','reports','profile','myreports']},
   {name:'HR', responsibilities:'Manages employee records, targets, and team roster.', permissions:['dashboard','expenses','employees','dailysummary','weeklyplanner','profile','myreports']}
@@ -2708,13 +2417,7 @@ const MODULES = {
       {key:'email', label:'Email'},
       {key:'phone', label:'Phone'},
       {key:'role', label:'Role', pill:()=>'blue'},
-      {key:'status', label:'Status', pill:s=>s==='Inactive'?'red':'green'},
-      {key:'invitationStatus', label:'Invitation', fmt:(v,r)=>{
-        if(v==='Sent' || v==='Invited') return '<span class="admin-invite-status sent">✉ Invitation Sent</span>';
-        if(v==='Accepted' || v==='Active') return '<span class="admin-invite-status active">✓ Active</span>';
-        if(r && r.status==='Inactive') return '<span class="admin-invite-status inactive">Inactive</span>';
-        return '<span class="admin-invite-status sent">Setup Pending</span>';
-      }}
+      {key:'status', label:'Status', pill:s=>s==='Inactive'?'red':'green'}
     ],
     fields:[
       {key:'name', label:'Full Name', type:'text', required:true},
@@ -2753,34 +2456,123 @@ function stagePill(s){ return ({New:'grey',Contacted:'blue',Qualified:'blue','De
 ========================================================= */
 const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meetings','quotations','proposals','expenses','employees','customers','dailysummary','weeklyplanner','techmanagement','notes','reports','settings','profile','myreports','adminpanel'];
 
+function isTechRole(){
+  const role = String(DB.profile && DB.profile.role || '').trim();
+  return role === 'Tech' || role === 'Tech Team';
+}
+
 function allowedPagesForRole(){
-  const roleName = (DB.profile && DB.profile.role) || '';
-  const match = (DB.roles||[]).find(r=>r.name===roleName);
-  const base = match ? [...(match.permissions||[])] : [...((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions||[])];
-  // Masters & Settings uses the existing `settings` route/permission key.
-  // Accept the newer `masterssettings` key as well for forward compatibility.
-  if(base.includes('masterssettings') && !base.includes('settings')) base.push('settings');
-  // Daily Summary & Weekly Planner are personal productivity logs every
-  // role must be able to submit — available to everyone regardless of
-  // what's saved in their role's permission list.
+  const roleName = String((DB.profile && DB.profile.role) || '').trim();
+  const match = (DB.roles || []).find(r => String(r.name || '').trim() === roleName);
+
+  let base = match
+    ? (match.permissions || [])
+    : ((DEFAULT_ROLES.find(r => r.name === roleName) ||
+        DEFAULT_ROLES.find(r => r.name === 'Sales Executive')).permissions || []);
+
+  base = [...base];
+
+  /*
+   * Tech / Tech Team have their own workspace.  Old role documents can
+   * contain legacy Sales/Operations permissions from an earlier version,
+   * so those legacy pages are deliberately ignored for Tech roles.
+   * Role-selected non-sales pages such as Reports, Masters & Settings and
+   * Admin Panel are still respected.
+   */
+  if(isTechRole()){
+    const techAllowed = new Set([
+      'dashboard',
+      'techmanagement',
+      'dailysummary',
+      'weeklyplanner',
+      'notes',
+      'profile',
+      'myreports',
+      'reports',
+      'settings',
+      'adminpanel'
+    ]);
+    base = base.filter(p => techAllowed.has(p));
+    if(!base.includes('techmanagement')) base.push('techmanagement');
+  }
+
   const forced = ['profile','myreports','sitemap','dailysummary','weeklyplanner','notes'];
-  // Calendar is just a view of Meetings data — always available alongside it,
-  // even for roles saved before Calendar existed as a separate page.
   const derived = base.includes('meetings') ? ['calendar'] : [];
-  const tech = ['Tech','Tech Team','Admin','Super Admin'].includes(roleName) ? ['techmanagement'] : [];
-  return [...new Set([...base, ...derived, ...forced, ...tech])];
+
+  return [...new Set([...base, ...derived, ...(isTechRole()?['techmanagement']:[]) , ...forced])];
+}
+
+function syncRoleBasedNavigation(){
+  const allowed = allowedPagesForRole();
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(btn=>{
+    const page = btn.dataset.page;
+    btn.style.display = allowed.includes(page) ? '' : 'none';
+  });
+
+  /*
+   * Hide a section heading when none of its menu items are visible.
+   * This removes empty headings such as "Sales Pipeline" for Tech users.
+   */
+  document.querySelectorAll('.nav-section-title').forEach(title=>{
+    let hasVisibleItem = false;
+    let node = title.nextElementSibling;
+
+    while(node){
+      if(node.classList && node.classList.contains('nav-section-title')) break;
+      if(node.classList && node.classList.contains('nav-item') &&
+         getComputedStyle(node).display !== 'none'){
+        hasVisibleItem = true;
+        break;
+      }
+      node = node.nextElementSibling;
+    }
+
+    title.style.display = hasVisibleItem ? '' : 'none';
+  });
+
+  const techVisible = allowed.includes('techmanagement');
+  const techSection = document.getElementById('navSectionTech');
+  const techButton = document.getElementById('navTechManagement');
+  if(techSection) techSection.style.display = techVisible ? '' : 'none';
+  if(techButton) techButton.style.display = techVisible ? '' : 'none';
+
+  const adminVisible = allowed.includes('adminpanel');
+  const adminSection = document.getElementById('navSectionAdmin');
+  const adminButton = document.getElementById('navAdminPanel');
+  if(adminSection) adminSection.style.display = adminVisible ? '' : 'none';
+  if(adminButton) adminButton.style.display = adminVisible ? '' : 'none';
 }
 
 function go(id){
+  /*
+   * For Tech / Tech Team, Dashboard is the Tech workspace entry point.
+   * The normal Sales dashboard remains unchanged for every other role.
+   */
+  if(id === 'dashboard' && isTechRole()){
+    id = 'techmanagement';
+  }
+
   const allowed = allowedPagesForRole();
+
   if(!allowed.includes(id)){
     toast("You don't have access to that section", 'error');
-    id = 'dashboard';
+    id = isTechRole() ? 'techmanagement' : 'dashboard';
   }
-  pages.forEach(p=>document.getElementById('page-'+p).classList.toggle('active', p===id));
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.page===id));
+
+  pages.forEach(p=>{
+    const el = document.getElementById('page-'+p);
+    if(el) el.classList.toggle('active', p===id);
+  });
+
+  document.querySelectorAll('.nav-item').forEach(b=>{
+    b.classList.toggle('active', b.dataset.page===id);
+  });
+
+  syncRoleBasedNavigation();
   toggleSidebar(false);
   window.scrollTo({top:0, behavior:'smooth'});
+
   if(id==='reports') renderReports();
   if(id==='meetings') renderTable('meetings');
   if(id==='calendar') renderCalendar();
@@ -2788,13 +2580,24 @@ function go(id){
   if(id==='profile') renderProfilePage();
   if(id==='adminpanel') renderAdminPanel();
   if(id==='myreports') renderMyReports();
-  if(id==='expenses'){ populateReportEmpFilter(); renderReportHistory(); }
+  if(id==='expenses'){
+    populateReportEmpFilter();
+    renderReportHistory();
+  }
   if(id==='sitemap') renderSitemap();
-  if(id==='dailysummary'){ renderTable('dailysummaries'); refreshDsWpFilterVisibility(); }
-  if(id==='weeklyplanner'){ renderTable('weeklyplanners'); populateWpFilterWeekOptions(); refreshDsWpFilterVisibility(); }
+  if(id==='dailysummary'){
+    renderTable('dailysummaries');
+    refreshDsWpFilterVisibility();
+  }
+  if(id==='weeklyplanner'){
+    renderTable('weeklyplanners');
+    populateWpFilterWeekOptions();
+    refreshDsWpFilterVisibility();
+  }
   if(id==='notes') renderTable('notes');
   if(id==='techmanagement') renderTechManagement();
 }
+
 function toggleSidebar(open){
   document.getElementById('sidebar').classList.toggle('open', open);
   document.getElementById('overlaySb').classList.toggle('show', open);
@@ -2822,37 +2625,9 @@ function renderTechProjects(){const tb=document.getElementById('tbody-techProjec
 function renderTechModules(){const tb=document.getElementById('tbody-techModules');if(!tb)return;const rows=DB.techModules||[];tb.innerHTML=rows.length?rows.map(m=>{const count=(DB.techTickets||[]).filter(t=>t.moduleId===m.id&&!['Resolved','Closed'].includes(t.status)).length;return `<tr><td><strong>${techEsc(m.name)}</strong><div class="tech-mini">${techEsc(m.key||'')}</div></td><td>${techEsc(techProjectName(m.projectId))}</td><td>${techEsc(techName(m.ownerUid))}</td><td>${techEsc(m.status||'Active')}</td><td>${count}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('module','${m.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techModules','${m.id}')">Delete</button></div></td></tr>`}).join(''):'<tr><td colspan="6"><div class="empty-state">No modules yet.</div></td></tr>';}
 function renderTechTeam(){const tb=document.getElementById('tbody-techTeam');if(!tb)return;const users=techUserList(),manual=(DB.techTeamMembers||[]).filter(x=>x.status!=='Inactive'),tickets=DB.techTickets||[];const combined=[...users.map(u=>({...u,_manual:false})),...manual.map(m=>({...m,id:m.id,_manual:true,role:m.role||'Tech Team'}))];tb.innerHTML=combined.length?combined.map(u=>{const mine=tickets.filter(t=>t.assignedToUid===u.id),open=mine.filter(t=>!['Resolved','Closed'].includes(t.status)).length,resolved=mine.filter(t=>['Resolved','Closed'].includes(t.status)).length,load=open>=8?'High':open>=4?'Medium':'Low';return `<tr><td><strong>${techEsc(u.name||u.email)}</strong>${u._manual?'<div class="tech-mini">Manual team member</div>':''}</td><td>${techEsc(u.email||'')}</td><td>${techEsc(u.role||'Tech')}</td><td>${open}</td><td>${resolved}</td><td><span class="pill ${load==='High'?'red':load==='Medium'?'amber':'green'}">${load}</span></td><td><div class="row-actions" style="justify-content:flex-end">${u._manual?`<button class="btn-sm" onclick="openTechModal('team','${u.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techTeamMembers','${u.id}')">Delete</button>`:'<span class="tech-mini">CRM User</span>'}</div></td></tr>`}).join(''):'<tr><td colspan="7"><div class="empty-state">No Tech Team members found.</div></td></tr>';}
 
-
-// Builds safe <option> elements for Tech Management forms.
-// Required by Ticket, Project and Module modals.
-function techSelectOptions(items, selectedValue, placeholder){
-  const list = Array.isArray(items) ? items : [];
-  const selected = selectedValue == null ? '' : String(selectedValue);
-  let html = '';
-  if (placeholder !== undefined && placeholder !== null) {
-    html += `<option value="">${techEsc(placeholder)}</option>`;
-  }
-  html += list.map(item => {
-    if (!item) return '';
-    const value = String(item.id || item.uid || item.key || '');
-    if (!value) return '';
-    const label = String(
-      item.name ||
-      item.title ||
-      item.email ||
-      item.company ||
-      item.displayName ||
-      item.key ||
-      value
-    );
-    return `<option value="${techEsc(value)}" ${value === selected ? 'selected' : ''}>${techEsc(label)}</option>`;
-  }).join('');
-  return html;
-}
-
 function openTechModal(kind,id){if(!isTechUser())return toast('Tech Management access required','error');const rec=id?({ticket:(DB.techTickets||[]).find(x=>x.id===id),project:(DB.techProjects||[]).find(x=>x.id===id),module:(DB.techModules||[]).find(x=>x.id===id),team:(DB.techTeamMembers||[]).find(x=>x.id===id),update:(DB.techUpdates||[]).find(x=>x.id===id)}[kind]):null;const title=kind==='ticket'?(id?'Edit Ticket':'New Ticket'):kind==='project'?(id?'Edit Project':'New Project'):kind==='module'?(id?'Edit Module':'New Module'):kind==='update'?(id?'Edit System Update':'Add System Update'):(id?'Edit Team Member':'Add Team Member');document.getElementById('techModalTitle').textContent=title;const users=techUserList(),projects=DB.techProjects||[],customers=DB.customers||[];let html='';
-if(kind==='ticket')html=`<form onsubmit="saveTechTicket(event,'${id||''}')"><div class="tech-form-grid"><div><label>Type</label><select name="type" required>${TECH_TYPES.map(x=>`<option ${x===(rec?.type||'Ticket')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Priority</label><select name="priority" required>${TECH_PRIORITIES.map(x=>`<option ${x===(rec?.priority||'Medium')?'selected':''}>${x}</option>`).join('')}</select></div><div class="full"><label>Title</label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="Bug / query / task title"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Module</label><select name="moduleId">${techSelectOptions(DB.techModules||[],rec?.moduleId||'','No Module')}</select></div><div><label>Assignee</label><select name="assignedToUid">${techSelectOptions(users,rec?.assignedToUid||'','Unassigned')}</select></div><div><label>Status</label><select name="status">${TECH_STATUSES.map(x=>`<option ${x===(rec?.status||'New')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Due Date</label><input type="date" class="tech-native-date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div class="full"><label>Client / Requesting Company</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div class="full"><label>Description / Query</label><textarea name="description" placeholder="Details, steps, expected result, requirement…">${techEsc(rec?.description||'')}</textarea></div><div class="full"><label>Acceptance / Resolution Notes</label><textarea name="resolution" placeholder="Resolution, testing notes, deployment notes…">${techEsc(rec?.resolution||'')}</textarea></div><div class="full"><label>Attachments</label><input type="file" name="attachments" id="techTicketAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini">Attach multiple screenshots, images, PDFs or documents. Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Ticket</button></div></form>`;
-if(kind==='project')html=`<form onsubmit="saveTechProject(event,'${id||''}')"><div class="tech-form-grid"><div><label>Project Key</label><input name="key" value="${techEsc(rec?.key||'')}" placeholder="CRM-001"></div><div><label>Status</label><select name="status"><option ${rec?.status==='Planning'||!rec?'selected':''}>Planning</option><option ${rec?.status==='Active'?'selected':''}>Active</option><option ${rec?.status==='On Hold'?'selected':''}>On Hold</option><option ${rec?.status==='Completed'?'selected':''}>Completed</option></select></div><div class="full"><label>Project Name</label><input name="name" required value="${techEsc(rec?.name||'')}"></div><div class="full"><label>Client / Stakeholder</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div><label>Owner</label><select name="ownerUid">${techSelectOptions(users,rec?.ownerUid||auth.currentUser.uid,'Select Owner')}</select></div><div><label>Start Date</label><input type="date" class="tech-native-date" name="startDate" value="${techEsc(rec?.startDate||'')}"></div><div><label>Due Date</label><input type="date" class="tech-native-date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div><label>Progress %</label><input type="number" name="progress" min="0" max="100" value="${Number(rec?.progress)||0}"></div><div class="full"><label>Description</label><textarea name="description">${techEsc(rec?.description||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Project</button></div></form>`;
+if(kind==='ticket')html=`<form onsubmit="saveTechTicket(event,'${id||''}')"><div class="tech-form-grid"><div><label>Type</label><select name="type" required>${TECH_TYPES.map(x=>`<option ${x===(rec?.type||'Ticket')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Priority</label><select name="priority" required>${TECH_PRIORITIES.map(x=>`<option ${x===(rec?.priority||'Medium')?'selected':''}>${x}</option>`).join('')}</select></div><div class="full"><label>Title</label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="Bug / query / task title"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Module</label><select name="moduleId">${techSelectOptions(DB.techModules||[],rec?.moduleId||'','No Module')}</select></div><div><label>Assignee</label><select name="assignedToUid">${techSelectOptions(users,rec?.assignedToUid||'','Unassigned')}</select></div><div><label>Status</label><select name="status">${TECH_STATUSES.map(x=>`<option ${x===(rec?.status||'New')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Due Date</label><input type="date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div class="full"><label>Client / Requesting Company</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div class="full"><label>Description / Query</label><textarea name="description" placeholder="Details, steps, expected result, requirement…">${techEsc(rec?.description||'')}</textarea></div><div class="full"><label>Acceptance / Resolution Notes</label><textarea name="resolution" placeholder="Resolution, testing notes, deployment notes…">${techEsc(rec?.resolution||'')}</textarea></div><div class="full"><label>Attachments</label><input type="file" name="attachments" id="techTicketAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini">Attach multiple screenshots, images, PDFs or documents. Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Ticket</button></div></form>`;
+if(kind==='project')html=`<form onsubmit="saveTechProject(event,'${id||''}')"><div class="tech-form-grid"><div><label>Project Key</label><input name="key" value="${techEsc(rec?.key||'')}" placeholder="CRM-001"></div><div><label>Status</label><select name="status"><option ${rec?.status==='Planning'||!rec?'selected':''}>Planning</option><option ${rec?.status==='Active'?'selected':''}>Active</option><option ${rec?.status==='On Hold'?'selected':''}>On Hold</option><option ${rec?.status==='Completed'?'selected':''}>Completed</option></select></div><div class="full"><label>Project Name</label><input name="name" required value="${techEsc(rec?.name||'')}"></div><div class="full"><label>Client / Stakeholder</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div><label>Owner</label><select name="ownerUid">${techSelectOptions(users,rec?.ownerUid||auth.currentUser.uid,'Select Owner')}</select></div><div><label>Start Date</label><input type="date" name="startDate" value="${techEsc(rec?.startDate||'')}"></div><div><label>Due Date</label><input type="date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div><label>Progress %</label><input type="number" name="progress" min="0" max="100" value="${Number(rec?.progress)||0}"></div><div class="full"><label>Description</label><textarea name="description">${techEsc(rec?.description||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Project</button></div></form>`;
 if(kind==='module')html=`<form onsubmit="saveTechModule(event,'${id||''}')"><div class="tech-form-grid"><div><label>Module Key</label><input name="key" value="${techEsc(rec?.key||'')}" placeholder="LEADS"></div><div><label>Status</label><select name="status"><option ${rec?.status==='Active'||!rec?'selected':''}>Active</option><option ${rec?.status==='Maintenance'?'selected':''}>Maintenance</option><option ${rec?.status==='Planned'?'selected':''}>Planned</option><option ${rec?.status==='Deprecated'?'selected':''}>Deprecated</option></select></div><div class="full"><label>Module Name</label><input name="name" required value="${techEsc(rec?.name||'')}"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Owner</label><select name="ownerUid">${techSelectOptions(users,rec?.ownerUid||auth.currentUser.uid,'Select Owner')}</select></div><div class="full"><label>Description</label><textarea name="description">${techEsc(rec?.description||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Module</button></div></form>`;
 if(kind==='update')html=`<form onsubmit="saveTechUpdate(event,'${id||''}')"><div class="tech-form-grid"><div><label>Date &amp; Time <span class="req">*</span></label><input type="datetime-local" name="updateDateTime" required value="${techEsc(rec?.updateDateTime||'')}"></div><div><label>Module / Area</label><input name="module" required value="${techEsc(rec?.module||'')}" placeholder="e.g. Leads, Calendar, Tech Management"></div><div class="full"><label>Functionality / Feature <span class="req">*</span></label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="What functionality was added?"></div><div class="full"><label>Requirement / Business Need</label><textarea name="requirement" placeholder="What was required and expected behavior…">${techEsc(rec?.requirement||'')}</textarea></div><div class="full"><label>Details / What Was Developed</label><textarea name="details" placeholder="Describe functionality, fields, workflow, validations, integrations…">${techEsc(rec?.details||'')}</textarea></div><div><label>Version / Release</label><input name="version" value="${techEsc(rec?.version||'')}" placeholder="e.g. v1.2.0"></div><div><label>Live Date &amp; Time</label><input type="datetime-local" name="liveDateTime" value="${techEsc(rec?.liveDateTime||'')}"></div><div class="full"><div class="tech-checks"><label class="tech-check"><input type="checkbox" name="developed" ${rec?.developed?'checked':''}> ✓ Developed / Completed</label><label class="tech-check"><input type="checkbox" name="live" ${rec?.live?'checked':''}> 🚀 Live in Production</label></div><div class="tech-mini" style="margin-top:6px;">Tick Developed after completion/testing. Tick Live only after production release.</div></div><div class="full"><label>Attachments</label><div class="tech-attachment-input"><input type="file" name="attachments" id="techUpdateAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini" style="margin-top:6px;">Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">📎 ${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save System Update</button></div></form>`;
 if(kind==='team')html=`<form onsubmit="saveTechTeamMember(event,'${id||''}')"><div class="tech-form-grid"><div class="full"><label>Name</label><input name="name" required value="${techEsc(rec?.name||'')}" placeholder="Team member name"></div><div><label>Email</label><input type="email" name="email" value="${techEsc(rec?.email||'')}" placeholder="name@company.com"></div><div><label>Role</label><select name="role"><option ${rec?.role==='Tech Lead'?'selected':''}>Tech Lead</option><option ${rec?.role==='Developer'?'selected':''}>Developer</option><option ${rec?.role==='QA / Tester'?'selected':''}>QA / Tester</option><option ${rec?.role==='UI / UX'?'selected':''}>UI / UX</option><option ${rec?.role==='DevOps'?'selected':''}>DevOps</option><option ${rec?.role==='Support'?'selected':''}>Support</option><option ${rec?.role==='Tech Team'||!rec?'selected':''}>Tech Team</option></select></div><div><label>Phone</label><input name="phone" value="${techEsc(rec?.phone||'')}"></div><div><label>Status</label><select name="status"><option ${rec?.status!=='Inactive'?'selected':''}>Active</option><option ${rec?.status==='Inactive'?'selected':''}>Inactive</option></select></div><div class="full"><label>Notes</label><textarea name="notes" placeholder="Skills, responsibility, availability…">${techEsc(rec?.notes||'')}</textarea></div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Team Member</button></div></form>`;
@@ -2870,48 +2645,7 @@ function clearTechUpdateMonth(){const el=document.getElementById('techUpdateMont
 function renderTechUpdates(){const body=document.getElementById('tbody-techUpdates');if(!body)return;const list=DB.techUpdates||[];const moduleSearch=(document.getElementById('techUpdateModuleSearch')?.value||'').toLowerCase();const featureSearch=(document.getElementById('techUpdateFeatureSearch')?.value||'').toLowerCase();const month=document.getElementById('techUpdateMonth');const mod=document.getElementById('techUpdateModule');const status=document.getElementById('techUpdateStatus');const prevM=month?.value||'';if(month)month.value=prevM;const mods=[...new Set(list.map(x=>x.module).filter(Boolean))].sort();const prevMod=mod?.value||'';if(mod)mod.innerHTML='<option value="">All Modules</option>'+mods.map(m=>`<option value="${techEsc(m)}" ${m===prevMod?'selected':''}>${techEsc(m)}</option>`).join('');let rows=list.filter(x=>{const hay=[x.module,x.title,x.requirement,x.details,x.version].join(' ').toLowerCase();if(moduleSearch&&!String(x.module||'').toLowerCase().includes(moduleSearch))return false;if(featureSearch&&!String(x.title||'').toLowerCase().includes(featureSearch))return false;if(month?.value&&(x.updateDateTime||'').slice(0,7)!==month.value)return false;if(mod?.value&&x.module!==mod.value)return false;if(status?.value==='development'&&!x.developed)return false;if(status?.value==='ready'&&!(x.developed&&!x.live))return false;if(status?.value==='live'&&!x.live)return false;return true;}).sort((a,b)=>String(b.updateDateTime||'').localeCompare(String(a.updateDateTime||'')));body.innerHTML=rows.length?rows.map(x=>{const dev=x.developed?'✓ Developed':'Pending';const live=x.live?'✓ Live':'Not Live';return `<tr><td><div>${techEsc(formatTechDateTime(x.updateDateTime))}</div><div class="tech-update-meta">${techEsc(x.version||'')}</div></td><td>${techEsc(x.module||'—')}</td><td><strong>${techEsc(x.title||'—')}</strong><div class="tech-update-meta">${techEsc((x.details||'').slice(0,110))}${(x.details||'').length>110?'…':''}</div></td><td><div class="tech-update-meta">${techEsc((x.requirement||'—').slice(0,120))}${(x.requirement||'').length>120?'…':''}</div></td><td><span class="tech-update-status ${x.developed?'developed':'pending'}">${dev}</span></td><td><span class="tech-update-status ${x.live?'live':'pending'}">${live}</span></td><td>${techEsc(x.createdBy||'—')}</td><td style="text-align:right;white-space:nowrap"><button class="btn-sm" onclick="openTechModal('update','${x.id}')">Edit</button> <button class="btn-sm danger" onclick="deleteTechRecord('techUpdates','${x.id}')">Delete</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="empty">No system updates found.</td></tr>';}
 async function saveTechTeamMember(e,id){e.preventDefault();const f=new FormData(e.target);const data={name:f.get('name').trim(),email:(f.get('email')||'').trim(),role:f.get('role'),phone:(f.get('phone')||'').trim(),status:f.get('status'),notes:f.get('notes')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await saveTechRecord('techTeamMembers',id,data,'Team Member');}
 
-async function saveTechRecord(col,id,data,label){
-  try{
-    if(!auth.currentUser) throw new Error('Please login again.');
-    if(!isTechUser()) throw new Error('Tech Management access required.');
-
-    const now=firebase.firestore.FieldValue.serverTimestamp();
-
-    if(id){
-      await db.collection(col).doc(id).set({
-        ...data,
-        updatedByUid:auth.currentUser.uid,
-        updatedAt:data.updatedAt||now
-      },{merge:true});
-    }else{
-      await db.collection(col).add({
-        ...data,
-        createdByUid:auth.currentUser.uid,
-        createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||'',
-        createdAt:now,
-        updatedByUid:auth.currentUser.uid,
-        updatedAt:now
-      });
-    }
-
-    closeTechModal();
-    toast(label+' saved successfully','success');
-
-    // Immediately refresh the current Tech view.
-    setTimeout(()=>{
-      try{
-        renderTechProjects();
-        renderTechModules();
-        renderTechTeam();
-        renderTechOverview();
-      }catch(_){}
-    },150);
-
-  }catch(err){
-    console.error('Tech save error:',col,label,err);
-    toast('Could not save '+label+': '+(err.message||'Unknown Firestore error'),'error');
-  }
-}
+async function saveTechRecord(col,id,data,label){try{if(!auth.currentUser||!isTechUser())throw new Error('Tech Team access required');if(id)await db.collection(col).doc(id).set(data,{merge:true});else{data.createdByUid=auth.currentUser.uid;data.createdBy=DB.profile.name||auth.currentUser.email||'';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(col).add(data);}closeTechModal();toast(label+' saved','success');}catch(err){console.error(err);toast('Could not save '+label+': '+err.message,'error');}}
 async function deleteTechRecord(col,id){if(!isTechUser())return;const rec=(DB[col]||[]).find(x=>x.id===id);if(!rec)return;if(!confirm('Delete this technical record?'))return;try{await db.collection(col).doc(id).delete();toast('Deleted','success');}catch(err){console.error(err);toast('Delete failed: '+err.message,'error');}}
 
 /* =========================================================
@@ -3045,7 +2779,6 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
         ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
         ${moduleKey==='quotations' ? `<button class="icon-action" title="Convert to Proposal" onclick="convertQuoteToProposal('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>` : ''}
-        ${moduleKey==='users' ? adminUserExtraActions(r) : ''}
         <button class="icon-action" title="Edit" onclick="${editHandler}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
@@ -6736,237 +6469,6 @@ async function exportExpenseReportPdfAsync(){
   doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
 }
 
-
-/* =========================================================
-   ADMIN — CREATE USER / EMAIL INVITATION
-   No Cloud Functions / billing required.
-========================================================= */
-
-function adminNewUserEsc(v){
-  return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
-    .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
-}
-
-function openAdminNewUserModal(){
-  if(!isAdmin()){
-    toast('Only Admin or Super Admin can create users','error');
-    return;
-  }
-
-  const modal=document.getElementById('adminNewUserModal');
-  const form=document.getElementById('adminNewUserForm');
-  if(!modal || !form) return;
-
-  form.reset();
-
-  const roleSelect=document.getElementById('newUserRole');
-  roleSelect.innerHTML='<option value="">Select Role</option>'+
-    (DB.roles||[]).map(r=>`<option value="${adminNewUserEsc(r.name)}">${adminNewUserEsc(r.name)}</option>`).join('');
-
-  const defaultRole=DB.appConfig && DB.appConfig.defaultNewUserRole;
-  if(defaultRole && (DB.roles||[]).some(r=>r.name===defaultRole)){
-    roleSelect.value=defaultRole;
-  }
-
-  setAdminNewUserError('');
-  modal.classList.add('show');
-}
-
-function closeAdminNewUserModal(){
-  document.getElementById('adminNewUserModal')?.classList.remove('show');
-}
-
-function setAdminNewUserError(message){
-  const el=document.getElementById('newUserCreateError');
-  if(!el) return;
-  el.textContent=message||'';
-  el.style.display=message?'block':'none';
-}
-
-function generateAdminTemporaryPassword(){
-  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-  let out='H!';
-  for(let i=0;i<14;i++) out+=chars[Math.floor(Math.random()*chars.length)];
-  return out+'#9';
-}
-
-function adminAuthError(err){
-  const code=(err&&err.code)||'';
-  if(code==='auth/email-already-in-use') return 'This email already has a Firebase Authentication account.';
-  if(code==='auth/invalid-email') return 'Please enter a valid email address.';
-  if(code==='auth/weak-password') return 'Unable to create the temporary password. Please try again.';
-  if(code==='auth/network-request-failed') return 'Network error. Please check the connection and try again.';
-  return (err&&err.message)||'Unable to create the user.';
-}
-
-async function createAdminNewUser(e){
-  e.preventDefault();
-
-  if(!isAdmin()){
-    toast('Only Admin or Super Admin can create users','error');
-    return;
-  }
-
-  setAdminNewUserError('');
-
-  const name=document.getElementById('newUserName').value.trim();
-  const email=document.getElementById('newUserEmail').value.trim().toLowerCase();
-  const phone=document.getElementById('newUserPhone').value.trim();
-  const role=document.getElementById('newUserRole').value.trim();
-  const responsibilities=document.getElementById('newUserResponsibilities').value.trim();
-  const status=document.getElementById('newUserStatus').value||'Active';
-  const button=document.getElementById('newUserCreateBtn');
-
-  if(!name) return setAdminNewUserError('Full name is required.');
-  if(!email) return setAdminNewUserError('Work email is required.');
-  if(phone && !/^[0-9]{10}$/.test(phone)) return setAdminNewUserError('Phone must contain exactly 10 digits.');
-  if(!role) return setAdminNewUserError('Please select a role.');
-  if(!(DB.roles||[]).some(r=>r.name===role)) return setAdminNewUserError('Selected role is not available.');
-  if((DB.users||[]).some(u=>String(u.email||'').toLowerCase()===email)){
-    return setAdminNewUserError('A CRM user with this email already exists.');
-  }
-
-  button.disabled=true;
-  button.textContent='Creating User…';
-
-  const provisionAuth=getAdminProvisionAuth();
-  let createdUser=null;
-  let profileCreated=false;
-
-  try{
-    const temporaryPassword=generateAdminTemporaryPassword();
-
-    const credential=await provisionAuth.createUserWithEmailAndPassword(
-      email,
-      temporaryPassword
-    );
-
-    createdUser=credential.user;
-    await createdUser.updateProfile({displayName:name});
-
-    const uid=createdUser.uid;
-    const selectedRole=(DB.roles||[]).find(r=>r.name===role);
-
-    await db.collection('users').doc(uid).set({
-      uid,
-      name,
-      email,
-      phone,
-      role,
-      responsibilities,
-      permissions:(selectedRole&&Array.isArray(selectedRole.permissions)) ? selectedRole.permissions : [],
-      status,
-      invitationStatus:'Sent',
-      invited:true,
-      invitedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-      createdByUid:auth.currentUser.uid,
-      createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||''
-    });
-
-    profileCreated=true;
-
-    /* Keep Employees synchronized with the newly created CRM user. */
-    const employeeSnap=await db.collection('employees')
-      .where('email','==',email).limit(1).get();
-
-    const employeeData={
-      name,email,phone,role,responsibilities,status,userUid:uid,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    if(employeeSnap.empty){
-      await db.collection('employees').add({
-        ...employeeData,
-        createdByUid:auth.currentUser.uid,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }else{
-      await employeeSnap.docs[0].ref.update(employeeData);
-    }
-
-    /*
-     * Firebase sends its standard secure password setup/reset email.
-     * The temporary password is never stored.
-     */
-    await provisionAuth.sendPasswordResetEmail(email);
-    await provisionAuth.signOut();
-
-    closeAdminNewUserModal();
-    toast(`User created and password setup email sent to ${email}.`,'success');
-
-    renderTable(
-      'users',
-      document.getElementById('adminUserSearch')?.value||'',
-      'tbody-users',
-      document.querySelector('#adminUsersTable thead')
-    );
-
-  }catch(err){
-    console.error('createAdminNewUser',err);
-
-    if(createdUser && !profileCreated){
-      try{ await createdUser.delete(); }catch(cleanupErr){
-        console.error('Auth cleanup failed',cleanupErr);
-      }
-    }
-
-    const msg=adminAuthError(err);
-    setAdminNewUserError(msg);
-    toast(msg,'error');
-
-  }finally{
-    button.disabled=false;
-    button.textContent='Create User & Send Invitation';
-    try{
-      if(provisionAuth.currentUser) await provisionAuth.signOut();
-    }catch(_){}
-  }
-}
-
-async function resendAdminUserInvitation(uid){
-  if(!isAdmin()){
-    toast('Only Admin or Super Admin can resend invitations','error');
-    return;
-  }
-
-  const user=(DB.users||[]).find(u=>u.id===uid);
-  if(!user || !user.email){
-    toast('User email not found','error');
-    return;
-  }
-
-  if(user.id===auth.currentUser.uid){
-    toast('Your own password is managed from My Profile','error');
-    return;
-  }
-
-  try{
-    const provisionAuth=getAdminProvisionAuth();
-    await provisionAuth.sendPasswordResetEmail(user.email);
-    await provisionAuth.signOut();
-
-    await db.collection('users').doc(uid).set({
-      invitationStatus:'Sent',
-      invited:true,
-      lastInvitationSentAt:firebase.firestore.FieldValue.serverTimestamp(),
-      invitationResentByUid:auth.currentUser.uid
-    },{merge:true});
-
-    toast(`Password setup email resent to ${user.email}`,'success');
-
-  }catch(err){
-    console.error('resendAdminUserInvitation',err);
-    toast(adminAuthError(err),'error');
-  }
-}
-
-function adminUserExtraActions(user){
-  if(!user || !user.email || user.id===auth.currentUser?.uid) return '';
-  return `<button type="button" class="btn-sm" title="Resend password setup email"
-    onclick="resendAdminUserInvitation('${adminNewUserEsc(user.id)}')">Resend Invite</button>`;
-}
-
 /* =========================================================
    ADMIN TABS
 ========================================================= */
@@ -7012,14 +6514,33 @@ async function saveConfig(e){
    ROLES & RESPONSIBILITIES
 ========================================================= */
 const PAGE_LABELS = {
-  dashboard:'Dashboard', leads:'Leads', contacts:'Contacts', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
-  proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
-  dailysummary:'Daily Summary', weeklyplanner:'Weekly Planner',
-  reports:'Reports', settings:'Masters & Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
+  dashboard:'Dashboard',
+  techmanagement:'Tech Management',
+
+  leads:'Leads',
+  contacts:'Contacts',
+  calls:'Calls',
+  calendar:'Calendar',
+  meetings:'Meetings',
+  quotations:'Quotations',
+  proposals:'Proposals',
+  expenses:'Expenses',
+  employees:'Employees',
+  customers:'Customers',
+
+  dailysummary:'Daily Summary',
+  weeklyplanner:'Weekly Planner',
+
+  reports:'Reports',
+  settings:'Masters & Settings',
+  profile:'My Profile',
+  myreports:'My Reports',
+  adminpanel:'Admin Panel'
 };
 
 const MODULE_TILES = [
   {id:'dashboard', title:'Dashboard', desc:'KPIs, pipeline health and today\'s activity.'},
+  {id:'techmanagement', title:'Tech Management', desc:'Tickets, projects, modules, team coordination and technical updates.'},
   {id:'leads', title:'Leads & Prospects', desc:'Capture, qualify and progress every opportunity.'},
   {id:'contacts', title:'Contacts', desc:'Every person at every company — registered client or not.'},
   {id:'calls', title:'Call Management', desc:'Log calls, auto-reminders, missed-call recovery.'},
@@ -7042,13 +6563,26 @@ const MODULE_TILES = [
 function renderSitemap(){
   const el = document.getElementById('sitemapTiles');
   if(!el) return;
+
   const allowed = allowedPagesForRole();
-  el.innerHTML = MODULE_TILES.filter(m=>allowed.includes(m.id)).map(m=>`
-    <div class="tile" onclick="go('${m.id}')">
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
-      <h4>${m.title}</h4>
-      <p>${m.desc}</p>
-    </div>`).join('');
+
+  el.innerHTML = MODULE_TILES
+    .filter(m => allowed.includes(m.id))
+    .map(m=>`
+      <div class="tile" onclick="go('${m.id}')">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+        </div>
+        <h4>${m.title}</h4>
+        <p>${m.desc}</p>
+      </div>
+    `)
+    .join('');
+
+  syncRoleBasedNavigation();
 }
 
 function renderRolesTable(){
@@ -7109,8 +6643,6 @@ async function saveRole(e){
   const responsibilities = document.getElementById('roleRespInput').value.trim();
   const permissions = Array.from(document.querySelectorAll('#rolePermGrid input[type=checkbox]'))
     .filter(cb=>cb.checked).map(cb=>cb.value);
-  // Keep Masters & Settings stored under the canonical `settings` permission.
-  if(permissions.includes('masterssettings') && !permissions.includes('settings')) permissions.push('settings');
   if(!permissions.includes('profile')) permissions.push('profile');
   if(!permissions.includes('myreports')) permissions.push('myreports');
 
@@ -7160,8 +6692,23 @@ function renderAll(){
   updateCounts();
   renderAdminPanel();
   renderMyReports();
+
   if(document.getElementById('tbody-employees-admin')){
     renderTable('employees', '', 'tbody-employees-admin', document.querySelector('#adminEmployeesTable thead'));
+  }
+
+  syncRoleBasedNavigation();
+
+  /*
+   * If a Tech / Tech Team user lands on the normal dashboard route,
+   * immediately place them in the Tech Management workspace.
+   */
+  if(
+    isTechRole() &&
+    document.getElementById('page-dashboard') &&
+    document.getElementById('page-dashboard').classList.contains('active')
+  ){
+    go('techmanagement');
   }
 }
 
@@ -7515,7 +7062,7 @@ function hlDateEnhance(input){
   shell.appendChild(trigger);
   hlDateSyncTrigger(input);
 }
-function hlDateEnhanceAll(root=document){root.querySelectorAll('input[type="date"]:not(.tech-native-date):not([data-hl-date-enhanced="1"])').forEach(hlDateEnhance);}
+function hlDateEnhanceAll(root=document){root.querySelectorAll('input[type="date"]:not([data-hl-date-enhanced="1"])').forEach(hlDateEnhance);}
 
 
 /* =========================================================
@@ -7664,16 +7211,6 @@ function hlMonthEnhanceAll(root=document){
 }
 
 /* Enhance static fields immediately and dynamically-created form fields/filters. */
-/* Ensure Tech Management date fields always open the native picker.
-   This is intentionally limited to Tech Management and does not affect other modules. */
-document.addEventListener('click', function(e){
-  const input=e.target?.closest?.('#techModal input.tech-native-date');
-  if(!input) return;
-  try{
-    if(typeof input.showPicker==='function') input.showPicker();
-  }catch(_){}
-}, true);
-
 function initGlobalDatePicker(){
   hlDateEnhanceAll(document);
   hlMonthEnhanceAll(document);
@@ -7690,27 +7227,6 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 
 </script>
 
-
-
-<script id="tech-button-click-fallback">
-(function(){
-  document.addEventListener('click', function(ev){
-    const b = ev.target.closest && ev.target.closest('.tech-action-btn');
-    if(!b) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    const txt=(b.textContent||'').trim().toLowerCase();
-    try{
-      if(txt.includes('ticket')) openTechModal('ticket');
-      else if(txt.includes('project')) openTechModal('project');
-      else if(txt.includes('module')) openTechModal('module');
-    }catch(err){
-      console.error('Tech action button error:',err);
-      if(typeof toast==='function') toast('Unable to open Tech form. Please refresh and try again.','error');
-    }
-  }, true);
-})();
-</script>
 
 </body>
 </html>
