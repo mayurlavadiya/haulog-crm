@@ -2756,7 +2756,10 @@ const pages = ['dashboard','sitemap','leads','contacts','calls','calendar','meet
 function allowedPagesForRole(){
   const roleName = (DB.profile && DB.profile.role) || '';
   const match = (DB.roles||[]).find(r=>r.name===roleName);
-  const base = match ? match.permissions : ((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions);
+  const base = match ? [...(match.permissions||[])] : [...((DEFAULT_ROLES.find(r=>r.name===roleName) || DEFAULT_ROLES.find(r=>r.name==='Sales Executive')).permissions||[])];
+  // Masters & Settings uses the existing `settings` route/permission key.
+  // Accept the newer `masterssettings` key as well for forward compatibility.
+  if(base.includes('masterssettings') && !base.includes('settings')) base.push('settings');
   // Daily Summary & Weekly Planner are personal productivity logs every
   // role must be able to submit — available to everyone regardless of
   // what's saved in their role's permission list.
@@ -7012,7 +7015,7 @@ const PAGE_LABELS = {
   dashboard:'Dashboard', leads:'Leads', contacts:'Contacts', calls:'Calls', calendar:'Calendar', meetings:'Meetings', quotations:'Quotations',
   proposals:'Proposals', expenses:'Expenses', employees:'Employees', customers:'Customers',
   dailysummary:'Daily Summary', weeklyplanner:'Weekly Planner',
-  reports:'Reports', settings:'Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
+  reports:'Reports', settings:'Masters & Settings', profile:'My Profile', myreports:'My Reports', adminpanel:'Admin Panel'
 };
 
 const MODULE_TILES = [
@@ -7106,6 +7109,8 @@ async function saveRole(e){
   const responsibilities = document.getElementById('roleRespInput').value.trim();
   const permissions = Array.from(document.querySelectorAll('#rolePermGrid input[type=checkbox]'))
     .filter(cb=>cb.checked).map(cb=>cb.value);
+  // Keep Masters & Settings stored under the canonical `settings` permission.
+  if(permissions.includes('masterssettings') && !permissions.includes('settings')) permissions.push('settings');
   if(!permissions.includes('profile')) permissions.push('profile');
   if(!permissions.includes('myreports')) permissions.push('myreports');
 
