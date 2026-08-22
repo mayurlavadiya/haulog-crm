@@ -552,6 +552,144 @@ tbody tr:hover{background:var(--blue-50);}
 @media(max-width:1050px){.tech-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.tech-two{grid-template-columns:1fr;}}
 @media(max-width:600px){.tech-grid{grid-template-columns:1fr}.tech-form-grid{grid-template-columns:1fr}.tech-form-grid .full{grid-column:auto}.tech-modal{padding:16px;border-radius:16px}.tech-tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:4px}.tech-tab{white-space:nowrap}}
 
+/* =========================================================
+   STANDARD CRM FORM DESIGN — Tech Management
+   Matches the existing generic CRM modal used by Contacts
+   and other modules. Functional behavior is unchanged.
+========================================================= */
+.tech-modal-backdrop{
+  padding:20px;
+}
+.tech-modal{
+  width:100%;
+  max-width:560px;
+  max-height:88vh;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:0;
+  background:var(--paper);
+  border:0;
+  border-radius:18px;
+  box-shadow:0 30px 70px rgba(0,0,50,.3);
+}
+.tech-modal-head{
+  padding:20px 24px;
+  margin:0;
+  border-bottom:1px solid var(--line);
+  background:var(--paper);
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+.tech-modal-head h3{
+  margin:0;
+  font-size:16px;
+  font-weight:700;
+}
+.tech-modal-head .btn-ghost{
+  width:32px;
+  height:32px;
+  min-height:32px;
+  padding:0;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 32px;
+  font-size:16px;
+  font-weight:500;
+}
+.tech-modal form{
+  padding:22px 24px 0;
+}
+.tech-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:14px;
+  row-gap:0;
+}
+.tech-form-grid > div{
+  margin-bottom:16px;
+  min-width:0;
+}
+.tech-form-grid .full{
+  grid-column:1/-1;
+}
+.tech-form-grid label{
+  display:block;
+  font-size:12.5px;
+  font-weight:600;
+  margin-bottom:6px;
+  color:var(--ink);
+}
+.tech-form-grid label .req{
+  color:var(--red);
+}
+.tech-form-grid input,
+.tech-form-grid select,
+.tech-form-grid textarea{
+  width:100%;
+  box-sizing:border-box;
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:13.5px;
+  font-family:inherit;
+  font-weight:400;
+  line-height:1.35;
+  outline:none;
+  background:var(--field-bg);
+  color:var(--ink);
+}
+.tech-form-grid input,
+.tech-form-grid select{
+  min-height:40px;
+}
+.tech-form-grid textarea{
+  min-height:70px;
+  resize:vertical;
+}
+.tech-form-grid input:focus,
+.tech-form-grid select:focus,
+.tech-form-grid textarea:focus{
+  border-color:var(--blue);
+  background:var(--paper);
+}
+.tech-modal-foot{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin:0 -24px;
+  padding:16px 24px;
+  border-top:1px solid var(--line);
+  position:sticky;
+  bottom:0;
+  background:var(--paper);
+  z-index:2;
+}
+.tech-modal .btn-primary,
+.tech-modal .btn-ghost{
+  min-height:0;
+  padding:10px 18px;
+  border-radius:11px;
+  font-size:13.5px;
+  font-weight:600;
+}
+.tech-modal .btn-ghost{
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--ink);
+}
+@media(max-width:600px){
+  .tech-modal-backdrop{padding:20px;}
+  .tech-modal{max-width:560px;border-radius:18px;}
+  .tech-modal-head{padding:20px 24px;}
+  .tech-modal form{padding:22px 24px 0;}
+  .tech-form-grid{grid-template-columns:1fr;}
+  .tech-form-grid .full{grid-column:auto;}
+  .tech-modal-foot{margin:0 -24px;padding:16px 24px;}
+}
+
 /* Reports / Intelligence */
 .reports-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .reports-filters .filter{min-width:150px;}
