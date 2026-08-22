@@ -759,6 +759,76 @@ tbody tr:hover{background:var(--blue-50);}
 }
 </style>
 
+
+<style id="tech-add-functionalities-style">
+#techTabProjects .card-head,
+#techTabModules .card-head,
+#techTabTeam .card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+#techTabProjects .card-head .btn-primary,
+#techTabModules .card-head .btn-primary,
+#techTabTeam .card-head .btn-primary{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+@media(max-width:640px){
+  #techTabProjects .card-head .btn-primary,
+  #techTabModules .card-head .btn-primary,
+  #techTabTeam .card-head .btn-primary{
+    width:100%;
+  }
+}
+</style>
+
+
+<style id="tech-standard-form-design">
+/* Tech Management uses the exact existing CRM typography/control sizing. */
+#techManagement,
+#techManagement * {
+  font-family: inherit;
+}
+#techManagement h1,
+#techManagement h2,
+#techManagement h3,
+#techManagement h4,
+#techManagement .section-title,
+#techManagement .card-title,
+#techManagement .form-title {
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+}
+#techManagement input,
+#techManagement select,
+#techManagement textarea,
+#techManagement button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+#techManagement .tech-action-btn {
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+}
+#techManagement .tech-action-btn:disabled {
+  pointer-events: none;
+}
+@media(max-width:640px){
+  #techManagement .tech-action-btn {
+    min-height: 36px;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -1581,13 +1651,13 @@ tbody tr:hover{background:var(--blue-50);}
 
       <!-- TECH MANAGEMENT -->
       <section class="page" id="page-techmanagement">
-        <div class="page-head"><div><div class="eyebrow">Technology</div><h1>Tech Management</h1><p>Tickets, bugs, queries, projects, modules and team coordination</p></div><div class="head-actions"><button class="btn-primary" onclick="openTechModal('ticket')">+ New Ticket</button></div></div>
+        <div class="page-head"><div><div class="eyebrow">Technology</div><h1>Tech Management</h1><p>Tickets, bugs, queries, projects, modules and team coordination</p></div><div class="head-actions"><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('ticket'); return false;">+ New Ticket</button></div></div>
         <div class="tech-tabs"><button class="tech-tab active" data-tech-tab="overview" onclick="setTechTab('overview')">Overview</button><button class="tech-tab" data-tech-tab="tickets" onclick="setTechTab('tickets')">Tickets</button><button class="tech-tab" data-tech-tab="projects" onclick="setTechTab('projects')">Projects</button><button class="tech-tab" data-tech-tab="modules" onclick="setTechTab('modules')">Modules</button><button class="tech-tab" data-tech-tab="team" onclick="setTechTab('team')">Team</button><button class="tech-tab" data-tech-tab="updates" onclick="setTechTab('updates')">System Updates</button></div>
         <div id="techTabOverview" class="tech-tab-panel"><div class="tech-grid" id="techKpis"></div><div class="tech-two" style="margin-top:16px;"><div class="card"><div class="card-head"><div><h3>Ticket Status</h3><p class="sub">Live technical workload</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techTicketStatusChart"></canvas></div></div><div class="card"><div class="card-head"><div><h3>Priority Load</h3><p class="sub">Open work by priority</p></div></div><div class="chart-box" style="height:260px;position:relative;"><canvas id="techPriorityChart"></canvas></div></div></div><div class="card" style="margin-top:16px;"><div class="card-head"><div><h3>Due &amp; Overdue</h3><p class="sub">Items that need attention</p></div></div><div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Type</th><th>Project</th><th>Assignee</th><th>Due</th><th>Priority</th><th>Status</th></tr></thead><tbody id="tbody-techDue"></tbody></table></div></div></div>
         <div id="techTabTickets" class="tech-tab-panel" style="display:none;"><div class="card"><div class="toolbar"><input class="search-input" id="techTicketSearch" placeholder="Search ticket, bug, query, project…" oninput="renderTechTickets()"><select class="filter" id="techTicketType" onchange="renderTechTickets()"><option value="">All Types</option><option>Bug</option><option>Query</option><option>Ticket</option><option>Task</option></select><select class="filter" id="techTicketStatus" onchange="renderTechTickets()"><option value="">All Statuses</option><option>New</option><option>In Progress</option><option>Blocked</option><option>Resolved</option><option>Closed</option></select><select class="filter" id="techTicketPriority" onchange="renderTechTickets()"><option value="">All Priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="table-wrap"><table><thead><tr><th>Title</th><th>Type</th><th>Project</th><th>Module</th><th>Assignee</th><th>Priority</th><th>Status</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTickets"></tbody></table></div></div></div>
-        <div id="techTabProjects" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Project Management</h3><p class="sub">Manage technical projects and client work</p></div><button class="btn-primary" onclick="openTechModal('project')">+ Project</button></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Client</th><th>Owner</th><th>Status</th><th>Progress</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techProjects"></tbody></table></div></div></div>
-        <div id="techTabModules" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Module Management</h3><p class="sub">Manage application modules and ownership</p></div><button class="btn-primary" onclick="openTechModal('module')">+ Module</button></div><div class="table-wrap"><table><thead><tr><th>Module</th><th>Project</th><th>Owner</th><th>Status</th><th>Open Tickets</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techModules"></tbody></table></div></div></div>
-        <div id="techTabTeam" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Team Management</h3><p class="sub">Add and coordinate technical team members</p></div><button class="btn-primary" onclick="openTechModal('team')">+ Team Member</button></div><div class="table-wrap"><table><thead><tr><th>Team Member</th><th>Email</th><th>Role</th><th>Open Tickets</th><th>Resolved</th><th>Current Load</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTeam"></tbody></table></div></div></div><div id="techTabUpdates" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>System Updates</h3><p class="sub">Track functionalities, requirements, development and live releases.</p></div><button class="btn-primary" onclick="openTechModal('update')">+ System Update</button></div><div class="tech-update-filters" style="margin-bottom:14px;"><input class="search-input" id="techUpdateModuleSearch" placeholder="Search module…" oninput="renderTechUpdates()"><input class="search-input" id="techUpdateFeatureSearch" placeholder="Search feature…" oninput="renderTechUpdates()"><input type="month" class="filter" id="techUpdateMonth" onchange="renderTechUpdates()" placeholder="Select month"><button class="btn-ghost" id="techUpdateMonthClear" type="button" onclick="clearTechUpdateMonth()">Clear Month</button><select class="filter" id="techUpdateModule" onchange="renderTechUpdates()"><option value="">All Modules</option></select><select class="filter" id="techUpdateStatus" onchange="renderTechUpdates()"><option value="">All Status</option><option value="development">Developed</option><option value="ready">Developed · Live Pending</option><option value="live">Live</option></select></div><div class="table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Module</th><th>Functionality</th><th>Requirement</th><th>Development</th><th>Live</th><th>Updated By</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techUpdates"></tbody></table></div></div></div>
+        <div id="techTabProjects" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Project Management</h3><p class="sub">Manage technical projects and client work</p></div><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('project'); return false;">+ Project</button></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Client</th><th>Owner</th><th>Status</th><th>Progress</th><th>Due</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techProjects"></tbody></table></div></div></div>
+        <div id="techTabModules" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Module Management</h3><p class="sub">Manage application modules and ownership</p></div><button type="button" class="btn-primary tech-action-btn" onclick="openTechModal('module'); return false;">+ Module</button></div><div class="table-wrap"><table><thead><tr><th>Module</th><th>Project</th><th>Owner</th><th>Status</th><th>Open Tickets</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techModules"></tbody></table></div></div></div>
+        <div id="techTabTeam" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>Team Management</h3><p class="sub">Add and coordinate technical team members</p></div><button class="btn-primary" type="button" onclick="openTechModal('team')">+ Team Member</button></div><div class="table-wrap"><table><thead><tr><th>Team Member</th><th>Email</th><th>Role</th><th>Open Tickets</th><th>Resolved</th><th>Current Load</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techTeam"></tbody></table></div></div></div><div id="techTabUpdates" class="tech-tab-panel" style="display:none;"><div class="card"><div class="card-head"><div><h3>System Updates</h3><p class="sub">Track functionalities, requirements, development and live releases.</p></div><button class="btn-primary" onclick="openTechModal('update')">+ System Update</button></div><div class="tech-update-filters" style="margin-bottom:14px;"><input class="search-input" id="techUpdateModuleSearch" placeholder="Search module…" oninput="renderTechUpdates()"><input class="search-input" id="techUpdateFeatureSearch" placeholder="Search feature…" oninput="renderTechUpdates()"><input type="month" class="filter" id="techUpdateMonth" onchange="renderTechUpdates()" placeholder="Select month"><button class="btn-ghost" id="techUpdateMonthClear" type="button" onclick="clearTechUpdateMonth()">Clear Month</button><select class="filter" id="techUpdateModule" onchange="renderTechUpdates()"><option value="">All Modules</option></select><select class="filter" id="techUpdateStatus" onchange="renderTechUpdates()"><option value="">All Status</option><option value="development">Developed</option><option value="ready">Developed · Live Pending</option><option value="live">Live</option></select></div><div class="table-wrap"><table><thead><tr><th>Date &amp; Time</th><th>Module</th><th>Functionality</th><th>Requirement</th><th>Development</th><th>Live</th><th>Updated By</th><th style="text-align:right">Actions</th></tr></thead><tbody id="tbody-techUpdates"></tbody></table></div></div></div>
       </section>
       <div class="tech-modal-backdrop" id="techModalBackdrop" onclick="if(event.target===this)closeTechModal()"><div class="tech-modal"><div class="tech-modal-head"><h3 id="techModalTitle">Tech Management</h3><button class="btn-ghost" onclick="closeTechModal()">✕</button></div><div id="techModalBody"></div></div></div>
 
@@ -2632,7 +2702,48 @@ function clearTechUpdateMonth(){const el=document.getElementById('techUpdateMont
 function renderTechUpdates(){const body=document.getElementById('tbody-techUpdates');if(!body)return;const list=DB.techUpdates||[];const moduleSearch=(document.getElementById('techUpdateModuleSearch')?.value||'').toLowerCase();const featureSearch=(document.getElementById('techUpdateFeatureSearch')?.value||'').toLowerCase();const month=document.getElementById('techUpdateMonth');const mod=document.getElementById('techUpdateModule');const status=document.getElementById('techUpdateStatus');const prevM=month?.value||'';if(month)month.value=prevM;const mods=[...new Set(list.map(x=>x.module).filter(Boolean))].sort();const prevMod=mod?.value||'';if(mod)mod.innerHTML='<option value="">All Modules</option>'+mods.map(m=>`<option value="${techEsc(m)}" ${m===prevMod?'selected':''}>${techEsc(m)}</option>`).join('');let rows=list.filter(x=>{const hay=[x.module,x.title,x.requirement,x.details,x.version].join(' ').toLowerCase();if(moduleSearch&&!String(x.module||'').toLowerCase().includes(moduleSearch))return false;if(featureSearch&&!String(x.title||'').toLowerCase().includes(featureSearch))return false;if(month?.value&&(x.updateDateTime||'').slice(0,7)!==month.value)return false;if(mod?.value&&x.module!==mod.value)return false;if(status?.value==='development'&&!x.developed)return false;if(status?.value==='ready'&&!(x.developed&&!x.live))return false;if(status?.value==='live'&&!x.live)return false;return true;}).sort((a,b)=>String(b.updateDateTime||'').localeCompare(String(a.updateDateTime||'')));body.innerHTML=rows.length?rows.map(x=>{const dev=x.developed?'✓ Developed':'Pending';const live=x.live?'✓ Live':'Not Live';return `<tr><td><div>${techEsc(formatTechDateTime(x.updateDateTime))}</div><div class="tech-update-meta">${techEsc(x.version||'')}</div></td><td>${techEsc(x.module||'—')}</td><td><strong>${techEsc(x.title||'—')}</strong><div class="tech-update-meta">${techEsc((x.details||'').slice(0,110))}${(x.details||'').length>110?'…':''}</div></td><td><div class="tech-update-meta">${techEsc((x.requirement||'—').slice(0,120))}${(x.requirement||'').length>120?'…':''}</div></td><td><span class="tech-update-status ${x.developed?'developed':'pending'}">${dev}</span></td><td><span class="tech-update-status ${x.live?'live':'pending'}">${live}</span></td><td>${techEsc(x.createdBy||'—')}</td><td style="text-align:right;white-space:nowrap"><button class="btn-sm" onclick="openTechModal('update','${x.id}')">Edit</button> <button class="btn-sm danger" onclick="deleteTechRecord('techUpdates','${x.id}')">Delete</button></td></tr>`;}).join(''):'<tr><td colspan="8" class="empty">No system updates found.</td></tr>';}
 async function saveTechTeamMember(e,id){e.preventDefault();const f=new FormData(e.target);const data={name:f.get('name').trim(),email:(f.get('email')||'').trim(),role:f.get('role'),phone:(f.get('phone')||'').trim(),status:f.get('status'),notes:f.get('notes')||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await saveTechRecord('techTeamMembers',id,data,'Team Member');}
 
-async function saveTechRecord(col,id,data,label){try{if(!auth.currentUser||!isTechUser())throw new Error('Tech Team access required');if(id)await db.collection(col).doc(id).set(data,{merge:true});else{data.createdByUid=auth.currentUser.uid;data.createdBy=DB.profile.name||auth.currentUser.email||'';data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection(col).add(data);}closeTechModal();toast(label+' saved','success');}catch(err){console.error(err);toast('Could not save '+label+': '+err.message,'error');}}
+async function saveTechRecord(col,id,data,label){
+  try{
+    if(!auth.currentUser) throw new Error('Please login again.');
+    if(!isTechUser()) throw new Error('Tech Management access required.');
+
+    const now=firebase.firestore.FieldValue.serverTimestamp();
+
+    if(id){
+      await db.collection(col).doc(id).set({
+        ...data,
+        updatedByUid:auth.currentUser.uid,
+        updatedAt:data.updatedAt||now
+      },{merge:true});
+    }else{
+      await db.collection(col).add({
+        ...data,
+        createdByUid:auth.currentUser.uid,
+        createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||'',
+        createdAt:now,
+        updatedByUid:auth.currentUser.uid,
+        updatedAt:now
+      });
+    }
+
+    closeTechModal();
+    toast(label+' saved successfully','success');
+
+    // Immediately refresh the current Tech view.
+    setTimeout(()=>{
+      try{
+        renderTechProjects();
+        renderTechModules();
+        renderTechTeam();
+        renderTechOverview();
+      }catch(_){}
+    },150);
+
+  }catch(err){
+    console.error('Tech save error:',col,label,err);
+    toast('Could not save '+label+': '+(err.message||'Unknown Firestore error'),'error');
+  }
+}
 async function deleteTechRecord(col,id){if(!isTechUser())return;const rec=(DB[col]||[]).find(x=>x.id===id);if(!rec)return;if(!confirm('Delete this technical record?'))return;try{await db.collection(col).doc(id).delete();toast('Deleted','success');}catch(err){console.error(err);toast('Delete failed: '+err.message,'error');}}
 
 /* =========================================================
@@ -7399,6 +7510,27 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 
 </script>
 
+
+
+<script id="tech-button-click-fallback">
+(function(){
+  document.addEventListener('click', function(ev){
+    const b = ev.target.closest && ev.target.closest('.tech-action-btn');
+    if(!b) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const txt=(b.textContent||'').trim().toLowerCase();
+    try{
+      if(txt.includes('ticket')) openTechModal('ticket');
+      else if(txt.includes('project')) openTechModal('project');
+      else if(txt.includes('module')) openTechModal('module');
+    }catch(err){
+      console.error('Tech action button error:',err);
+      if(typeof toast==='function') toast('Unable to open Tech form. Please refresh and try again.','error');
+    }
+  }, true);
+})();
+</script>
 
 </body>
 </html>
