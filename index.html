@@ -746,6 +746,19 @@ tbody tr:hover{background:var(--blue-50);}
   }
 }
 </style>
+
+<style id="admin-create-user-style">
+.admin-invite-info{background:var(--blue-50,#EEF0FF);border:1px solid var(--blue-100,#DDE1FF);border-radius:12px;padding:12px 14px;color:var(--ink,#0A0B1F);font-size:12px;line-height:1.55}
+.admin-invite-status{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}
+.admin-invite-status.sent{background:#FFF4D8;color:#9A6500}
+.admin-invite-status.active{background:#E8F8EF;color:#147A46}
+.admin-invite-status.inactive{background:#FEEEEC;color:#B42318}
+@media(max-width:700px){
+  #adminTab-users .toolbar{align-items:stretch}
+  #adminTab-users .toolbar .search-input,#adminTab-users .toolbar .btn-primary{width:100%;min-width:0}
+}
+</style>
+
 </head>
 <body>
 
@@ -1753,10 +1766,63 @@ tbody tr:hover{background:var(--blue-50);}
         <div class="admin-tab-panel" id="adminTab-users" style="display:none;">
           <div class="card">
             <h3>Users</h3><p class="sub">Everyone with a login. Edit name/phone/role/status, or deactivate access. You can't edit your own row here — use My Profile.</p>
-            <div class="toolbar" style="margin-top:14px;">
-              <input class="search-input" id="adminUserSearch" placeholder="Search by name or email…" oninput="renderTable('users', this.value, 'tbody-users', document.querySelector('#adminUsersTable thead'))">
+            <div class="toolbar" style="margin-top:14px;justify-content:space-between;flex-wrap:wrap;">
+              <input class="search-input" id="adminUserSearch" placeholder="Search by name or email…" oninput="renderTable('users', this.value, 'tbody-users', document.querySelector('#adminUsersTable thead'))" style="flex:1;min-width:220px;">
+              <button class="btn-primary" type="button" onclick="openAdminNewUserModal()">+ New User</button>
             </div>
             <div class="table-wrap"><table id="adminUsersTable"><thead></thead><tbody id="tbody-users"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- ADMIN — CREATE USER / PASSWORD INVITATION MODAL -->
+        <div class="modal-bg" id="adminNewUserModal" onclick="if(event.target===this)closeAdminNewUserModal()">
+          <div class="modal">
+            <div class="modal-head">
+              <h3>Create New User</h3>
+              <button class="modal-close" type="button" onclick="closeAdminNewUserModal()">✕</button>
+            </div>
+            <form id="adminNewUserForm" onsubmit="createAdminNewUser(event)">
+              <div class="modal-body">
+                <div class="field">
+                  <label>Full Name <span class="req">*</span></label>
+                  <input id="newUserName" type="text" required placeholder="Enter full name">
+                </div>
+                <div class="two-col">
+                  <div class="field">
+                    <label>Work Email <span class="req">*</span></label>
+                    <input id="newUserEmail" type="email" required autocomplete="email" spellcheck="false" placeholder="name@company.com">
+                  </div>
+                  <div class="field">
+                    <label>Phone</label>
+                    <input id="newUserPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile">
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Role <span class="req">*</span></label>
+                  <select id="newUserRole" required><option value="">Select Role</option></select>
+                </div>
+                <div class="field">
+                  <label>Responsibilities</label>
+                  <textarea id="newUserResponsibilities" rows="3" placeholder="Responsibilities for this user"></textarea>
+                </div>
+                <div class="field">
+                  <label>Status</label>
+                  <select id="newUserStatus">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <div class="admin-invite-info">
+                  <strong>Password setup</strong>
+                  <div style="margin-top:4px;">Firebase will send a secure password setup email. The temporary password is generated only in memory and is never stored in Firestore.</div>
+                </div>
+                <div id="newUserCreateError" class="form-error" style="display:none;"></div>
+              </div>
+              <div class="modal-foot">
+                <button type="button" class="btn-ghost" onclick="closeAdminNewUserModal()">Cancel</button>
+                <button type="submit" class="btn-primary" id="newUserCreateBtn">Create User &amp; Send Invitation</button>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -1835,6 +1901,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+/*
+ * Admin-only user provisioning.
+ * A secondary Firebase Auth app creates users without signing
+ * the currently logged-in Admin out.
+ * No Cloud Functions / Cloud Build / billing required.
+ */
+let adminProvisionApp = null;
+let adminProvisionAuth = null;
+
+function getAdminProvisionAuth(){
+  if(adminProvisionAuth) return adminProvisionAuth;
+  adminProvisionApp = firebase.apps.find(app => app.name === 'AdminUserProvisioning');
+  if(!adminProvisionApp){
+    adminProvisionApp = firebase.initializeApp(firebaseConfig, 'AdminUserProvisioning');
+  }
+  adminProvisionAuth = adminProvisionApp.auth();
+  return adminProvisionAuth;
+}
 
 const STAGES = ['New','Contacted','Qualified','Demo Scheduled','Proposal Sent','Negotiation','Won','Lost'];
 const COLLECTIONS = ['leads','calls','meetings','quotations','proposals','expenses','employees','customers','contacts','dailysummaries','weeklyplanners','notes'];
@@ -2416,7 +2501,13 @@ const MODULES = {
       {key:'email', label:'Email'},
       {key:'phone', label:'Phone'},
       {key:'role', label:'Role', pill:()=>'blue'},
-      {key:'status', label:'Status', pill:s=>s==='Inactive'?'red':'green'}
+      {key:'status', label:'Status', pill:s=>s==='Inactive'?'red':'green'},
+      {key:'invitationStatus', label:'Invitation', fmt:(v,r)=>{
+        if(v==='Sent' || v==='Invited') return '<span class="admin-invite-status sent">✉ Invitation Sent</span>';
+        if(v==='Accepted' || v==='Active') return '<span class="admin-invite-status active">✓ Active</span>';
+        if(r && r.status==='Inactive') return '<span class="admin-invite-status inactive">Inactive</span>';
+        return '<span class="admin-invite-status sent">Setup Pending</span>';
+      }}
     ],
     fields:[
       {key:'name', label:'Full Name', type:'text', required:true},
@@ -2675,6 +2766,7 @@ function renderTable(moduleKey, filterText, tbodyIdOverride, theadElOverride){
       return `<tr>${tds}<td><div class="row-actions" style="justify-content:flex-end">
         ${moduleKey==='calls' ? `<button class="icon-action" title="Call history & follow-up remarks" onclick="openCallDetail('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ''}
         ${moduleKey==='quotations' ? `<button class="icon-action" title="Convert to Proposal" onclick="convertQuoteToProposal('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>` : ''}
+        ${moduleKey==='users' ? adminUserExtraActions(r) : ''}
         <button class="icon-action" title="Edit" onclick="${editHandler}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
         <button class="icon-action danger" title="Delete" onclick="deleteRecord('${moduleKey}','${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
       </div></td></tr>`;
@@ -6363,6 +6455,237 @@ async function exportExpenseReportPdfAsync(){
   }
 
   doc.save(`Expense_Report_${lastReportMeta.month}.pdf`);
+}
+
+
+/* =========================================================
+   ADMIN — CREATE USER / EMAIL INVITATION
+   No Cloud Functions / billing required.
+========================================================= */
+
+function adminNewUserEsc(v){
+  return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
+    .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
+}
+
+function openAdminNewUserModal(){
+  if(!isAdmin()){
+    toast('Only Admin or Super Admin can create users','error');
+    return;
+  }
+
+  const modal=document.getElementById('adminNewUserModal');
+  const form=document.getElementById('adminNewUserForm');
+  if(!modal || !form) return;
+
+  form.reset();
+
+  const roleSelect=document.getElementById('newUserRole');
+  roleSelect.innerHTML='<option value="">Select Role</option>'+
+    (DB.roles||[]).map(r=>`<option value="${adminNewUserEsc(r.name)}">${adminNewUserEsc(r.name)}</option>`).join('');
+
+  const defaultRole=DB.appConfig && DB.appConfig.defaultNewUserRole;
+  if(defaultRole && (DB.roles||[]).some(r=>r.name===defaultRole)){
+    roleSelect.value=defaultRole;
+  }
+
+  setAdminNewUserError('');
+  modal.classList.add('show');
+}
+
+function closeAdminNewUserModal(){
+  document.getElementById('adminNewUserModal')?.classList.remove('show');
+}
+
+function setAdminNewUserError(message){
+  const el=document.getElementById('newUserCreateError');
+  if(!el) return;
+  el.textContent=message||'';
+  el.style.display=message?'block':'none';
+}
+
+function generateAdminTemporaryPassword(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  let out='H!';
+  for(let i=0;i<14;i++) out+=chars[Math.floor(Math.random()*chars.length)];
+  return out+'#9';
+}
+
+function adminAuthError(err){
+  const code=(err&&err.code)||'';
+  if(code==='auth/email-already-in-use') return 'This email already has a Firebase Authentication account.';
+  if(code==='auth/invalid-email') return 'Please enter a valid email address.';
+  if(code==='auth/weak-password') return 'Unable to create the temporary password. Please try again.';
+  if(code==='auth/network-request-failed') return 'Network error. Please check the connection and try again.';
+  return (err&&err.message)||'Unable to create the user.';
+}
+
+async function createAdminNewUser(e){
+  e.preventDefault();
+
+  if(!isAdmin()){
+    toast('Only Admin or Super Admin can create users','error');
+    return;
+  }
+
+  setAdminNewUserError('');
+
+  const name=document.getElementById('newUserName').value.trim();
+  const email=document.getElementById('newUserEmail').value.trim().toLowerCase();
+  const phone=document.getElementById('newUserPhone').value.trim();
+  const role=document.getElementById('newUserRole').value.trim();
+  const responsibilities=document.getElementById('newUserResponsibilities').value.trim();
+  const status=document.getElementById('newUserStatus').value||'Active';
+  const button=document.getElementById('newUserCreateBtn');
+
+  if(!name) return setAdminNewUserError('Full name is required.');
+  if(!email) return setAdminNewUserError('Work email is required.');
+  if(phone && !/^[0-9]{10}$/.test(phone)) return setAdminNewUserError('Phone must contain exactly 10 digits.');
+  if(!role) return setAdminNewUserError('Please select a role.');
+  if(!(DB.roles||[]).some(r=>r.name===role)) return setAdminNewUserError('Selected role is not available.');
+  if((DB.users||[]).some(u=>String(u.email||'').toLowerCase()===email)){
+    return setAdminNewUserError('A CRM user with this email already exists.');
+  }
+
+  button.disabled=true;
+  button.textContent='Creating User…';
+
+  const provisionAuth=getAdminProvisionAuth();
+  let createdUser=null;
+  let profileCreated=false;
+
+  try{
+    const temporaryPassword=generateAdminTemporaryPassword();
+
+    const credential=await provisionAuth.createUserWithEmailAndPassword(
+      email,
+      temporaryPassword
+    );
+
+    createdUser=credential.user;
+    await createdUser.updateProfile({displayName:name});
+
+    const uid=createdUser.uid;
+    const selectedRole=(DB.roles||[]).find(r=>r.name===role);
+
+    await db.collection('users').doc(uid).set({
+      uid,
+      name,
+      email,
+      phone,
+      role,
+      responsibilities,
+      permissions:(selectedRole&&Array.isArray(selectedRole.permissions)) ? selectedRole.permissions : [],
+      status,
+      invitationStatus:'Sent',
+      invited:true,
+      invitedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      createdByUid:auth.currentUser.uid,
+      createdBy:(DB.profile&&DB.profile.name)||auth.currentUser.email||''
+    });
+
+    profileCreated=true;
+
+    /* Keep Employees synchronized with the newly created CRM user. */
+    const employeeSnap=await db.collection('employees')
+      .where('email','==',email).limit(1).get();
+
+    const employeeData={
+      name,email,phone,role,responsibilities,status,userUid:uid,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if(employeeSnap.empty){
+      await db.collection('employees').add({
+        ...employeeData,
+        createdByUid:auth.currentUser.uid,
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }else{
+      await employeeSnap.docs[0].ref.update(employeeData);
+    }
+
+    /*
+     * Firebase sends its standard secure password setup/reset email.
+     * The temporary password is never stored.
+     */
+    await provisionAuth.sendPasswordResetEmail(email);
+    await provisionAuth.signOut();
+
+    closeAdminNewUserModal();
+    toast(`User created and password setup email sent to ${email}.`,'success');
+
+    renderTable(
+      'users',
+      document.getElementById('adminUserSearch')?.value||'',
+      'tbody-users',
+      document.querySelector('#adminUsersTable thead')
+    );
+
+  }catch(err){
+    console.error('createAdminNewUser',err);
+
+    if(createdUser && !profileCreated){
+      try{ await createdUser.delete(); }catch(cleanupErr){
+        console.error('Auth cleanup failed',cleanupErr);
+      }
+    }
+
+    const msg=adminAuthError(err);
+    setAdminNewUserError(msg);
+    toast(msg,'error');
+
+  }finally{
+    button.disabled=false;
+    button.textContent='Create User & Send Invitation';
+    try{
+      if(provisionAuth.currentUser) await provisionAuth.signOut();
+    }catch(_){}
+  }
+}
+
+async function resendAdminUserInvitation(uid){
+  if(!isAdmin()){
+    toast('Only Admin or Super Admin can resend invitations','error');
+    return;
+  }
+
+  const user=(DB.users||[]).find(u=>u.id===uid);
+  if(!user || !user.email){
+    toast('User email not found','error');
+    return;
+  }
+
+  if(user.id===auth.currentUser.uid){
+    toast('Your own password is managed from My Profile','error');
+    return;
+  }
+
+  try{
+    const provisionAuth=getAdminProvisionAuth();
+    await provisionAuth.sendPasswordResetEmail(user.email);
+    await provisionAuth.signOut();
+
+    await db.collection('users').doc(uid).set({
+      invitationStatus:'Sent',
+      invited:true,
+      lastInvitationSentAt:firebase.firestore.FieldValue.serverTimestamp(),
+      invitationResentByUid:auth.currentUser.uid
+    },{merge:true});
+
+    toast(`Password setup email resent to ${user.email}`,'success');
+
+  }catch(err){
+    console.error('resendAdminUserInvitation',err);
+    toast(adminAuthError(err),'error');
+  }
+}
+
+function adminUserExtraActions(user){
+  if(!user || !user.email || user.id===auth.currentUser?.uid) return '';
+  return `<button type="button" class="btn-sm" title="Resend password setup email"
+    onclick="resendAdminUserInvitation('${adminNewUserEsc(user.id)}')">Resend Invite</button>`;
 }
 
 /* =========================================================
