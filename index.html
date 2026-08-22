@@ -786,49 +786,14 @@ tbody tr:hover{background:var(--blue-50);}
 </style>
 
 
-<style id="tech-standard-form-design">
-/* Tech Management uses the exact existing CRM typography/control sizing. */
-#techManagement,
-#techManagement * {
-  font-family: inherit;
-}
-#techManagement h1,
-#techManagement h2,
-#techManagement h3,
-#techManagement h4,
-#techManagement .section-title,
-#techManagement .card-title,
-#techManagement .form-title {
-  font-size: inherit;
-  line-height: inherit;
-  font-weight: inherit;
-}
-#techManagement input,
-#techManagement select,
-#techManagement textarea,
-#techManagement button {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-}
-#techManagement .tech-action-btn {
-  min-height: 36px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  white-space: nowrap;
-  cursor: pointer;
-  pointer-events: auto;
-}
-#techManagement .tech-action-btn:disabled {
-  pointer-events: none;
-}
-@media(max-width:640px){
-  #techManagement .tech-action-btn {
-    min-height: 36px;
-  }
+<style id="tech-action-button-fix">
+#techManagement .tech-action-btn{
+  position:relative;
+  z-index:2;
+  cursor:pointer;
+  pointer-events:auto;
 }
 </style>
-
 </head>
 <body>
 
@@ -2681,6 +2646,34 @@ function renderTechTickets(){const search=(document.getElementById('techTicketSe
 function renderTechProjects(){const tb=document.getElementById('tbody-techProjects');if(!tb)return;const rows=DB.techProjects||[];tb.innerHTML=rows.length?rows.map(p=>{const pct=Math.max(0,Math.min(100,Number(p.progress)||0));return `<tr><td><strong>${techEsc(p.name)}</strong><div class="tech-mini">${techEsc(p.key||'')}</div></td><td>${techEsc(p.client||'—')}</td><td>${techEsc(techName(p.ownerUid))}</td><td><span class="tech-status ${p.status==='Completed'?'resolved':p.status==='On Hold'?'blocked':'progress'}">${techEsc(p.status)}</span></td><td><div style="min-width:120px"><div class="tech-mini">${pct}%</div><div class="tech-progress"><span style="width:${pct}%"></span></div></div></td><td>${techEsc(p.dueDate||'—')}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('project','${p.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techProjects','${p.id}')">Delete</button></div></td></tr>`}).join(''):'<tr><td colspan="7"><div class="empty-state">No projects yet.</div></td></tr>';}
 function renderTechModules(){const tb=document.getElementById('tbody-techModules');if(!tb)return;const rows=DB.techModules||[];tb.innerHTML=rows.length?rows.map(m=>{const count=(DB.techTickets||[]).filter(t=>t.moduleId===m.id&&!['Resolved','Closed'].includes(t.status)).length;return `<tr><td><strong>${techEsc(m.name)}</strong><div class="tech-mini">${techEsc(m.key||'')}</div></td><td>${techEsc(techProjectName(m.projectId))}</td><td>${techEsc(techName(m.ownerUid))}</td><td>${techEsc(m.status||'Active')}</td><td>${count}</td><td><div class="row-actions" style="justify-content:flex-end"><button class="btn-sm" onclick="openTechModal('module','${m.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techModules','${m.id}')">Delete</button></div></td></tr>`}).join(''):'<tr><td colspan="6"><div class="empty-state">No modules yet.</div></td></tr>';}
 function renderTechTeam(){const tb=document.getElementById('tbody-techTeam');if(!tb)return;const users=techUserList(),manual=(DB.techTeamMembers||[]).filter(x=>x.status!=='Inactive'),tickets=DB.techTickets||[];const combined=[...users.map(u=>({...u,_manual:false})),...manual.map(m=>({...m,id:m.id,_manual:true,role:m.role||'Tech Team'}))];tb.innerHTML=combined.length?combined.map(u=>{const mine=tickets.filter(t=>t.assignedToUid===u.id),open=mine.filter(t=>!['Resolved','Closed'].includes(t.status)).length,resolved=mine.filter(t=>['Resolved','Closed'].includes(t.status)).length,load=open>=8?'High':open>=4?'Medium':'Low';return `<tr><td><strong>${techEsc(u.name||u.email)}</strong>${u._manual?'<div class="tech-mini">Manual team member</div>':''}</td><td>${techEsc(u.email||'')}</td><td>${techEsc(u.role||'Tech')}</td><td>${open}</td><td>${resolved}</td><td><span class="pill ${load==='High'?'red':load==='Medium'?'amber':'green'}">${load}</span></td><td><div class="row-actions" style="justify-content:flex-end">${u._manual?`<button class="btn-sm" onclick="openTechModal('team','${u.id}')">Edit</button><button class="btn-sm" onclick="deleteTechRecord('techTeamMembers','${u.id}')">Delete</button>`:'<span class="tech-mini">CRM User</span>'}</div></td></tr>`}).join(''):'<tr><td colspan="7"><div class="empty-state">No Tech Team members found.</div></td></tr>';}
+
+
+// Builds safe <option> elements for Tech Management forms.
+// Required by Ticket, Project and Module modals.
+function techSelectOptions(items, selectedValue, placeholder){
+  const list = Array.isArray(items) ? items : [];
+  const selected = selectedValue == null ? '' : String(selectedValue);
+  let html = '';
+  if (placeholder !== undefined && placeholder !== null) {
+    html += `<option value="">${techEsc(placeholder)}</option>`;
+  }
+  html += list.map(item => {
+    if (!item) return '';
+    const value = String(item.id || item.uid || item.key || '');
+    if (!value) return '';
+    const label = String(
+      item.name ||
+      item.title ||
+      item.email ||
+      item.company ||
+      item.displayName ||
+      item.key ||
+      value
+    );
+    return `<option value="${techEsc(value)}" ${value === selected ? 'selected' : ''}>${techEsc(label)}</option>`;
+  }).join('');
+  return html;
+}
 
 function openTechModal(kind,id){if(!isTechUser())return toast('Tech Management access required','error');const rec=id?({ticket:(DB.techTickets||[]).find(x=>x.id===id),project:(DB.techProjects||[]).find(x=>x.id===id),module:(DB.techModules||[]).find(x=>x.id===id),team:(DB.techTeamMembers||[]).find(x=>x.id===id),update:(DB.techUpdates||[]).find(x=>x.id===id)}[kind]):null;const title=kind==='ticket'?(id?'Edit Ticket':'New Ticket'):kind==='project'?(id?'Edit Project':'New Project'):kind==='module'?(id?'Edit Module':'New Module'):kind==='update'?(id?'Edit System Update':'Add System Update'):(id?'Edit Team Member':'Add Team Member');document.getElementById('techModalTitle').textContent=title;const users=techUserList(),projects=DB.techProjects||[],customers=DB.customers||[];let html='';
 if(kind==='ticket')html=`<form onsubmit="saveTechTicket(event,'${id||''}')"><div class="tech-form-grid"><div><label>Type</label><select name="type" required>${TECH_TYPES.map(x=>`<option ${x===(rec?.type||'Ticket')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Priority</label><select name="priority" required>${TECH_PRIORITIES.map(x=>`<option ${x===(rec?.priority||'Medium')?'selected':''}>${x}</option>`).join('')}</select></div><div class="full"><label>Title</label><input name="title" required value="${techEsc(rec?.title||'')}" placeholder="Bug / query / task title"></div><div><label>Project</label><select name="projectId">${techSelectOptions(projects,rec?.projectId||'','No Project')}</select></div><div><label>Module</label><select name="moduleId">${techSelectOptions(DB.techModules||[],rec?.moduleId||'','No Module')}</select></div><div><label>Assignee</label><select name="assignedToUid">${techSelectOptions(users,rec?.assignedToUid||'','Unassigned')}</select></div><div><label>Status</label><select name="status">${TECH_STATUSES.map(x=>`<option ${x===(rec?.status||'New')?'selected':''}>${x}</option>`).join('')}</select></div><div><label>Due Date</label><input type="date" name="dueDate" value="${techEsc(rec?.dueDate||'')}"></div><div class="full"><label>Client / Requesting Company</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><select name="clientId"><option value="">Manual / No linked client</option>${customers.map(c=>{const v=c.id||'';const n=c.company||c.name||'';return `<option value="${techEsc(v)}" ${rec?.clientId===v?'selected':''}>${techEsc(n)}</option>`}).join('')}</select><input name="clientManual" value="${techEsc(rec?.client||'')}" placeholder="Or enter client name manually"></div><div class="tech-mini" style="margin-top:5px;">Select an existing Customer or enter a client name manually.</div></div><div class="full"><label>Description / Query</label><textarea name="description" placeholder="Details, steps, expected result, requirement…">${techEsc(rec?.description||'')}</textarea></div><div class="full"><label>Acceptance / Resolution Notes</label><textarea name="resolution" placeholder="Resolution, testing notes, deployment notes…">${techEsc(rec?.resolution||'')}</textarea></div><div class="full"><label>Attachments</label><input type="file" name="attachments" id="techTicketAttachments" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"><div class="tech-mini">Attach multiple screenshots, images, PDFs or documents. Maximum 10 files, 8 MB each.</div>${(rec?.attachments||[]).length?`<div class="tech-attachments">${rec.attachments.map(a=>`<a href="${techEsc(a.url)}" target="_blank" rel="noopener">${techEsc(a.name)}</a>`).join('')}</div>`:''}</div></div><div class="tech-modal-foot"><button type="button" class="btn-ghost" onclick="closeTechModal()">Cancel</button><button class="btn-primary">Save Ticket</button></div></form>`;
